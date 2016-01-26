@@ -1,0 +1,12 @@
+filename:       Danhint.zip
+replacements:   2.0
+version:        3.0
+description:    Delphi3 component to provide a new kind of hint
+target:         Delphi 3
+author:         Dr. Peter Plass
+e-mail:         Peter.Plass@fh-zwickau.de
+URL:            http://www.fh-zwickau.de/~pp/tm.htm
+status:         freeware
+full source:    with src.
+category:       InVisible components
+

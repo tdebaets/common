@@ -1,0 +1,16 @@
+{***************************************************************************}
+{  Date: 19.12.97                                            Time: 17:30:40 }
+{  Copyright (c)1996-1997                                                   }
+{  © by Dr.Plass                                               TDanHint3.0  }
+{                                                                           }
+{                                              for DELPHI 3, Win95 (Not NT!)}
+{  feel free to contact me:                                                 }
+{  Peter.Plass@FH-Zwickau.de                                                }
+{  http://www.fh-zwickau.de/~pp/tm.htm                                      }
+{                                                                           }
+{  All Rights Reserved.                                                     }
+{  This component can be freely used and distributed in commercial and      }
+{  private environments, provided this notice is not modified in any way.   }
+{                                                                           }
+{***************************************************************************}
+

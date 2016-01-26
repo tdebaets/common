@@ -1,0 +1,68 @@
+object StrEditDlg: TStrEditDlg
+  Left = 299
+  Top = 106
+  Width = 424
+  Height = 344
+  Caption = 'String List editor'
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = False
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Bevel1: TBevel
+    Left = 0
+    Top = 257
+    Width = 416
+    Height = 2
+    Anchors = [akLeft, akRight, akBottom]
+  end
+  object btnOk: TButton
+    Left = 240
+    Top = 266
+    Width = 80
+    Height = 24
+    Anchors = [akRight, akBottom]
+    Caption = '&OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 1
+  end
+  object btnCancel: TButton
+    Left = 328
+    Top = 266
+    Width = 80
+    Height = 24
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Cancel'
+    ModalResult = 2
+    TabOrder = 2
+  end
+  object Editor: TRichEdit
+    Left = 8
+    Top = 8
+    Width = 400
+    Height = 240
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    HideSelection = False
+    ScrollBars = ssBoth
+    TabOrder = 0
+    WantTabs = True
+    WordWrap = False
+    OnChange = EditorChange
+    OnKeyDown = EditorKeyDown
+  end
+  object StatusBar: TStatusBar
+    Left = 0
+    Top = 298
+    Width = 416
+    Height = 19
+    Panels = <>
+    SimplePanel = True
+    SimpleText = '0 lines.'
+  end
+end

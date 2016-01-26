@@ -1,0 +1,161 @@
+{***************************************************************
+ *
+ * Unit Name: AppIcon
+ * Purpose : Contains the AppIcon component which can be used
+ * to display an Icon on a form from your project's
+ * resource file. Set the property ResourceName to
+ * the name of the resource you want to load. It
+ * will be displayed at run time.
+ * Author : John Long <johnwlong@mail.com>
+ * History : ??/??/2001 Created.
+ * Notes : Please email all significant changes to me at my email address
+above.
+ * Copyright© 2001-2002, John W. Long
+ ****************************************************************}
+
+unit AppIcon;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  Math;
+
+type
+  TIconSize = (icon16x16, icon24x24, icon32x32, icon48x48, iconCustom);
+  TAppIcon = class(TGraphicControl)
+  private
+    { Private declarations }
+    FIconHandle: HICON;
+    FIconWidth: Integer;
+    FIconHeight: Integer;
+    FIconSize: TIconSize;
+    FResourceName: String;
+    procedure ReloadIcon;
+    procedure SetIconWidth(const Value: Integer);
+    procedure SetIconHeight(const Value: Integer);
+    procedure SetIconSize(const Value: TIconSize);
+    procedure SetResourceName(const Value: String);
+  protected
+    { Protected declarations }
+  public
+    { Public declarations }
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure ChangeIconSize(Size: TPoint);
+    property IconHandle: HICON read FIconHandle;
+    procedure Paint; override;
+  published
+    { Published declarations }
+    property IconWidth: Integer read FIconWidth write SetIconWidth;
+    property IconHeight: Integer read FIconHeight write SetIconHeight;
+    property IconSize: TIconSize read FIconSize write SetIconSize;
+    property ResourceName: String read FResourceName write SetResourceName;
+    property Anchors;
+    property Align;
+    property Constraints;
+    property ShowHint;
+    property Cursor;
+    property Hint;
+  end;
+
+procedure Register;
+
+implementation
+
+procedure Register;
+begin
+  RegisterComponents('Wiseheart', [TAppIcon]);
+end;
+
+{ TAppIcon }
+
+constructor TAppIcon.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FResourceName := 'MAINICON';
+  FIconHandle := 0;
+  ChangeIconSize(Point(32, 32));
+  FIconSize := icon32x32;
+  Width := 32;
+  Height := 32;
+end;
+
+procedure TAppIcon.ReloadIcon;
+begin
+  if FIconHandle <> 0 then
+    DestroyIcon(FIconHandle);
+  if csDesigning in ComponentState then
+    FIconHandle := LoadImage(MainInstance, PChar('MAINICON'), IMAGE_ICON,
+        FIconWidth, FIconHeight, LR_DEFAULTCOLOR)
+  else
+    FIconHandle := LoadImage(MainInstance, PChar(FResourceName), IMAGE_ICON,
+        FIconWidth, FIconHeight, LR_DEFAULTCOLOR);
+  Repaint;
+end;
+
+procedure TAppIcon.ChangeIconSize(Size: TPoint);
+begin
+  FIconWidth := Max(Size.x, 16);
+  FIconHeight := Max(Size.y, 16);
+
+  if (FIconSize <> iconCustom) and
+     ((FIconWidth <> 16) or (FIconHeight <> 16)) and
+     ((FIconWidth <> 24) or (FIconHeight <> 24)) and
+     ((FIconWidth <> 32) or (FIconHeight <> 32)) and
+     ((FIconWidth <> 48) or (FIconHeight <> 48)) then
+     FIconSize:= iconCustom;
+
+  ReloadIcon;
+end;
+
+procedure TAppIcon.SetIconHeight(const Value: Integer);
+begin
+  ChangeIconSize(Point(FIconWidth, Value));
+end;
+
+procedure TAppIcon.SetIconWidth(const Value: Integer);
+begin
+  ChangeIconSize(Point(FIconHeight, Value));
+end;
+
+procedure TAppIcon.SetIconSize(const Value: TIconSize);
+begin
+  FIconSize := Value;
+  case FIconSize of
+    icon16x16: ChangeIconSize(Point(16, 16));
+    icon24x24: ChangeIconSize(Point(24, 24));
+    icon32x32: ChangeIconSize(Point(32, 32));
+    icon48x48: ChangeIconSize(Point(48, 48));
+  end;
+end;
+
+procedure TAppIcon.Paint;
+begin
+  inherited Paint;
+  if FIconHandle > 0 then
+    DrawIconEx(Canvas.Handle, (Width-FIconWidth) div 2,
+        (Height-FIconHeight) div 2, FIconHandle, FIconWidth, FIconHeight, 0, 0,
+        DI_NORMAL);
+  if csDesigning in ComponentState then
+  begin
+    Canvas.Pen.Style := psDash;
+    Canvas.Pen.Color := clWindowFrame;
+    Canvas.Brush.Style := bsClear;
+    Canvas.Rectangle(0, 0, ClientWidth, ClientHeight);
+  end;
+end;
+
+destructor TAppIcon.Destroy;
+begin
+  inherited Destroy;
+  if FIconHandle <> 0 then DestroyIcon(FIconHandle);
+end;
+
+procedure TAppIcon.SetResourceName(const Value: String);
+begin
+  FResourceName := Value;
+  ReloadIcon;
+end;
+
+end.

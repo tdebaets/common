@@ -1,0 +1,91 @@
+(****************************************************************************
+ *
+ * Copyright 2016 Tim De Baets
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ****************************************************************************
+ *
+ * Tim De Baets Components Collection package
+ *
+ ****************************************************************************)
+
+package tdebaets_comps;
+
+{$R *.RES}
+{$R 'EnhButtn.dcr'}
+{$R 'ThemeMgr.dcr'}
+{$R 'DTPEx.dcr'}
+{$R 'ProgressDialog.dcr'}
+{$R 'ATImageBox.dcr'}
+{$ALIGN ON}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST ON}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $00400000}
+{$DESCRIPTION 'Tim De Baets Components Collection'}
+{$DESIGNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  vcl40,
+  vclx40,
+  vclsmp40;
+
+contains
+  ELV_Reg in 'ELV_Reg.pas',
+  Danhint in 'Danhint.pas',
+  MarqueeBar in 'MarqueeBar.pas',
+  CaptionBevel in 'CaptionBevel.pas',
+  ComboboxEx in 'ComboboxEx.pas',
+  NewCheckListBox in 'NewCheckListBox.pas',
+  ExtChkListView in 'ExtChkListView.pas',
+  ExtProgressBarReg in 'ExtProgressBarReg.pas',
+  EnhButtn in 'EnhButtn.pas',
+  AgOpenDialog in 'AgOpenDialog.pas',
+  IconView in 'IconView.pas',
+  NewToolBar in 'NewToolBar.pas',
+  ProcessListView in 'ProcessListView.pas',
+  ThemeMgr in 'ThemeMgr.pas',
+  ThemeSrv in 'ThemeSrv.pas',
+  CC95_Register in 'CC95_Register.pas',
+  SysLink in 'SysLink.pas',
+  DTPEx in 'DTPEx.pas',
+  SpinIntEdit in 'SpinIntEdit.pas',
+  VTEditors in 'VTEditors.pas',
+  VirtualTreesReg in 'Virtual Treeview\Design\VirtualTreesReg.pas',
+  StarControl in 'StarControl.pas',
+  AppIcon in 'AppIcon.pas',
+  ProgressDialog in 'ProgressDialog.pas',
+  IconMessage in 'IconMessage.pas',
+  ATImageBox in 'ATImageBox.pas',
+  EnhHotkey in 'EnhHotkey.pas',
+  SizeGrip in 'SizeGrip.pas';
+
+end.

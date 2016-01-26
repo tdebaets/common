@@ -27,3 +27,10 @@
 # Delphi history and backups
 __history/
 *.~*
+
+# User-specific compile settings (e.g. paths)
+usercompilesettings.bat
+
+# Per-project compiler options created by Delphi
+# <project-name>.cfg.main is always used instead for command-line compile
+tdebaets_comps.cfg
