@@ -2822,83 +2822,83 @@ begin
                 List := FTabSheetList;
             end
             else
-							if Control is TTab95Sheet then
-							begin
-								if (toSubclassTabSheet in FOptions) or not Inserting then
-									List := FTab95SheetList;
-							end
-							else
-								if Control is TCustomPanel then
-								begin
-									if (toSubclassPanel in FOptions) or not Inserting then
-										List := FPanelList;
-								end
-								else
-									{$ifdef COMPILER_5_UP}
-										if Control is TCustomFrame then
-										begin
-											if (toSubclassFrame in FOptions) or not Inserting then
-												List := FFrameList;
-										end
-										else
-									{$endif COMPILER_5_UP}
-										if Control is TCustomListView then
-										begin
-											if (toSubclassListView in FOptions) or not Inserting then
-											begin
-												List := FListViewList;
-												// We have to force the listview to recreate its window handle (to reapply all the control settings).
-												// However if it is already in our list then don't touch the window anymore.
-												WinControl := Control as TWinControl;
-												if Inserting and not List.Find(Control, Index) and WinControl.HandleAllocated then
-													PostMessage(WinControl.Handle, CM_RECREATEWND, 0, 0);
-											end;
-										end
-										else
-											if Control is TTrackBar then
-											begin
-												if (toSubclassTrackBar in FOptions) or not Inserting then
-													List := FTrackBarList;
-											end
-											else
-												{$ifdef CheckListSupport}
-													if Control is TCheckListBox then
-													begin
-														if (toSubclassCheckListBox in FOptions) or not Inserting then
-															List := FCheckListBoxList;
-													end
-													else
-												{$endif CheckListSupport}
-													if Control is TCustomStatusBar then
-													begin
-														if (toSubclassStatusBar in FOptions) or not Inserting then
-															List := FStatusBarList;
-													end
-													else
-														if Control is TSplitter then
-														begin
-															if (toSubclassSplitter in FOptions) or not Inserting then
-																List := FSplitterList;
-														end
-														else
-															if Control is TAnimate then
-															begin
-																if (toSubclassAnimate in FOptions) or not Inserting then
-																	List := FAnimateList;
-															end
-															else
-																if Control is TCustomForm then
-																begin
-																	List := FFormList;
-																	if Inserting then
-																		FPendingFormsList.Remove(Control);
-																end
-																else
-																	if Control is TWinControl then
-																	begin
-																		if (toSubclassWinControl in FOptions) or not Inserting then
-																			List := FWinControlList;
-																	end;
+              if Control is TTab95Sheet then
+              begin
+                if (toSubclassTabSheet in FOptions) or not Inserting then
+                  List := FTab95SheetList;
+              end
+              else
+                if Control is TCustomPanel then
+                begin
+                  if (toSubclassPanel in FOptions) or not Inserting then
+                    List := FPanelList;
+                end
+                else
+                  {$ifdef COMPILER_5_UP}
+                    if Control is TCustomFrame then
+                    begin
+                      if (toSubclassFrame in FOptions) or not Inserting then
+                        List := FFrameList;
+                    end
+                    else
+                  {$endif COMPILER_5_UP}
+                    if Control is TCustomListView then
+                    begin
+                      if (toSubclassListView in FOptions) or not Inserting then
+                      begin
+                        List := FListViewList;
+                        // We have to force the listview to recreate its window handle (to reapply all the control settings).
+                        // However if it is already in our list then don't touch the window anymore.
+                        WinControl := Control as TWinControl;
+                        if Inserting and not List.Find(Control, Index) and WinControl.HandleAllocated then
+                          PostMessage(WinControl.Handle, CM_RECREATEWND, 0, 0);
+                      end;
+                    end
+                    else
+                      if Control is TTrackBar then
+                      begin
+                        if (toSubclassTrackBar in FOptions) or not Inserting then
+                          List := FTrackBarList;
+                      end
+                      else
+                        {$ifdef CheckListSupport}
+                          if Control is TCheckListBox then
+                          begin
+                            if (toSubclassCheckListBox in FOptions) or not Inserting then
+                              List := FCheckListBoxList;
+                          end
+                          else
+                        {$endif CheckListSupport}
+                          if Control is TCustomStatusBar then
+                          begin
+                            if (toSubclassStatusBar in FOptions) or not Inserting then
+                              List := FStatusBarList;
+                          end
+                          else
+                            if Control is TSplitter then
+                            begin
+                              if (toSubclassSplitter in FOptions) or not Inserting then
+                                List := FSplitterList;
+                            end
+                            else
+                              if Control is TAnimate then
+                              begin
+                                if (toSubclassAnimate in FOptions) or not Inserting then
+                                  List := FAnimateList;
+                              end
+                              else
+                                if Control is TCustomForm then
+                                begin
+                                  List := FFormList;
+                                  if Inserting then
+                                    FPendingFormsList.Remove(Control);
+                                end
+                                else
+                                  if Control is TWinControl then
+                                  begin
+                                    if (toSubclassWinControl in FOptions) or not Inserting then
+                                      List := FWinControlList;
+                                  end;
     end;
 
     if Assigned(List) then

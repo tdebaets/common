@@ -2546,12 +2546,12 @@ var
 begin
   // Found this code on www.codeguru.com in an article talking about how to get
   // an owner draw listview to ask for the item height (WM_MEASUREITEM) again.
-	GetWindowRect(Handle, r);
-	wp.hwnd := Handle;
-	wp.cx := Width;
-	wp.cy := Height;
-	wp.flags := SWP_NOACTIVATE or SWP_NOMOVE or SWP_NOOWNERZORDER or SWP_NOZORDER;
-	SendMessage(Handle, WM_WINDOWPOSCHANGED, 0, LPARAM(@wp));
+  GetWindowRect(Handle, r);
+  wp.hwnd := Handle;
+  wp.cx := Width;
+  wp.cy := Height;
+  wp.flags := SWP_NOACTIVATE or SWP_NOMOVE or SWP_NOOWNERZORDER or SWP_NOZORDER;
+  SendMessage(Handle, WM_WINDOWPOSCHANGED, 0, LPARAM(@wp));
 end;
 
 procedure TCustomEnhListView.MoveItem(OriginalIndex, NewIndex: Integer);

@@ -34253,18 +34253,18 @@ begin
   PaintInfo.Column := Column;
   PaintInfo.CellRect := Rect(0, 0, 0, 0);
   if Column > NoColumn then
-	begin
-	  PaintInfo.CellRect.Right := FHeader.Columns[Column].Width - FTextMargin;
-	  PaintInfo.CellRect.Left := FTextMargin + FMargin;
-	  if Column = Header.MainColumn then
-	  begin
-	    if toFixedIndent in FOptions.FPaintOptions then
-	      SetLength(LineImage, 1)
-	    else
-	      DetermineLineImageAndSelectLevel(Node, LineImage);
-	    Inc(PaintInfo.CellRect.Left, Length(LineImage) * Integer(Indent));
-	  end;
-	end
+  begin
+    PaintInfo.CellRect.Right := FHeader.Columns[Column].Width - FTextMargin;
+    PaintInfo.CellRect.Left := FTextMargin + FMargin;
+    if Column = Header.MainColumn then
+    begin
+      if toFixedIndent in FOptions.FPaintOptions then
+        SetLength(LineImage, 1)
+      else
+        DetermineLineImageAndSelectLevel(Node, LineImage);
+      Inc(PaintInfo.CellRect.Left, Length(LineImage) * Integer(Indent));
+    end;
+  end
   else
     PaintInfo.CellRect.Right := ClientWidth;
   AdjustPaintCellRect(PaintInfo, Dummy);

@@ -336,22 +336,22 @@ type
     hInstance: THandle;
     case Integer of
       0: (
-	hIcon: THandle);
+        hIcon: THandle);
       1: (
-	pszIcon: PAnsiChar;
-	pszCaption: PAnsiChar;
-	nPages: Integer;
-	case Integer of
-	  0: (
-	    nStartPage: Integer);
-	  1: (
-	    pStartPage: PAnsiChar;
-	    case Integer of
-	      0: (
-		ppsp: PPropSheetPageA);
-	      1: (
-		phpage: Pointer;
-		pfnCallback: TFNPropSheetCallback;
+        pszIcon: PAnsiChar;
+        pszCaption: PAnsiChar;
+        nPages: Integer;
+        case Integer of
+          0: (
+            nStartPage: Integer);
+          1: (
+            pStartPage: PAnsiChar;
+            case Integer of
+              0: (
+                ppsp: PPropSheetPageA);
+              1: (
+                phpage: Pointer;
+                pfnCallback: TFNPropSheetCallback;
                 case Integer of
                   0: (
                     hbmWatermark: HBITMAP);
@@ -373,22 +373,22 @@ type
     hInstance: THandle;
     case Integer of
       0: (
-	hIcon: THandle);
+        hIcon: THandle);
       1: (
-	pszIcon: PWideChar;
-	pszCaption: PWideChar;
-	nPages: Integer;
-	case Integer of
-	  0: (
-	    nStartPage: Integer);
-	  1: (
-	    pStartPage: PWideChar;
-	    case Integer of
-	      0: (
-		ppsp: PPropSheetPageW);
-	      1: (
-		phpage: Pointer;
-		pfnCallback: TFNPropSheetCallback;
+        pszIcon: PWideChar;
+        pszCaption: PWideChar;
+        nPages: Integer;
+        case Integer of
+          0: (
+            nStartPage: Integer);
+          1: (
+            pStartPage: PWideChar;
+            case Integer of
+              0: (
+                ppsp: PPropSheetPageW);
+              1: (
+                phpage: Pointer;
+                pfnCallback: TFNPropSheetCallback;
                 case Integer of
                   0: (
                     hbmWatermark: HBITMAP);
@@ -2071,7 +2071,7 @@ const
   
   TB_SETCOLORSCHEME       = CCM_SETCOLORSCHEME;  // lParam is color scheme
   
-  TB_GETCOLORSCHEME       = CCM_GETCOLORSCHEME;	// fills in COLORSCHEME pointed to by lParam
+  TB_GETCOLORSCHEME       = CCM_GETCOLORSCHEME;  // fills in COLORSCHEME pointed to by lParam
 
   
   TB_SETUNICODEFORMAT     = CCM_SETUNICODEFORMAT;
@@ -3596,12 +3596,12 @@ const
   PBM_SETRANGE32          = WM_USER+6;   // lParam = high, wParam = low
   
   PBM_GETRANGE            = WM_USER+7;   // lParam = PPBRange or Nil
-					 // wParam = False: Result = high
-					 // wParam = True: Result = low
+           // wParam = False: Result = high
+           // wParam = True: Result = low
   
   PBM_GETPOS              = WM_USER+8;
   
-  PBM_SETBARCOLOR         = WM_USER+9;		// lParam = bar color
+  PBM_SETBARCOLOR         = WM_USER+9;    // lParam = bar color
   
   PBM_SETBKCOLOR          = CCM_SETBKCOLOR;  // lParam = bkColor
 
@@ -4190,7 +4190,7 @@ const
   LVHT_ONITEMSTATEICON    = $0008;
   
   LVHT_ONITEM             = LVHT_ONITEMICON or LVHT_ONITEMLABEL or
-			    LVHT_ONITEMSTATEICON;
+          LVHT_ONITEMSTATEICON;
   
   LVHT_ABOVE              = $0008;
   
@@ -6053,7 +6053,7 @@ const
 
   
   TVHT_ONITEM             = TVHT_ONITEMICON or TVHT_ONITEMLABEL or
-			      TVHT_ONITEMSTATEICON;
+            TVHT_ONITEMSTATEICON;
 
   
   TVHT_ABOVE              = $0100;
@@ -6685,9 +6685,9 @@ const
   
   CBEN_GETDISPINFOW       = CBEN_FIRST - 7;
   
-  CBEN_DRAGBEGINA			    = CBEN_FIRST - 8;
-  
-  CBEN_DRAGBEGINW			    = CBEN_FIRST - 9;
+  CBEN_DRAGBEGINA         = CBEN_FIRST - 8;
+
+  CBEN_DRAGBEGINW         = CBEN_FIRST - 9;
 
 
 
