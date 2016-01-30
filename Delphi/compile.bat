@@ -27,7 +27,7 @@ setlocal
 rem  Units in LibFixed to compile separately
 set LIBFIXED_UNITS=Controls.pas ComCtrls.pas
 
-rem  Units in IMPORTS to compile separately
+rem  Units in Imports to compile separately
 set IMPORTS_UNITS=SHDocVw_TLB.pas
 
 set CFGFILE=
@@ -42,7 +42,6 @@ for /f "delims=:., tokens=1-4" %%t in ("%TIME: =0%") do (
 )
 
 rem  Retrieve user-specific compile settings from file
-
 if exist ..\usercompilesettings.bat goto usercompilesettingsfound
 :usercompilesettingserror
 echo usercompilesettings.bat (in the root of the repository) is missing or
@@ -81,10 +80,10 @@ if errorlevel 1 goto failed
 
 cd ..
 
-cd IMPORTS
+cd Imports
 if errorlevel 1 goto failed
 
-echo - IMPORTS
+echo - Imports
 
 "%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
     -U"%COMMON_LIB_PATH%" ^ -R"%DELPHIROOT%\lib" ^
@@ -123,8 +122,8 @@ cd ..
 goto exit
 
 :failed
-if not %CFGFILE%=="" ren %CFGFILE% %CFGFILE%.main
-if not %OLDCFGFILE%=="" ren %OLDCFGFILE%.%UNIQUESTR% %OLDCFGFILE%
+if not "%CFGFILE%"=="" ren %CFGFILE% %CFGFILE%.main
+if not "%OLDCFGFILE%"=="" ren %OLDCFGFILE%.%UNIQUESTR% %OLDCFGFILE%
 echo *** FAILED ***
 cd ..
 :failed2
