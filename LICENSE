@@ -699,15 +699,17 @@ CmnFunc2.pas file
 and
 Int64Em.pas file
 and
-PathFunc.pas file
+MBCSUtil.pas file
 and
-Wow64.pas file
+PathFunc.pas file
 and
 VCL-Controls-D2D5-patch.txt file
 and
 VCL-Controls-D6-patch.txt file
 and
 Version.inc file
+and
+Wow64.pas file
 are licensed as follows:
 
     Inno Setup License

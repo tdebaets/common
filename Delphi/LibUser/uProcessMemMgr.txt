@@ -1,0 +1,30 @@
+Sometimes it's necessary to access the address space of another application
+directly from a running Delphi application. For example when calling messages
+from CommCtrl.pas (TabCtrl, ListView, TreeView, etc.) for windows in other
+applications if these messages transfer pointers. In general, this is true for
+all messages above WM_USER.
+
+There are differences between NT and 9x when dealing with such memory, and I've
+tried to encapsulate these differences in the TProcessMemMgr class. It covers
+allocating and freeing of memory in foreign processes, and read and write acces.
+
+The sample application captures the content of another (or, of cause, of an own)
+ListView ind displays it in its own window. Simply point the mouse cursor onto
+a ListView control (right Explorer pane, Windows desktop, etc.), and hit F12. It
+should work if you see 'SysListView32' or 'TListView' as the current Windows
+class name in the caption bar.
+
+Some other examples I was asked for in the meantime you'll find in examples.txt.
+
+Please direct reports to <delphi.net@gmx.net>.
+Updates will be available at <http://come.to/delphi-bits>.
+
+Changes in 0.9, 2002-12-24
+- Bug: Shared mem portion must have a name (9x code only)
+- Bug: ReadStr failed when source > 4KB
+- IpcThrd and Contnrs no longer necessary to compile
+- ReadStr function with given Length added
+
+
+-Michael
+

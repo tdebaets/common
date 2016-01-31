@@ -30,6 +30,10 @@ set LIBFIXED_UNITS=Controls.pas ComCtrls.pas
 rem  Units in Imports to compile separately
 set IMPORTS_UNITS=SHDocVw_TLB.pas
 
+rem Units in LibUser to compile separately
+set LIBUSER_UNITS=GIFImage.pas HugeIni.pas MBCSUtil.pas NewDialogs.pas ^
+    ShellApi2.pas ShlObj2.pas uProcessMemMgr.pas
+
 set CFGFILE=
 set OLDCFGFILE=
 
@@ -93,6 +97,13 @@ if errorlevel 1 goto failed
 cd ..
 
 cd LibUser
+if errorlevel 1 goto failed
+
+echo - LibUser
+
+"%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
+    -U"%COMMON_LIB_PATH%" ^ -R"%DELPHIROOT%\lib" ^
+    %LIBUSER_UNITS%
 if errorlevel 1 goto failed
 
 echo - tdebaets_comps.dpk
