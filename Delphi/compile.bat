@@ -25,14 +25,24 @@ rem **************************************************************************
 setlocal
 
 rem  Units in LibFixed to compile separately
-set LIBFIXED_UNITS=Controls.pas ComCtrls.pas
+set LIBFIXED_UNITS= ^
+    Controls.pas ^
+    ComCtrls.pas
 
 rem  Units in Imports to compile separately
-set IMPORTS_UNITS=SHDocVw_TLB.pas
+set IMPORTS_UNITS= ^
+    SHDocVw_TLB.pas
 
 rem Units in LibUser to compile separately
-set LIBUSER_UNITS=GIFImage.pas HugeIni.pas MBCSUtil.pas NewDialogs.pas ^
-    ShellApi2.pas ShlObj2.pas uProcessMemMgr.pas
+set LIBUSER_UNITS= ^
+    GIFImage.pas ^
+    HugeIni.pas ^
+    MBCSUtil.pas ^
+    NewDialogs.pas ^
+    PEStruct.pas ^
+    ShellApi2.pas ^
+    ShlObj2.pas ^
+    uProcessMemMgr.pas
 
 set CFGFILE=
 set OLDCFGFILE=
