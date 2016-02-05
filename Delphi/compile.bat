@@ -88,7 +88,8 @@ if errorlevel 1 goto failed
 echo - LibFixed
 
 "%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
-    -U"%COMMON_LIB_PATH%" -R"%DELPHIROOT%\lib" ^
+    -U"%COMMON_LIB_PATH%" ^
+    -R"%DELPHIROOT%\lib" ^
     %LIBFIXED_UNITS%
 if errorlevel 1 goto failed
 
@@ -100,7 +101,8 @@ if errorlevel 1 goto failed
 echo - Imports
 
 "%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
-    -U"%COMMON_LIB_PATH%" ^ -R"%DELPHIROOT%\lib" ^
+    -U"%COMMON_LIB_PATH%" ^
+    -R"%DELPHIROOT%\lib" ^
     %IMPORTS_UNITS%
 if errorlevel 1 goto failed
 
@@ -112,7 +114,8 @@ if errorlevel 1 goto failed
 echo - LibUser
 
 "%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
-    -U"%COMMON_LIB_PATH%" ^ -R"%DELPHIROOT%\lib" ^
+    -U"%COMMON_LIB_PATH%" ^
+    -R"%DELPHIROOT%\lib" ^
     %LIBUSER_UNITS%
 if errorlevel 1 goto failed
 
