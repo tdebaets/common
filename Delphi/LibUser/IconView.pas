@@ -20,7 +20,7 @@
  *
  ****************************************************************************)
 
-{$I DELPHIAREA.INC}
+{$I Compilers.inc}
 
 unit IconView;
 
@@ -83,10 +83,10 @@ type
   TIconView = class(TCustomIconView)
   published
     property Align;
-    {$IFDEF DELPHI4_UP}
+    {$IFDEF DELPHI_4_UP}
     property Anchors;
     {$ENDIF}
-    {$IFDEF DELPHI4_UP}
+    {$IFDEF DELPHI_4_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
@@ -94,11 +94,11 @@ type
     {$ENDIF}
     property BorderStyle;
     property Color;
-    {$IFDEF DELPHI4_UP}
+    {$IFDEF DELPHI_4_UP}
     property Constraints;
     {$ENDIF}
     property DragCursor;
-    {$IFDEF DELPHI4_UP}
+    {$IFDEF DELPHI_4_UP}
     property DragKind;
     {$ENDIF}
     property DragMode;
@@ -114,20 +114,20 @@ type
     property Transparent;
     property Visible;
     property OnClick;
-    {$IFDEF DELPHI5_UP}
+    {$IFDEF DELPHI_5_UP}
     property OnContextPopup;
     {$ENDIF}
     property OnDblClick;
     property OnDragDrop;
     property OnDragOver;
-    {$IFDEF DELPHI4_UP}
+    {$IFDEF DELPHI_4_UP}
     property OnEndDock;
     {$ENDIF}
     property OnEndDrag;
     property OnMouseDown;
     property OnMouseMove;
     property OnMouseUp;
-    {$IFDEF DELPHI4_UP}
+    {$IFDEF DELPHI_4_UP}
     property OnStartDock;
     {$ENDIF}
     property OnStartDrag;
