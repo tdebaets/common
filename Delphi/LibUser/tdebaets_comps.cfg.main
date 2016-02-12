@@ -21,34 +21,34 @@
  ****************************************************************************)
 
 -$A+                // alignment on
--$B-
--$C+
--$D-
--$E-
--$F-
--$G+
--$H+
--$I+
--$J+
--$K-
--$L-
--$M-
--$N+
--$O+
--$P+
--$Q-
--$R-
--$S-
--$T-
--$U-
--$V+
--$W-
--$X+
--$Y-
--$Z1
+-$B-                // short-circuit boolean expressions
+-$C+                // assertions on
+-$D-                // debug info off
+-$E-                // arithmetic emulation (legacy)
+-$F-                // far calls off (legacy)
+-$G+                // imported data references on
+-$H+                // long strings on
+-$I+                // I/O checks on
+-$J+                // writeable constants on
+-$K-                // smart callbacks of (legacy)
+-$L-                // local symbol info off
+-$M-                // runtime type information off
+-$N+                // numeric coprocessor on (legacy)
+-$O+                // optimizations on
+-$P+                // open strings on (legacy)
+-$Q-                // integer overflow checking off
+-$R-                // range checking off
+-$S-                // stack space checking off
+-$T-                // typed address off
+-$U-                // safe floating-point division off
+-$V+                // short string strict type checking on (legacy)
+-$W-                // stack frames off
+-$X+                // extended syntax on
+-$Y-                // symbol info off
+-$Z1                // min enum size: 1 byte
 -CG                 // GUI target
 -AWinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
 -M                  // make modified units
--$M16384,1048576
+-$M16384,1048576    // min/max stack size
 -K$00400000         // image base address
 -Z                  // disable implicit compilation
