@@ -28,6 +28,9 @@
 __history/
 *.~*
 
+# Windows Help index files
+*.gid
+
 # User-specific compile settings (e.g. paths)
 usercompilesettings.bat
 
