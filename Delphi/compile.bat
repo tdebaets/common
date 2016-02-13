@@ -40,6 +40,7 @@ set LIBUSER_UNITS= ^
     MBCSUtil.pas ^
     NewDialogs.pas ^
     PEStruct.pas ^
+    PJMessageDialog ^
     ShellApi2.pas ^
     ShlObj2.pas ^
     uProcessMemMgr.pas
