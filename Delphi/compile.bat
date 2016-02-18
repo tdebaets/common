@@ -56,20 +56,20 @@ for /f "delims=:., tokens=1-4" %%t in ("%TIME: =0%") do (
     set UNIQUESTR=%%t%%u%%v%%w
 )
 
-rem  Retrieve user-specific compile settings from file
-if exist ..\usercompilesettings.bat goto usercompilesettingsfound
-:usercompilesettingserror
-echo usercompilesettings.bat (in the root of the repository) is missing or
-echo incomplete. It needs to be created with the following lines, adjusted
-echo for your system:
+rem  Retrieve user-specific settings from file
+if exist ..\userprefs.bat goto userprefsfound
+:userprefserror
+echo userprefs.bat (in the root of the repository) is missing or incomplete.
+echo It needs to be created with the following lines, adjusted for your
+echo system:
 echo.
 echo   set DELPHIROOT=c:\delphi4              [Path to Delphi 4 (or later)]
 goto failed2
 
-:usercompilesettingsfound
+:userprefsfound
 set DELPHIROOT=
-call ..\usercompilesettings.bat
-if "%DELPHIROOT%"=="" goto usercompilesettingserror
+call ..\userprefs.bat
+if "%DELPHIROOT%"=="" goto userprefserror
 
 set COMMON_LIB_PATH=..\LibFixed;%DELPHIROOT%\lib
 
