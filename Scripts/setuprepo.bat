@@ -24,14 +24,6 @@ rem **************************************************************************
 
 setlocal
 
-if exist common (
-    rem We're in another repository including common as a submodule
-    set COMMONDIR=common
-) else (
-    rem We're in the common repository itself
-    set COMMONDIR=.
-)
-
 echo Setting up repository...
 
 git config pull.rebase preserve
@@ -43,12 +35,12 @@ rem No permission for regular users in Win7 to create symbolic links, so create
 rem hardlinks instead
 
 if not exist .git\hooks\post-checkout (
-    mklink /H .git\hooks\post-checkout %COMMONDIR%\Scripts\post-checkout
+    mklink /H .git\hooks\post-checkout Hooks\post-checkout
     if errorlevel 1 goto failed
 )
 
 if not exist .git\hooks\pre-push (
-    mklink /H .git\hooks\pre-push %COMMONDIR%\Scripts\pre-push
+    mklink /H .git\hooks\pre-push Hooks\pre-push
     if errorlevel 1 goto failed
 )
 

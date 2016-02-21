@@ -22,12 +22,4 @@
 # *
 # **************************************************************************
 
-if [ -d common ]; then
-    #  We're in another repository including common as a submodule
-    commondir=common
-else
-    # We're in the common repository itself
-    commondir=.
-fi
-
-cmd.exe /c "$commondir\Scripts\pre-push.bat"
+cmd.exe /c "Scripts\pre-push.bat"
