@@ -18,35 +18,20 @@ rem * limitations under the License.
 rem *
 rem **************************************************************************
 rem *
-rem * Script to initially set up a repository
+rem * Git post-checkout hook
 rem *
 rem **************************************************************************
 
 setlocal
 
-echo Setting up repository...
-
-git config pull.rebase preserve
+rem Run project-specific hook if it exists
+if exist Hooks\post-checkout.bat call .\Hooks\post-checkout.bat
 if errorlevel 1 goto failed
-
-echo Installing hooks...
-
-rem No permission for regular users in Win7 to create symbolic links, so create
-rem hardlinks instead
-
-if not exist .git\hooks\post-checkout (
-    mklink /H .git\hooks\post-checkout Scripts\post-checkout
-    if errorlevel 1 goto failed
-)
-
-if not exist .git\hooks\pre-push (
-    mklink /H .git\hooks\pre-push Scripts\pre-push
-    if errorlevel 1 goto failed
-)
 
 goto exit
 
 :failed
+echo *** post-checkout FAILED ***
 exit /b 1
 
 :exit
