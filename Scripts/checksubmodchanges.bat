@@ -22,5 +22,14 @@ rem * Script to check for uncommitted changes in Git submodules
 rem *
 rem **************************************************************************
 
-git submodule --quiet foreach "$toplevel/checksubmodchanges.sh $name" 2> NUL
-if errorlevel 1 exit /b 1
+setlocal
+
+git submodule --quiet foreach "$toplevel/common/Scripts/checksubmodchanges.sh $name" 2> NUL
+if errorlevel 1 goto failed
+
+goto exit
+
+:failed
+exit /b 1
+
+:exit

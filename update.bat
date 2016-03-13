@@ -23,3 +23,11 @@ rem **************************************************************************
 setlocal
 
 call ./Scripts/updaterepo.bat %*
+if errorlevel 1 goto failed
+
+goto exit
+
+:failed
+exit /b 1
+
+:exit
