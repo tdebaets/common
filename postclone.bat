@@ -22,7 +22,7 @@ rem **************************************************************************
 
 setlocal
 
-call .\Scripts\setuprepo.bat
+call .\Scripts\setuprepo.bat %*
 if errorlevel 1 goto failed
 
 echo Success!
