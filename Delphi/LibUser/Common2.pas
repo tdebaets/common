@@ -386,6 +386,7 @@ function CheckCommonControl(CC: Integer): Boolean;
 // Misc
 
 function IsExtendedKey(VirtualKeyCode: Cardinal): Boolean;
+function GetDlgCodeMaskFromKey(VirtualKeyCode: Cardinal): Cardinal;
 
 function ExpandEnvVars(const Str: string): string;
 
@@ -2043,6 +2044,19 @@ begin
       Result := True;
     else
       Result := False;
+  end;
+end;
+
+function GetDlgCodeMaskFromKey(VirtualKeyCode: Cardinal): Cardinal;
+begin
+  Result := 0;
+  case VirtualKeyCode of
+    VK_TAB:
+      Result := DLGC_WANTTAB;
+    VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN:
+      Result := DLGC_WANTARROWS;
+    VK_RETURN, VK_EXECUTE, VK_ESCAPE, VK_CANCEL:
+      Result := DLGC_WANTALLKEYS;
   end;
 end;
 

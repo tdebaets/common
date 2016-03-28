@@ -40,6 +40,8 @@ type
     procedure SetOnClickLink(const Value: TOnClickLink);
     procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
     procedure CMTextChanged(var Message: TMessage); message CM_TEXTCHANGED;
+    procedure CMWantSpecialKey(var Message: TCMWantSpecialKey);
+        message CM_WANTSPECIALKEY;
     procedure AdjustBounds;
     procedure SetAlignment(Value: TAlignment);
     procedure SetAutoHeight(Value: Boolean);
@@ -146,6 +148,35 @@ begin
   AdjustBounds;
 end;
 
+procedure TCustomSysLink.CMWantSpecialKey(var Message: TCMWantSpecialKey);
+var
+  Mask: Integer;
+  KeyDownMsg: TMsg;
+  DlgCode: Cardinal;
+begin
+  inherited;
+  with Message do begin
+    // Unexpectedly, the WM_GETDLGCODE handler in SysLinkWindowProc doesn't look
+    // at the virtual key code in wParam but instead expects a pointer to a
+    // WM_KEYDOWN MSG structure in lParam, see
+    // http://doxygen.reactos.org/d3/d54/syslink_8c_a11d50a58d0178b6dd15bfe2201a9c776.html
+    // So we need to generate a 'fake' WM_KEYDOWN MSG to receive the correct
+    // result from WM_GETDLGCODE.
+    Mask := GetDlgCodeMaskFromKey(CharCode);
+    FillChar(KeyDownMsg, SizeOf(Msg), 0);
+    KeyDownMsg.hwnd := Handle;
+    KeyDownMsg.message := WM_KEYDOWN;
+    KeyDownMsg.wParam := CharCode;
+    DlgCode := Perform(WM_GETDLGCODE, CharCode, Integer(@KeyDownMsg));
+    if (DlgCode and Mask) <> 0 then begin
+      // Return a nonzero value if this key should be handled by the SysLink
+      // default window proc. This will cause the handler in the VCL to indicate
+      // that the app hasn't processed the message yet.
+      Result := 1;
+    end;
+  end;
+end;
+
 procedure TCustomSysLink.Loaded;
 begin
   inherited Loaded;
@@ -238,8 +269,6 @@ begin
           end;
         end;
       end;
-    WM_GETDLGCODE:
-      Msg.Result := DLGC_WANTALLKEYS {or DLGC_WANTTAB};
     else
       inherited;
   end;
