@@ -137,7 +137,7 @@ procedure Register;
 
 implementation
 
-uses ComObj, CommCtrl, ClassCallback, MonitorFunc;
+uses ComObj, CommCtrl, MonitorFunc;
 
 const
   CommonAVIId: array[TCommonAVI] of Integer =
