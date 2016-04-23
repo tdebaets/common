@@ -24,16 +24,17 @@ rem **************************************************************************
 
 setlocal
 
-rem  Units in LibFixed to compile separately
+rem  Units in LibFixed to compile separately (keep alphabetical please)
 set LIBFIXED_UNITS= ^
     Controls.pas ^
     ComCtrls.pas
 
-rem  Units in Imports to compile separately
+rem  Units in Imports to compile separately (keep alphabetical please)
 set IMPORTS_UNITS= ^
+    Accessibility_TLB.pas ^
     SHDocVw_TLB.pas
 
-rem Units in LibUser to compile separately
+rem Units in LibUser to compile separately (keep alphabetical please)
 set LIBUSER_UNITS= ^
     GIFImage.pas ^
     HugeIni.pas ^
