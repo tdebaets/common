@@ -27,7 +27,9 @@ setlocal
 rem  Units in LibFixed to compile separately (keep alphabetical please)
 set LIBFIXED_UNITS= ^
     Controls.pas ^
-    ComCtrls.pas
+    ComCtrls.pas ^
+    FormDefs.pas ^
+    Forms.pas
 
 rem  Units in Imports to compile separately (keep alphabetical please)
 set IMPORTS_UNITS= ^
