@@ -52,6 +52,8 @@ procedure AutosizeListViewColumns(ListView: TCustomListView);
 
 procedure SetMemoHeightInLines(Memo: TCustomMemo; Lines: Cardinal);
 
+procedure ScrollRectInView(ScrollBox: TScrollBox; Rect: TRect);
+
 implementation
 
 function ProcessAppMessages: Boolean;
@@ -263,6 +265,35 @@ begin
     ReleaseDC(Memo.Handle, DC);
   end;
   Memo.Height := Memo.Height + TextRect.Bottom - EditRect.Bottom;
+end;
+
+// Almost literally copy-pasted from Delphi 4's TScrollingWinControl.ScrollInView,
+// but this takes a TRect (with client coordinates) as parameter instead of a
+// TControl.
+procedure ScrollRectInView(ScrollBox: TScrollBox; Rect: TRect);
+begin
+  with ScrollBox do begin
+    Dec(Rect.Left, HorzScrollBar.Margin);
+    Inc(Rect.Right, HorzScrollBar.Margin);
+    Dec(Rect.Top, VertScrollBar.Margin);
+    Inc(Rect.Bottom, VertScrollBar.Margin);
+    if Rect.Left < 0 then
+      with HorzScrollBar do Position := Position + Rect.Left
+    else if Rect.Right > ClientWidth then
+    begin
+      if Rect.Right - Rect.Left > ClientWidth then
+        Rect.Right := Rect.Left + ClientWidth;
+      with HorzScrollBar do Position := Position + Rect.Right - ClientWidth;
+    end;
+    if Rect.Top < 0 then
+      with VertScrollBar do Position := Position + Rect.Top
+    else if Rect.Bottom > ClientHeight then
+    begin
+      if Rect.Bottom - Rect.Top > ClientHeight then
+        Rect.Bottom := Rect.Top + ClientHeight;
+      with VertScrollBar do Position := Position + Rect.Bottom - ClientHeight;
+    end;
+  end;
 end;
 
 end.
