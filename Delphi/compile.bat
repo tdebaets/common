@@ -136,7 +136,7 @@ ren tdebaets_comps.cfg.main tdebaets_comps.cfg
 if errorlevel 1 goto failed
 set CFGFILE=tdebaets_comps.cfg
 "%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
-    -U"%COMMON_LIB_PATH%;Virtual Treeview\Source;Virtual Treeview\Design" ^
+    -U"%COMMON_LIB_PATH%;..\Imports;Virtual Treeview\Source;Virtual Treeview\Design" ^
     -R"%DELPHIROOT%\lib" ^
     tdebaets_comps.dpk
 if errorlevel 1 goto failed

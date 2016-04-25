@@ -24,21 +24,31 @@ unit EnhScrollBox;
 
 interface
 
-uses Windows, Classes, Messages, Controls, Forms, FormDefs, Common2;
+uses Windows, Classes, Messages, Controls, Forms, FormDefs, ActiveX, CtrlsCommon,
+    Common2;
 
 type
   TEnhScrollBox = class(TScrollBox)
   private
     fFocusOnClick: Boolean;
+    fpWinEventStub: Pointer;
+    fhWinEventHook: THandle;
     procedure DoFocusOnClick;
     procedure CMAutoScrollInView(var Message: TCMAutoScrollInView);
         message CM_AUTO_SCROLL_IN_VIEW;
+    procedure WinEventProc(hWinEventHook: THandle; event: DWORD;
+        hwnd: HWND; idObject, idChild: Longint;
+        idEventThread, dwmsEventTime: DWORD); stdcall;
   protected
     function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
         MousePos: TPoint): Boolean; override;
     procedure Click; override;
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  published
     property FocusOnClick: Boolean read fFocusOnClick write fFocusOnClick
         default True;
   end;
@@ -47,12 +57,21 @@ procedure Register;
 
 implementation
 
-uses SysLink;
+uses SysLink, ClassCallback, OleAccDLL, Accessibility_TLB;
 
 constructor TEnhScrollBox.Create(AOwner: TComponent);
 begin
   inherited;
   fFocusOnClick := True;
+  fpWinEventStub := CreateStub(Self, @TEnhScrollBox.WinEventProc);
+  fhWinEventHook := 0;
+end;
+
+destructor TEnhScrollBox.Destroy;
+begin
+  DisposeStub(fpWinEventStub);
+  fpWinEventStub := nil;
+  inherited;
 end;
 
 procedure TEnhScrollBox.DoFocusOnClick;
@@ -109,6 +128,53 @@ begin
   inherited;
   if fFocusOnClick then
     DoFocusOnClick;
+end;
+
+procedure TEnhScrollBox.WinEventProc(hWinEventHook: THandle; event: DWORD;
+    hwnd: HWND; idObject, idChild: Longint;
+    idEventThread, dwmsEventTime: DWORD); stdcall;
+var
+  hr: HResult;
+  Accessible: IAccessible;
+  VarChild: OleVariant;
+  Left, Top, Width, Height: Integer;
+  URLRect: TRect;
+begin
+  if (event = EVENT_OBJECT_FOCUS) and (idObject = Longint(OBJID_CLIENT))
+      and (idChild <> CHILDID_SELF) // URLs only, not the SysLink itself
+      and (hwnd <> 0) and (GetParent(hwnd) = Handle) then begin
+    VariantInit(VarChild);
+    hr := AccessibleObjectFromEvent(hwnd, idObject, idChild, Accessible,
+        VarChild);
+    if Succeeded(hr) and Assigned(Accessible) then begin
+      if Succeeded(Accessible.accLocation(Left, Top, Width, Height,
+          VarChild)) then begin
+        URLRect := Rect(Left, Top, Left + Width, Top + Height);
+        URLRect.TopLeft := ScreenToClient(URLRect.TopLeft);
+        URLRect.BottomRight := ScreenToClient(URLRect.BottomRight);
+        ScrollRectInView(Self, URLRect);
+      end;
+    end;
+  end;
+end;
+
+procedure TEnhScrollBox.CreateWnd;
+var
+  ProcID, ThreadID: Cardinal;
+begin
+  inherited;
+  ThreadID := GetWindowThreadProcessId(Handle, @ProcID);
+  fhWinEventHook := SetWinEventHook(EVENT_OBJECT_FOCUS, EVENT_OBJECT_FOCUS, 0,
+      fpWinEventStub, ProcID, ThreadID, WINEVENT_OUTOFCONTEXT);
+end;
+
+procedure TEnhScrollBox.DestroyWnd;
+begin
+  if fhWinEventHook <> 0 then begin
+    UnhookWinEvent(fhWinEventHook);
+    fhWinEventHook := 0;
+  end;
+  inherited;
 end;
 
 procedure Register;
