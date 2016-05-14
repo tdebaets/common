@@ -113,13 +113,30 @@ end;
 
 function TEnhScrollBox.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
     MousePos: TPoint): Boolean;
+var
+  NumLines, ScrollReq, i: Integer;
 begin
   Result := inherited DoMouseWheel(Shift, WheelDelta, MousePos);
   if not Result then begin
-    if Shift * [ssShift..ssCtrl] = [] then begin
-      VertScrollBar.Position := VertScrollBar.Position - WheelDelta;
-      Result := True;
+    if DWORD(Mouse.WheelScrollLines) = WHEEL_PAGESCROLL then begin
+      // page scrolling
+      NumLines := 1;
+      if WheelDelta < 0 then
+        ScrollReq := SB_PAGEDOWN
+      else
+        ScrollReq := SB_PAGEUP;
+    end
+    else begin
+      // line scrolling
+      NumLines := Abs(Mouse.WheelScrollLines * (WheelDelta div WHEEL_DELTA));
+      if WheelDelta < 0 then
+        ScrollReq := SB_LINEDOWN
+      else
+        ScrollReq := SB_LINEUP;
     end;
+    for i := 1 to NumLines do
+      Perform(WM_VSCROLL, ScrollReq, 0);
+    Result := True;
   end;
 end;
 
