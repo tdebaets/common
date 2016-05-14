@@ -155,11 +155,14 @@ var
   DlgCode: Cardinal;
 begin
   inherited;
+  // ignore when Ctrl is pressed, eg. Ctrl+Tab is used for tab controls
+  if GetKeyState(VK_CONTROL) < 0 then
+    Exit; 
   with Message do begin
     // Unexpectedly, the WM_GETDLGCODE handler in SysLinkWindowProc doesn't look
     // at the virtual key code in wParam but instead expects a pointer to a
     // WM_KEYDOWN MSG structure in lParam, see
-    // http://doxygen.reactos.org/d3/d54/syslink_8c_a11d50a58d0178b6dd15bfe2201a9c776.html
+    // https://code.reactos.org/browse/~raw,r=10902/reactos/trunk/reactos/lib/comctl32/syslink.c
     // So we need to generate a 'fake' WM_KEYDOWN MSG to receive the correct
     // result from WM_GETDLGCODE.
     Mask := GetDlgCodeMaskFromKey(CharCode);
