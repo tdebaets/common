@@ -40,7 +40,6 @@ function AddResIconToImageList(ResourceID: PChar;
     ImageList: TImageList): Integer;
 Function FitOnCanvas(Control: TGraphicControl; MyString: String): String;
 procedure SetElevationRequiredState(aControl: TWinControl; Required: Boolean);
-function ShiftStateToKeyData(ShiftState: TShiftState): Longint;
 
 type
   TEnumControlProc = function(Control: TControl; Data: Pointer): Boolean of object;
@@ -153,19 +152,6 @@ end;
 procedure SetElevationRequiredState(aControl: TWinControl; Required: Boolean);
 begin
   SendMessage(aControl.Handle, BCM_SETSHIELD, 0, Integer(Required));
-end;
-
-function ShiftStateToKeyData(ShiftState: TShiftState): Longint;
-const
-  AltMask = $20000000;
-begin
-  Result := 0;
-  if ssShift in ShiftState then
-    Result := Result or VK_SHIFT;
-  if ssCtrl in ShiftState then
-    Result := Result or VK_CONTROL;
-  if ssAlt in ShiftState then
-    Result := Result or AltMask;
 end;
 
 function EnumControls(Container: TWinControl; Proc: TEnumControlProc;
