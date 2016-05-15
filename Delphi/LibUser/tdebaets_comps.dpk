@@ -87,7 +87,6 @@ contains
   ATImageBox in 'ATImageBox.pas',
   EnhHotkey in 'EnhHotkey.pas',
   SizeGrip in 'SizeGrip.pas',
-  RichEditViewer in 'RichEditViewer.pas',
   EnhScrollBox in 'EnhScrollBox.pas';
 
 end.
