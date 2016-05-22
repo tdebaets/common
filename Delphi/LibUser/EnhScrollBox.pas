@@ -34,17 +34,20 @@ type
     fpWinEventStub: Pointer;
     fhWinEventHook: THandle;
     procedure DoFocusOnClick;
-    procedure CMAutoScrollInView(var Message: TCMAutoScrollInView);
-        message CM_AUTO_SCROLL_IN_VIEW;
+    procedure HookWinEvents;
+    procedure UnhookWinEvents;
     procedure WinEventProc(hWinEventHook: THandle; event: DWORD;
         hwnd: HWND; idObject, idChild: Longint;
         idEventThread, dwmsEventTime: DWORD); stdcall;
+    procedure WMNCDestroy(var Message: TWMNCDestroy); message WM_NCDESTROY;
+    procedure CMAutoScrollInView(var Message: TCMAutoScrollInView);
+        message CM_AUTO_SCROLL_IN_VIEW;
   protected
     function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
         MousePos: TPoint): Boolean; override;
     procedure Click; override;
-    procedure CreateWnd; override;
-    procedure DestroyWnd; override;
+    procedure CreateWindowHandle(const Params: TCreateParams); override;
+    procedure DestroyWindowHandle; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -69,9 +72,11 @@ end;
 
 destructor TEnhScrollBox.Destroy;
 begin
+  inherited;
+  // dispose stub *after* calling the inherited method to make sure that
+  // UnhookWinEvents has been called first
   DisposeStub(fpWinEventStub);
   fpWinEventStub := nil;
-  inherited;
 end;
 
 procedure TEnhScrollBox.DoFocusOnClick;
@@ -93,6 +98,60 @@ begin
   // Fallback: set focus on ourselves. The downside of this is that there's no
   // indication of the focus to the user.
   SetFocus;
+end;
+
+procedure TEnhScrollBox.HookWinEvents;
+var
+  ProcID, ThreadID: Cardinal;
+begin
+  ThreadID := GetWindowThreadProcessId(Handle, @ProcID);
+  fhWinEventHook := SetWinEventHook(EVENT_OBJECT_FOCUS, EVENT_OBJECT_FOCUS, 0,
+      fpWinEventStub, ProcID, ThreadID, WINEVENT_OUTOFCONTEXT);
+end;
+
+procedure TEnhScrollBox.UnhookWinEvents;
+begin
+  if fhWinEventHook <> 0 then begin
+    UnhookWinEvent(fhWinEventHook);
+    fhWinEventHook := 0;
+  end;
+end;
+
+procedure TEnhScrollBox.WinEventProc(hWinEventHook: THandle; event: DWORD;
+    hwnd: HWND; idObject, idChild: Longint;
+    idEventThread, dwmsEventTime: DWORD); stdcall;
+var
+  hr: HResult;
+  Accessible: IAccessible;
+  VarChild: OleVariant;
+  Left, Top, Width, Height: Integer;
+  URLRect: TRect;
+begin
+  if (event = EVENT_OBJECT_FOCUS) and (idObject = Longint(OBJID_CLIENT))
+      and (idChild <> CHILDID_SELF) // URLs only, not the SysLink itself
+      and (hwnd <> 0) and (GetParent(hwnd) = Handle) then begin
+    VariantInit(VarChild);
+    hr := AccessibleObjectFromEvent(hwnd, idObject, idChild, Accessible,
+        VarChild);
+    if Succeeded(hr) and Assigned(Accessible) then begin
+      if Succeeded(Accessible.accLocation(Left, Top, Width, Height,
+          VarChild)) then begin
+        URLRect := Rect(Left, Top, Left + Width, Top + Height);
+        URLRect.TopLeft := ScreenToClient(URLRect.TopLeft);
+        URLRect.BottomRight := ScreenToClient(URLRect.BottomRight);
+        ScrollRectInView(Self, URLRect);
+      end;
+    end;
+  end;
+end;
+
+procedure TEnhScrollBox.WMNCDestroy(var Message: TWMNCDestroy);
+begin
+  // DestroyWnd/DestroyWindowHandle only gets called when the handle is
+  // recreated! To handle control destruction, we need to cleanup on
+  // WM_NCDESTROY.
+  UnhookWinEvents;
+  inherited;
 end;
 
 procedure TEnhScrollBox.CMAutoScrollInView(var Message: TCMAutoScrollInView);
@@ -147,50 +206,15 @@ begin
     DoFocusOnClick;
 end;
 
-procedure TEnhScrollBox.WinEventProc(hWinEventHook: THandle; event: DWORD;
-    hwnd: HWND; idObject, idChild: Longint;
-    idEventThread, dwmsEventTime: DWORD); stdcall;
-var
-  hr: HResult;
-  Accessible: IAccessible;
-  VarChild: OleVariant;
-  Left, Top, Width, Height: Integer;
-  URLRect: TRect;
-begin
-  if (event = EVENT_OBJECT_FOCUS) and (idObject = Longint(OBJID_CLIENT))
-      and (idChild <> CHILDID_SELF) // URLs only, not the SysLink itself
-      and (hwnd <> 0) and (GetParent(hwnd) = Handle) then begin
-    VariantInit(VarChild);
-    hr := AccessibleObjectFromEvent(hwnd, idObject, idChild, Accessible,
-        VarChild);
-    if Succeeded(hr) and Assigned(Accessible) then begin
-      if Succeeded(Accessible.accLocation(Left, Top, Width, Height,
-          VarChild)) then begin
-        URLRect := Rect(Left, Top, Left + Width, Top + Height);
-        URLRect.TopLeft := ScreenToClient(URLRect.TopLeft);
-        URLRect.BottomRight := ScreenToClient(URLRect.BottomRight);
-        ScrollRectInView(Self, URLRect);
-      end;
-    end;
-  end;
-end;
-
-procedure TEnhScrollBox.CreateWnd;
-var
-  ProcID, ThreadID: Cardinal;
+procedure TEnhScrollBox.CreateWindowHandle(const Params: TCreateParams);
 begin
   inherited;
-  ThreadID := GetWindowThreadProcessId(Handle, @ProcID);
-  fhWinEventHook := SetWinEventHook(EVENT_OBJECT_FOCUS, EVENT_OBJECT_FOCUS, 0,
-      fpWinEventStub, ProcID, ThreadID, WINEVENT_OUTOFCONTEXT);
+  HookWinEvents;
 end;
 
-procedure TEnhScrollBox.DestroyWnd;
+procedure TEnhScrollBox.DestroyWindowHandle;
 begin
-  if fhWinEventHook <> 0 then begin
-    UnhookWinEvent(fhWinEventHook);
-    fhWinEventHook := 0;
-  end;
+  UnhookWinEvents;
   inherited;
 end;
 
