@@ -24,7 +24,7 @@ rem **************************************************************************
 
 setlocal
 
-git submodule --quiet foreach "$toplevel/common/Scripts/checksubmodchanges.sh $name" 2> NUL
+git submodule --quiet foreach "\"$toplevel/common/Scripts/checksubmodchanges.sh\" $name" 2> NUL
 if errorlevel 1 goto failed
 
 goto exit
