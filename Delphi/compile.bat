@@ -54,10 +54,8 @@ set OLDCFGFILE=
 rem  Quiet compile / Build all / Output warnings
 set DCC32OPTS=-Q -B -W
 
-rem  Generate semi-unique string for temporary file renames
-for /f "delims=:., tokens=1-4" %%t in ("%TIME: =0%") do (
-    set UNIQUESTR=%%t%%u%%v%%w
-)
+rem Generate unique number for temporary file renames
+set RND=%RANDOM%
 
 rem  Retrieve user-specific settings from file
 if exist ..\userprefs.bat goto userprefsfound
@@ -127,7 +125,7 @@ echo - tdebaets_comps.dpk
 
 rem  Rename user-generated .cfg file if it exists
 if not exist tdebaets_comps.cfg goto tdebaets_comps
-ren tdebaets_comps.cfg tdebaets_comps.cfg.%UNIQUESTR%
+ren tdebaets_comps.cfg tdebaets_comps.cfg.%RND%
 if errorlevel 1 goto failed
 set OLDCFGFILE=tdebaets_comps.cfg
 
@@ -142,7 +140,7 @@ set CFGFILE=tdebaets_comps.cfg
 if errorlevel 1 goto failed
 ren %CFGFILE% %CFGFILE%.main
 set CFGFILE=
-ren %OLDCFGFILE%.%UNIQUESTR% %OLDCFGFILE%
+if not "%OLDCFGFILE%"=="" ren %OLDCFGFILE%.%RND% %OLDCFGFILE%
 set OLDCFGFILE=
 
 echo Success!
@@ -151,7 +149,7 @@ goto exit
 
 :failed
 if not "%CFGFILE%"=="" ren %CFGFILE% %CFGFILE%.main
-if not "%OLDCFGFILE%"=="" ren %OLDCFGFILE%.%UNIQUESTR% %OLDCFGFILE%
+if not "%OLDCFGFILE%"=="" ren %OLDCFGFILE%.%RND% %OLDCFGFILE%
 echo *** FAILED ***
 cd ..
 :failed2
