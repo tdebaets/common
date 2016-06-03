@@ -53,7 +53,7 @@ if errorlevel 1 (
     if errorlevel 1 (
         echo Conflicts found
         echo Resolve the conflicts, then run these commands to complete the update:
-        echo - git add <file>...
+        echo - git add ^<file^>...
         echo - git rebase --continue
         echo - git submodule update
         goto failed2
