@@ -29,6 +29,10 @@ echo Setting up repository...
 git config pull.rebase preserve
 if errorlevel 1 goto failed
 
+rem Check that all submodule commits to push are available on a remote
+git config push.recurseSubmodules check
+if errorlevel 1 goto failed
+
 echo Installing hooks...
 
 rem No permission for regular users in Win7 to create symbolic links, so create
