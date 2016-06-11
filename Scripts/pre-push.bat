@@ -25,7 +25,13 @@ rem **************************************************************************
 setlocal
 
 rem Run project-specific hook if it exists
-if exist Hooks\pre-push.bat call .\Hooks\pre-push.bat
+if exist Hooks\pre-push.bat (
+    call .\Hooks\pre-push.bat
+    if errorlevel 1 goto failed
+)
+
+rem Possibly update the common submodule
+call %~dp0\updatecommon.bat
 if errorlevel 1 goto failed
 
 goto exit
