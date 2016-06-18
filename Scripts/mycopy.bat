@@ -16,19 +16,20 @@ rem * limitations under the License.
 rem *
 rem **************************************************************************
 rem *
-rem * Script to update the repository to the latest changes
+rem * Silent wrapper script around 'copy', but still showing any errors
 rem *
 rem **************************************************************************
 
 setlocal
 
-rem Intentionally not using 'call' here because this script should stop
-rem executing. Otherwise, strange effects can occur if this script gets updated
-rem while it is being executed!
-.\Scripts\updaterepo.bat %*
+copy /y "%1" "%2" >NUL
+if errorlevel 1 (
+    rem 'copy' sends all errors to stdout so echo something ourselves
+    echo Failed to copy %1 to %2
+    goto failed
+)
 
-echo ERROR: We should never get here!
-goto failed
+goto exit
 
 :failed
 exit /b 1

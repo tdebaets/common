@@ -16,21 +16,19 @@ rem * limitations under the License.
 rem *
 rem **************************************************************************
 rem *
-rem * Script to update the repository to the latest changes
+rem * Script to let another script delete itself and then exit
 rem *
 rem **************************************************************************
 
+rem NOTE: this script should never be invoked by using 'call', otherwise there
+rem will be an ugly "The batch file cannot be found." error message.
+
 setlocal
 
-rem Intentionally not using 'call' here because this script should stop
-rem executing. Otherwise, strange effects can occur if this script gets updated
-rem while it is being executed!
-.\Scripts\updaterepo.bat %*
+if "%1"=="" (
+    echo ERROR: at least 1 argument expected
+    exit /b 1
+)
 
-echo ERROR: We should never get here!
-goto failed
-
-:failed
-exit /b 1
-
-:exit
+del %1
+exit /b %2

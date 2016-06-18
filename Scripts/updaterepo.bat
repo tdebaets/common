@@ -20,7 +20,11 @@ rem * Script to update a repository to its latest changes
 rem *
 rem **************************************************************************
 
-setlocal
+rem NOTE: any other script in the repository that calls this script needs to
+rem take precautions to prevent the script from being updated while it is being
+rem executed.
+
+setlocal enabledelayedexpansion
 
 if exist common (
     set SCRIPTPATH=.\common\Scripts
@@ -28,15 +32,28 @@ if exist common (
     set SCRIPTPATH=.\Scripts
 )
 
+rem Strange effects can occur if this script is updated while it is being
+rem executed. Therefore, we first create a temporary copy of ourselves and
+rem then transfer execution to that copy.
+set BATCHNAME=%~nx0
+set BATCHSUFFIX=%BATCHNAME:~-8%
+set BATCHTMPNAME=
+if not "%BATCHSUFFIX%"==".tmp.bat" (
+    set BATCHTMPNAME=%~n0.tmp.bat
+    call %SCRIPTPATH%\mycopy.bat "%~f0" "!BATCHTMPNAME%!"
+    if errorlevel 1 goto failed
+    .\!BATCHTMPNAME!
+)
+
 echo Checking repository...
 
-git status --porcelain > NUL
+git status --porcelain >NUL
 if errorlevel 1 (
     echo git status FAILED
     goto failed
 )
 
-for /F %%i in ('git status --porcelain') do (
+for /f %%i in ('git status --porcelain') do (
     echo Uncommitted local changes found; cannot continue
     goto failed2
 )
@@ -66,12 +83,15 @@ if errorlevel 1 (
 git submodule update
 if errorlevel 1 goto failed
 
-echo Success!
+echo Success^^!
 goto exit
 
 :failed
 echo *** FAILED ***
 :failed2
-exit /b 1
+set ERRCODE=1
+if "%BATCHSUFFIX%"==".tmp.bat" %SCRIPTPATH%\deleteselfandexit.bat "%~f0" %ERRCODE%
+exit /b %ERRCODE%
 
 :exit
+if "%BATCHSUFFIX%"==".tmp.bat" %SCRIPTPATH%\deleteselfandexit.bat "%~f0"

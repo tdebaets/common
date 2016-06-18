@@ -34,6 +34,9 @@ __history/
 # User-specific settings (e.g. paths)
 userprefs.bat
 
+# Temporary batch file copies
+*.tmp.bat
+
 # Per-project compiler options created by Delphi
 # <project-name>.cfg.main is always used instead for command-line compile
 tdebaets_comps.cfg
