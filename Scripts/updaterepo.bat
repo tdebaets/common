@@ -26,12 +26,6 @@ rem executed.
 
 setlocal enabledelayedexpansion
 
-if exist common (
-    set SCRIPTPATH=.\common\Scripts
-) else (
-    set SCRIPTPATH=.\Scripts
-)
-
 rem Strange effects can occur if this script is updated while it is being
 rem executed. Therefore, we first create a temporary copy of ourselves and
 rem then transfer execution to that copy.
@@ -39,10 +33,12 @@ set BATCHNAME=%~nx0
 set BATCHSUFFIX=%BATCHNAME:~-8%
 set BATCHTMPNAME=
 if not "%BATCHSUFFIX%"==".tmp.bat" (
-    set BATCHTMPNAME=%~n0.tmp.bat
-    call %SCRIPTPATH%\mycopy.bat "%~f0" "!BATCHTMPNAME%!"
+    set BATCHTMPNAME=%~dpn0.tmp.bat
+    call %~dp0\mycopy.bat "%~f0" "!BATCHTMPNAME%!"
     if errorlevel 1 goto failed
-    .\!BATCHTMPNAME!
+    rem Transfer execution to temporary copy
+    !BATCHTMPNAME!
+    if errorlevel 1 goto failed
 )
 
 echo Checking repository...
@@ -60,13 +56,13 @@ for /f %%i in ('git status --porcelain') do (
 
 echo Checking submodules...
 
-call %SCRIPTPATH%\checksubmodchanges.bat
+call %~dp0\checksubmodchanges.bat
 if errorlevel 1 goto failed2
 
 git pull %*
 if errorlevel 1 (
     echo git pull failed; checking for conflicts
-    call %SCRIPTPATH%\checkconflicts.bat
+    call %~dp0\checkconflicts.bat
     if errorlevel 1 (
         echo Conflicts found
         echo Resolve the conflicts, then run these commands to complete the update:
@@ -90,8 +86,8 @@ goto exit
 echo *** FAILED ***
 :failed2
 set ERRCODE=1
-if "%BATCHSUFFIX%"==".tmp.bat" %SCRIPTPATH%\deleteselfandexit.bat "%~f0" %ERRCODE%
+if "%BATCHSUFFIX%"==".tmp.bat" %~dp0\deleteselfandexit.bat "%~f0" %ERRCODE%
 exit /b %ERRCODE%
 
 :exit
-if "%BATCHSUFFIX%"==".tmp.bat" %SCRIPTPATH%\deleteselfandexit.bat "%~f0"
+if "%BATCHSUFFIX%"==".tmp.bat" %~dp0\deleteselfandexit.bat "%~f0"

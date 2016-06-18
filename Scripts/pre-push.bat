@@ -22,7 +22,22 @@ rem * Git pre-push hook
 rem *
 rem **************************************************************************
 
-setlocal
+setlocal enabledelayedexpansion
+
+rem Strange effects can occur if this script is updated while it is being
+rem executed. Therefore, we first create a temporary copy of ourselves and
+rem then transfer execution to that copy.
+set BATCHNAME=%~nx0
+set BATCHSUFFIX=%BATCHNAME:~-8%
+set BATCHTMPNAME=
+if not "%BATCHSUFFIX%"==".tmp.bat" (
+    set BATCHTMPNAME=%~dpn0.tmp.bat
+    call %~dp0\mycopy.bat "%~f0" "!BATCHTMPNAME%!"
+    if errorlevel 1 goto failed
+    rem Transfer execution to temporary copy
+    !BATCHTMPNAME!
+    if errorlevel 1 goto failed
+)
 
 rem Run project-specific hook if it exists
 if exist Hooks\pre-push.bat (
@@ -38,6 +53,9 @@ goto exit
 
 :failed
 echo *** pre-push FAILED ***
-exit /b 1
+set ERRCODE=1
+if "%BATCHSUFFIX%"==".tmp.bat" %~dp0\deleteselfandexit.bat "%~f0" %ERRCODE%
+exit /b %ERRCODE%
 
 :exit
+if "%BATCHSUFFIX%"==".tmp.bat" %~dp0\deleteselfandexit.bat "%~f0"
