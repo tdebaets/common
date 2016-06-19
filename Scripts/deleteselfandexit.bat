@@ -25,7 +25,7 @@ rem will be an ugly "The batch file cannot be found." error message.
 
 setlocal
 
-if "%1"=="" (
+if [%1]==[] (
     echo ERROR: at least 1 argument expected
     exit /b 1
 )

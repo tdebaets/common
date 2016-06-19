@@ -22,7 +22,8 @@ rem **************************************************************************
 
 setlocal
 
-copy /y "%1" "%2" >NUL
+rem Arguments are assumed to be already quoted
+copy /y %1 %2 >NUL
 if errorlevel 1 (
     rem 'copy' sends all errors to stdout so echo something ourselves
     echo Failed to copy %1 to %2
