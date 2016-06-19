@@ -21,7 +21,7 @@ rem *
 rem **************************************************************************
 
 rem NOTE: any other script in the repository that calls this script needs to
-rem take precautions to prevent the script from being updated while it is being
+rem take precautions to prevent itself from being updated while it's being
 rem executed.
 
 setlocal enabledelayedexpansion

@@ -22,7 +22,25 @@ rem * Script to auto-update the common submodule before pushing
 rem *
 rem **************************************************************************
 
-setlocal
+rem NOTE: any other script in common that calls this script needs to take
+rem precautions to prevent itself from being updated while it's being executed.
+
+setlocal enabledelayedexpansion
+
+rem Strange effects can occur if this script is updated while it is being
+rem executed. Therefore, we first create a temporary copy of ourselves and
+rem then transfer execution to that copy.
+set BATCHNAME=%~nx0
+set BATCHSUFFIX=%BATCHNAME:~-8%
+set BATCHTMPNAME=
+if not "%BATCHSUFFIX%"==".tmp.bat" (
+    set BATCHTMPNAME=%~dpn0.tmp.bat
+    call %~dp0\mycopy.bat "%~f0" "!BATCHTMPNAME%!"
+    if errorlevel 1 goto failed
+    rem Transfer execution to temporary copy
+    !BATCHTMPNAME!
+    if errorlevel 1 goto failed
+)
 
 rem Bail out if the common submodule isn't present
 if not exist common goto exit
@@ -71,7 +89,7 @@ for /F %%i in ('git diff common 2^>NUL') do (
     goto common_updated
 )
 
-echo common is still up-to-date!
+echo common is still up-to-date^^!
 goto exit
 
 :common_updated
@@ -101,10 +119,12 @@ echo You should at least recompile and possibly also retest the changes.
 echo Then try pushing again.
 echo *** push ABORTED ***
 
-exit /b 1
+rem Fall through to return exit code and abort the git push
 
 :failed
-
-exit /b 1
+set ERRCODE=1
+if "%BATCHSUFFIX%"==".tmp.bat" %~dp0\deleteselfandexit.bat "%~f0" %ERRCODE%
+exit /b %ERRCODE%
 
 :exit
+if "%BATCHSUFFIX%"==".tmp.bat" %~dp0\deleteselfandexit.bat "%~f0"
