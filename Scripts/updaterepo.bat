@@ -59,6 +59,8 @@ echo Checking submodules...
 call %~dp0\checksubmodchanges.bat
 if errorlevel 1 goto failed2
 
+echo Pulling...
+
 git pull %*
 if errorlevel 1 (
     echo git pull failed; checking for conflicts
@@ -78,6 +80,11 @@ if errorlevel 1 (
 
 git submodule update
 if errorlevel 1 goto failed
+
+if exist Scripts\postupdate.bat (
+    call .\Scripts\postupdate.bat
+    if errorlevel 1 goto failed
+)
 
 echo Success^^!
 goto exit

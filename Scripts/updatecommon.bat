@@ -110,7 +110,7 @@ if "%LATEST_REV_SHA%"=="" (
     goto failed
 )
 
-set MESSAGE="Update of submodule 'common' by %~nx0 to %LATEST_REV_SHA%"
+set MESSAGE="Update of submodule 'common' by updatecommon.bat to %LATEST_REV_SHA%"
 git commit -m %MESSAGE% common
 if errorlevel 1 goto failed
 

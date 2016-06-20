@@ -27,6 +27,9 @@ rem executing. Otherwise, strange effects can occur if this script gets updated
 rem while it is being executed!
 .\Scripts\updaterepo.bat %*
 
+rem If any processing is needed after the update, it should be added to the
+rem Scripts\postupdate.bat file
+
 echo ERROR: We should never get here!
 goto failed
 
