@@ -34,10 +34,10 @@ set BATCHSUFFIX=%BATCHNAME:~-8%
 set BATCHTMPNAME=
 if not "%BATCHSUFFIX%"==".tmp.bat" (
     set BATCHTMPNAME=%~dpn0.tmp.bat
-    call %~dp0\mycopy.bat "%~f0" "!BATCHTMPNAME%!"
+    call "%~dp0\mycopy.bat" "%~f0" "!BATCHTMPNAME%!"
     if errorlevel 1 goto failed
     rem Transfer execution to temporary copy
-    !BATCHTMPNAME!
+    "!BATCHTMPNAME!"
     if errorlevel 1 goto failed
 )
 
@@ -56,7 +56,7 @@ for /f %%i in ('git status --porcelain') do (
 
 echo Checking submodules...
 
-call %~dp0\checksubmodchanges.bat
+call "%~dp0\checksubmodchanges.bat"
 if errorlevel 1 goto failed2
 
 echo Pulling...
@@ -64,7 +64,7 @@ echo Pulling...
 git pull %*
 if errorlevel 1 (
     echo git pull failed; checking for conflicts
-    call %~dp0\checkconflicts.bat
+    call "%~dp0\checkconflicts.bat"
     if errorlevel 1 (
         echo Conflicts found
         echo Resolve the conflicts, then run these commands to complete the update:
@@ -93,8 +93,8 @@ goto exit
 echo *** FAILED ***
 :failed2
 set ERRCODE=1
-if "%BATCHSUFFIX%"==".tmp.bat" %~dp0\deleteselfandexit.bat "%~f0" %ERRCODE%
+if "%BATCHSUFFIX%"==".tmp.bat" "%~dp0\deleteselfandexit.bat" "%~f0" %ERRCODE%
 exit /b %ERRCODE%
 
 :exit
-if "%BATCHSUFFIX%"==".tmp.bat" %~dp0\deleteselfandexit.bat "%~f0"
+if "%BATCHSUFFIX%"==".tmp.bat" "%~dp0\deleteselfandexit.bat" "%~f0"

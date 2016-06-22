@@ -32,10 +32,10 @@ set BATCHSUFFIX=%BATCHNAME:~-8%
 set BATCHTMPNAME=
 if not "%BATCHSUFFIX%"==".tmp.bat" (
     set BATCHTMPNAME=%~dpn0.tmp.bat
-    call %~dp0\mycopy.bat "%~f0" "!BATCHTMPNAME%!"
+    call "%~dp0\mycopy.bat" "%~f0" "!BATCHTMPNAME%!"
     if errorlevel 1 goto failed
     rem Transfer execution to temporary copy
-    !BATCHTMPNAME!
+    "!BATCHTMPNAME!"
     if errorlevel 1 goto failed
 )
 
@@ -46,7 +46,7 @@ if exist Hooks\pre-push.bat (
 )
 
 rem Possibly update the common submodule
-call %~dp0\updatecommon.bat
+call "%~dp0\updatecommon.bat"
 if errorlevel 1 goto failed
 
 goto exit
@@ -54,8 +54,8 @@ goto exit
 :failed
 echo *** pre-push FAILED ***
 set ERRCODE=1
-if "%BATCHSUFFIX%"==".tmp.bat" %~dp0\deleteselfandexit.bat "%~f0" %ERRCODE%
+if "%BATCHSUFFIX%"==".tmp.bat" "%~dp0\deleteselfandexit.bat" "%~f0" %ERRCODE%
 exit /b %ERRCODE%
 
 :exit
-if "%BATCHSUFFIX%"==".tmp.bat" %~dp0\deleteselfandexit.bat "%~f0"
+if "%BATCHSUFFIX%"==".tmp.bat" "%~dp0\deleteselfandexit.bat" "%~f0"

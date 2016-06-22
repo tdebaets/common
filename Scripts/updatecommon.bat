@@ -35,10 +35,10 @@ set BATCHSUFFIX=%BATCHNAME:~-8%
 set BATCHTMPNAME=
 if not "%BATCHSUFFIX%"==".tmp.bat" (
     set BATCHTMPNAME=%~dpn0.tmp.bat
-    call %~dp0\mycopy.bat "%~f0" "!BATCHTMPNAME%!"
+    call "%~dp0\mycopy.bat" "%~f0" "!BATCHTMPNAME%!"
     if errorlevel 1 goto failed
     rem Transfer execution to temporary copy
-    !BATCHTMPNAME!
+    "!BATCHTMPNAME!"
     if errorlevel 1 goto failed
 )
 
@@ -123,8 +123,8 @@ rem Fall through to return exit code and abort the git push
 
 :failed
 set ERRCODE=1
-if "%BATCHSUFFIX%"==".tmp.bat" %~dp0\deleteselfandexit.bat "%~f0" %ERRCODE%
+if "%BATCHSUFFIX%"==".tmp.bat" "%~dp0\deleteselfandexit.bat" "%~f0" %ERRCODE%
 exit /b %ERRCODE%
 
 :exit
-if "%BATCHSUFFIX%"==".tmp.bat" %~dp0\deleteselfandexit.bat "%~f0"
+if "%BATCHSUFFIX%"==".tmp.bat" "%~dp0\deleteselfandexit.bat" "%~f0"
