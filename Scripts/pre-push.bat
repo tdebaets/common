@@ -24,6 +24,9 @@ rem **************************************************************************
 
 setlocal enabledelayedexpansion
 
+echo pre-push: %*
+exit /b 1
+
 rem Strange effects can occur if this script is updated while it is being
 rem executed. Therefore, we first create a temporary copy of ourselves and
 rem then transfer execution to that copy.
