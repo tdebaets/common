@@ -26,7 +26,7 @@ setlocal
 
 rem Run project-specific hook if it exists
 if exist Hooks\post-checkout.bat (
-    call .\Hooks\post-checkout.bat
+    call .\Hooks\post-checkout.bat %*
     if errorlevel 1 goto failed
 )
 

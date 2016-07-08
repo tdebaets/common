@@ -41,7 +41,7 @@ if not "%BATCHSUFFIX%"==".tmp.bat" (
 
 rem Run project-specific hook if it exists
 if exist Hooks\pre-push.bat (
-    call .\Hooks\pre-push.bat
+    call .\Hooks\pre-push.bat %*
     if errorlevel 1 goto failed
 )
 
