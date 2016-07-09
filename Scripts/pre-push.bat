@@ -46,7 +46,7 @@ if exist Hooks\pre-push.bat (
 )
 
 rem Possibly update the common submodule
-call "%~dp0\updatecommon.bat"
+call "%~dp0\autoupdcommon.bat"
 if errorlevel 1 goto failed
 
 goto exit
