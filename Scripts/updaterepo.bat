@@ -37,7 +37,7 @@ if not "%BATCHSUFFIX%"==".tmp.bat" (
     call "%~dp0\mycopy.bat" "%~f0" "!BATCHTMPNAME%!"
     if errorlevel 1 goto failed
     rem Transfer execution to temporary copy
-    "!BATCHTMPNAME!"
+    "!BATCHTMPNAME!" %*
     if errorlevel 1 goto failed
 )
 
@@ -84,7 +84,7 @@ git submodule update
 if errorlevel 1 goto failed
 
 if exist Scripts\postupdate.bat (
-    call .\Scripts\postupdate.bat
+    call .\Scripts\postupdate.bat %*
     if errorlevel 1 goto failed
 )
 
