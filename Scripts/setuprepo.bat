@@ -49,7 +49,7 @@ if exist common (
     set COMMONPATH=
 )
 
-for /f %%i in ("post-checkout!LF!pre-push") do (
+for /f %%i in ("post-checkout!LF!pre-push!LF!post-rewrite!LF!post-merge") do (
     rem Create backup of possible existing hook
     if exist %GITHOOKPATH%\%%i (
         call "%SCRIPTPATH%\mymove.bat" ^
