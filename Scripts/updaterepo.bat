@@ -78,6 +78,8 @@ if errorlevel 1 (
     )
 )
 
+echo Updating submodules...
+
 git submodule update
 if errorlevel 1 goto failed
 

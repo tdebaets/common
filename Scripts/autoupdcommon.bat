@@ -18,7 +18,7 @@ rem * limitations under the License.
 rem *
 rem **************************************************************************
 rem *
-rem * Script to auto-update the common submodule before pushing
+rem * Script to auto-update the common submodule from upstream before pushing
 rem *
 rem **************************************************************************
 

@@ -16,7 +16,8 @@ rem * limitations under the License.
 rem *
 rem **************************************************************************
 rem *
-rem * Script to manually update the common submodule in a repository
+rem * Script to manually update the common submodule in a repository from
+rem * upstream
 rem *
 rem **************************************************************************
 
@@ -28,6 +29,7 @@ if not exist common (
 )
 
 echo Updating common submodule...
+
 git submodule update --remote common
 if errorlevel 1 goto failed
 
