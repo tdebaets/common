@@ -39,10 +39,20 @@ if not "%BATCHSUFFIX%"==".tmp.bat" (
     if errorlevel 1 goto failed
 )
 
+if exist userprefs.bat call .\userprefs.bat
+
 rem Run project-specific hook if it exists
 if exist Hooks\pre-push.bat (
     call .\Hooks\pre-push.bat %*
     if errorlevel 1 goto failed
+)
+
+rem Check for files that were probably forgotten to be committed
+if not "%PUSH_CHECK_FORGOTTEN_FILES%"=="0" (
+    for /f %%i in ('git status --porcelain --untracked-files') do (
+        echo Uncommitted local changes found; cannot continue
+        goto failed
+    )
 )
 
 rem Possibly update the common submodule from upstream

@@ -46,7 +46,7 @@ rem Bail out if the common submodule isn't present
 if not exist common goto exit
 
 rem Check if the common submodule isn't empty
-for /F %%i in ('dir /b /a "common\*" 2^>NUL') do (
+for /f %%i in ('dir /b /a "common\*" 2^>NUL') do (
     rem common submodule folder not empty, ok
     goto common_ok
 )
@@ -57,11 +57,11 @@ goto failed
 :common_ok
 
 rem Check if auto-update is enabled in user prefs
-call .\userprefs.bat
-if not "%AUTO_UPD_COMMON%"=="1" goto exit
+if exist userprefs.bat call .\userprefs.bat
+if not "%PUSH_AUTO_UPD_COMMON%"=="1" goto exit
 
 rem Check if on master branch
-for /F %%i in ('git rev-parse --abbrev-ref HEAD 2^>NUL') do (
+for /f %%i in ('git rev-parse --abbrev-ref HEAD 2^>NUL') do (
     if "%%i"=="master" (
         goto branch_ok
     ) else (
@@ -74,7 +74,7 @@ goto failed
 
 :branch_ok
 
-for /F %%i in ('git status --porcelain') do (
+for /f %%i in ('git status --porcelain') do (
     echo Uncommitted local changes found; cannot continue
     goto failed
 )
@@ -84,7 +84,7 @@ echo Checking if common submodule it still up-to-date...
 git submodule update --remote common
 if errorlevel 1 goto failed
 
-for /F %%i in ('git diff common 2^>NUL') do (
+for /f %%i in ('git diff common 2^>NUL') do (
     echo common was updated, committing...
     goto common_updated
 )
