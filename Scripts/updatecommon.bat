@@ -50,7 +50,7 @@ echo Updating common submodule...
 git submodule update --remote common
 if errorlevel 1 goto failed
 
-echo Success!
+echo Success^^!
 goto exit
 
 :failed
