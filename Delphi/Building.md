@@ -55,3 +55,10 @@ Delphi 4 stores form layouts in binary files (`.dfm`) which of course aren't ver
 To let Delphi automatically create textual mirrors of form layout files, you can install the [GExperts](http://www.gexperts.org/) IDE add-in. This is a requirement if you intend to make any changes to the project's forms.
 
 GExperts isn't being actively developed anymore for older versions of Delphi, but fortunately you can still download version 1.01 for Delphi 4 [here](http://www.gexperts.org/download/#GX101) (`GX4-101.exe`). Follow the installer instructions, launch Delphi again when the installation is finished, and go to `GExperts` - `GExperts Configuration` - `IDE`. Make sure that `Save DFMs as TXT` is ticked.
+
+Notes
+-----
+
+- There seems to be a bug in Delphi 4 where the IDE generates an access violation in module `dcc40.dll` on the first compile (incremental, `Ctrl+F9`) after opening a project. It seems to depend on which project is compiled as not all ones are affected. The workaround is to simply make sure that the first compilation after opening a project is a *full* rebuild (`Project` - `Build <projectname>` in the IDE). All subsequent incremental compilations should then work fine. To avoid being bitten by this bug, it's a good idea to always do a full rebuild immediately after opening a project.
+
+- Most of my Delphi projects support the `Debug` conditional compilation define that include additional debug output in the build, usually in the form of extra calls to the `OutputDebugString` API function. When the project is run under the Delphi debugger, you can capture this output using the `Send OutputDebugString To GExperts` expert. Outside of Delphi, you can use [DebugView](https://technet.microsoft.com/en-us/sysinternals/debugview.aspx) tool.
