@@ -43,4 +43,6 @@ First, make sure that you have built the `common` repository successfully. This 
 > compile.bat
 ```
 
-However, if you also intend to make changes to files in the `common` repository then you should create a separate clone of that repository and build it there.
+However, if you also intend to make changes to files in the `common` repository itself, you should create a separate clone of that repository and build that clone first.
+
+Successful compilation of `common` should lead to the creation of the `tdebaets_comps.bpl` file in `Delphi\LibUser`, which should be added as a design package in the Delphi IDE (`Component` - `Install Packages...`).
