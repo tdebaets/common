@@ -46,3 +46,12 @@ First, make sure that you have built the `common` repository successfully. This 
 However, if you also intend to make changes to files in the `common` repository itself, you should create a separate clone of that repository and build that clone first.
 
 Successful compilation of `common` should lead to the creation of the `tdebaets_comps.bpl` file in `Delphi\LibUser`, which should be added as a design package in the Delphi IDE (`Component` - `Install Packages...`).
+
+Textual Form Layout Files
+-------------------------
+
+Delphi 4 stores form layouts in binary files (`.dfm`) which of course aren't very suited for version control. Therefore, for each such `.dfm` file, a textual mirror is also added to the repository and updated whenever the corresponding binary file is changed. For example, for a binary form layout file called `Main.dfm`, there will also be a textual mirror called `Main.txt`.
+
+To let Delphi automatically create textual mirrors of form layout files, you can install the [GExperts](http://www.gexperts.org/) IDE add-in. This is a requirement if you intend to make any changes to the project's forms.
+
+GExperts isn't being actively developed anymore for older versions of Delphi, but fortunately you can still download version 1.01 for Delphi 4 [here](http://www.gexperts.org/download/#GX101) (`GX4-101.exe`). Follow the installer instructions, launch Delphi again when the installation is finished, and go to `GExperts` - `GExperts Configuration` - `IDE`. Make sure that `Save DFMs as TXT` is ticked.
