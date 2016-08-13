@@ -27,12 +27,10 @@ To keep your clone updated, run the `update.bat` script. This script essentially
 
 If you want to contribute to this project, don't clone its main repository, but create your own fork first and clone that fork instead. Then commit your work on a topic branch and submit a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
-Installing Borland Delphi
--------------------------
-
-
 Building
 --------
+
+A large portion of Common Code Uitilities consists of Borland Delphi 4 source code. This means that in order to build this project, you'll need to have Borland Delphi 4 installed and properly set up. See the [generic instructions for building Delphi projects](Delphi/Building.md).
 
 License
 -------
