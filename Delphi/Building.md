@@ -13,7 +13,7 @@ If you don't have access to Delphi 4 (which is admittedly a *very* old version),
 Building
 --------
 
-To build the project from the command line, open a Windows command prompt in the repository directory, run the `compile.bat` script and follow the instructions.
+To build the project from the command line, open a Windows command prompt in the repository directory (note that Git Bash isn't supported), run the `compile.bat` script and follow the instructions.
 
 If you also want to compile the project from within Delphi, some additional steps are required. These are outlined in the next sections.
 
@@ -61,4 +61,4 @@ Notes
 
 - There seems to be a bug in Delphi 4 where the IDE generates an access violation in module `dcc40.dll` on the first compile (incremental, `Ctrl+F9`) after opening a project. It seems to depend on which project is compiled as not all ones are affected. The workaround is to simply make sure that the first compilation after opening a project is a *full* rebuild (`Project` - `Build <projectname>` in the IDE). All subsequent incremental compilations should then work fine. To avoid being bitten by this bug, it's a good idea to always do a full rebuild immediately after opening a project.
 
-- Most of my Delphi projects support the `Debug` conditional compilation define that include additional debug output in the build, usually in the form of extra calls to the `OutputDebugString` API function. When the project is run under the Delphi debugger, you can capture this output using the `Send OutputDebugString To GExperts` expert. Outside of Delphi, you can use [DebugView](https://technet.microsoft.com/en-us/sysinternals/debugview.aspx) tool.
+- Most of my Delphi projects support the `Debug` conditional compilation define. Compiling with this define includes additional debug output in the build, usually in the form of extra calls to the `OutputDebugString` API function. When the project is run under the Delphi debugger, you can capture this output using the `Send OutputDebugString To GExperts` feature of GExperts. Outside of Delphi, you can use [DebugView](https://technet.microsoft.com/en-us/sysinternals/debugview.aspx) tool.
