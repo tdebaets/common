@@ -20,7 +20,7 @@ If you also want to compile the project from within Delphi, some additional step
 Configuring the Library Path
 ----------------------------
 
-Launch Delphi, go to `Tools` - `Environment Options` - `Library`, and click the `...` button for `Library Path`. Then edit your library path until it matches the following. Note that the relative paths containing `common` should be absolute paths in reality:
+Launch Delphi, go to `Tools` - `Environment Options` - `Library`, and click the `...` button for `Library Path`. Then edit your library path until it matches the following list. Note that the relative paths containing `common` should be absolute paths in reality.
 ```
 common\Delphi\LibFixed
 $(DELPHI)\Lib
@@ -35,7 +35,7 @@ common\Delphi\LibUser\Virtual Treeview\Design
 Package Installation
 --------------------
 
-If you also want to view or edit the project's forms, you need to install some additional design packages so that the Delphi IDE recognizes the third-party components used in these forms. Otherwise, if you just want to edit the code, you can skip this step and choose `Cancel` when the Delphi IDE tells you that a class can't be found.
+If you also want to view or edit the project's forms, you need to install an additional design package so that the Delphi IDE recognizes the third-party components used in these forms. Otherwise, if you just want to edit the code, you can skip this step and choose `Cancel` when the Delphi IDE tells you that a class can't be found.
 
 First, make sure that you have built the `common` repository successfully. This is required to install the `tdebaets_comps.bpl` package. If you cloned a repository that includes `common` as a submodule, open a Windows command prompt in the repository directory and run these commands:
 ```
@@ -43,9 +43,9 @@ First, make sure that you have built the `common` repository successfully. This 
 > compile.bat
 ```
 
-However, if you also intend to make changes to files in the `common` repository itself, you should create a separate clone of that repository and build that clone first.
+However, if you also intend to make changes to files in the `common` repository itself, you should create a separate clone of that repository and build that clone instead.
 
-Successful compilation of `common` should lead to the creation of the `tdebaets_comps.bpl` file in `Delphi\LibUser`, which should be added as a design package in the Delphi IDE (`Component` - `Install Packages...`).
+Successful compilation of `common` should lead to the creation of the `tdebaets_comps.bpl` file in `common\Delphi\LibUser`, which should be added as a design package in the Delphi IDE (`Component` - `Install Packages...`).
 
 Textual Form Layout Files
 -------------------------
