@@ -63,7 +63,7 @@ type
     function GetScrollPos: Integer;
     function NeedsScrollBarVisible: Boolean;
     function IsIncrementStored: Boolean;
-    procedure ScrollMessage(var Msg: TWMScroll);
+    procedure ScrollMessage(var Msg: TWMScroll); // LIBFIXED_MODIFIED
     procedure SetButtonSize(Value: Integer);
     procedure SetColor(Value: TColor);
     procedure SetParentColor(Value: Boolean);
@@ -1739,7 +1739,10 @@ end;
 procedure TControlScrollBar.ScrollMessage(var Msg: TWMScroll);
 var
   Incr, FinalIncr, Count: Integer;
-  CurrentTime, StartTime, ElapsedTime: Longint;
+  // BEGIN_LIBFIXED_MODIFIED
+  //CurrentTime, StartTime, ElapsedTime: Longint;
+  CurrentTime, StartTime, ElapsedTime: DWORD;
+  // END_LIBFIXED_MODIFIED
 
   function GetRealScrollPosition: Integer;
   var
@@ -1782,9 +1785,22 @@ begin
       CurrentTime := 0;
       while Count > 0 do
       begin
-        StartTime := GetCurrentTime;
-        ElapsedTime := StartTime - CurrentTime;
-        if ElapsedTime < FDelay then Sleep(FDelay - ElapsedTime);
+        // BEGIN_LIBFIXED_MODIFIED
+        //StartTime := GetCurrentTime;
+        //ElapsedTime := StartTime - CurrentTime;
+        //if ElapsedTime < FDelay then Sleep(FDelay - ElapsedTime);
+        StartTime := GetTickCount;
+        // We can't simply subtract 2 tickcounts and expect an overflow to
+        // correctly handle a wrap just like in C - Delphi may throw an
+        // EIntOverflow exception.
+        if StartTime >= CurrentTime then
+          ElapsedTime := StartTime - CurrentTime
+        else
+          ElapsedTime := (High(DWORD) - CurrentTime) + StartTime;
+        // casts to DWORD below have been added to silent compiler warnings and
+        // aren't part of the actual fix
+        if ElapsedTime < DWORD(FDelay) then Sleep(DWORD(FDelay) - ElapsedTime);
+        // END_LIBFIXED_MODIFIED
         CurrentTime := StartTime;
         case ScrollCode of
           SB_LINEUP: SetPosition(FPosition - Incr);
