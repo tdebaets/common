@@ -73,6 +73,7 @@ call ..\userprefs.bat
 if "%DELPHIROOT%"=="" goto userprefserror
 
 set COMMON_LIB_PATH=..\LibFixed;%DELPHIROOT%\lib
+set DCU_PATH=..\DCU
 
 rem -------------------------------------------------------------------------
 
@@ -92,6 +93,7 @@ echo - LibFixed
 "%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
     -U"%COMMON_LIB_PATH%" ^
     -R"%DELPHIROOT%\lib" ^
+    -N"%DCU_PATH%" ^
     %LIBFIXED_UNITS%
 if errorlevel 1 goto failed
 
@@ -105,6 +107,7 @@ echo - Imports
 "%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
     -U"%COMMON_LIB_PATH%" ^
     -R"%DELPHIROOT%\lib" ^
+    -N"%DCU_PATH%" ^
     %IMPORTS_UNITS%
 if errorlevel 1 goto failed
 
@@ -118,6 +121,7 @@ echo - LibUser
 "%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
     -U"%COMMON_LIB_PATH%" ^
     -R"%DELPHIROOT%\lib" ^
+    -N"%DCU_PATH%" ^
     %LIBUSER_UNITS%
 if errorlevel 1 goto failed
 
@@ -136,6 +140,7 @@ set CFGFILE=tdebaets_comps.cfg
 "%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
     -U"%COMMON_LIB_PATH%;..\Imports;Virtual Treeview\Source;Virtual Treeview\Design" ^
     -R"%DELPHIROOT%\lib" ^
+    -N"%DCU_PATH%" ^
     tdebaets_comps.dpk
 if errorlevel 1 goto failed
 ren %CFGFILE% %CFGFILE%.main
