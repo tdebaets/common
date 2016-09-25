@@ -41,8 +41,8 @@ ExeDescription=Tim De Baets Components Collection
 [Directories]
 OutputDir=
 UnitOutputDir=..\DCU
-PackageDLLOutputDir=
-PackageDCPOutputDir=
+PackageDLLOutputDir=..\..\Output
+PackageDCPOutputDir=..\..\Output
 SearchPath=
 Packages=
 Conditionals=

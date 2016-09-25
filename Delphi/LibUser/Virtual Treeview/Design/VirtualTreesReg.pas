@@ -321,6 +321,9 @@ var
 begin
   List := TStringList.Create;
   Tree := TClipboardFormats(GetOrdValue).Owner;
+  // TODO: fix unexplicable 'undeclared identifier' compiler error on the following line
+  // The error only occurs when compiling tdebaets_comps from the Delphi IDE,
+  // and doesn't occur with compile.bat
   EnumerateVTClipboardFormats(TVirtualTreeClass(Tree.ClassType), List);
   for I := 0 to List.Count - 1 do
     Proc(TClipboardElement.Create(Self, List[I]));

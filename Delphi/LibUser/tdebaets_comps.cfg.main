@@ -51,5 +51,7 @@
 -M                  // make modified units
 -$M16384,1048576    // min/max stack size
 -K$00400000         // image base address
+-LE"..\..\Output"   // package BPL directory
+-LN"..\..\Output"   // package DCP directory
 -N"..\DCU"          // unit output directory
 -Z                  // disable implicit compilation
