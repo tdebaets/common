@@ -13,7 +13,7 @@ If you don't have access to Delphi 4 (which is admittedly a *very* old version),
 Building
 --------
 
-To build the project from the command line, open a Windows command prompt in the repository directory (note that Git Bash isn't supported), run the `compile.bat` script and follow the instructions.
+To build the project from the command line, open a Windows command prompt in the repository directory (note that Git Bash isn't supported), run the `compile.bat` script, and follow the instructions.
 
 If you also want to compile the project from within Delphi, some additional steps are required. These are outlined in the next sections.
 
@@ -37,7 +37,7 @@ Package Installation
 
 If you also want to view or edit the project's forms, you need to install an additional design package so that the Delphi IDE recognizes the third-party components used in these forms. Otherwise, if you just want to edit the code, you can skip this step and choose `Cancel` when the Delphi IDE tells you that a class can't be found.
 
-First, make sure that you have built the `common` repository successfully. This is required to install the `tdebaets_comps.bpl` package. If you cloned a repository that includes `common` as a submodule, open a Windows command prompt in the repository directory and run these commands:
+First, make sure that you have built the `common` repository successfully. This is required to install the `tdebaets_comps.bpl` package. If you cloned a repository that includes `common` as a submodule, open a Windows command prompt in the repository directory, run these commands, and follow the instructions:
 ```
 > cd common
 > compile.bat
