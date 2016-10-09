@@ -72,6 +72,18 @@ cmd.exe //c "%COMMONPATH%Scripts\%%i.bat $@"
     if errorlevel 1 goto failed
 )
 
+rem Creating output directories for common here so that they are also created
+rem when running this script for a different repository including common as a
+rem submodule.
+
+echo Creating directories in 'common'...
+
+call "%SCRIPTPATH%\createdir.bat" "%COMMONPATH%Output"
+if errorlevel 1 goto failed
+
+call "%SCRIPTPATH%\createdir.bat" "%COMMONPATH%Delphi\DCU"
+if errorlevel 1 goto failed
+
 goto exit
 
 :failed

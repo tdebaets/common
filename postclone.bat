@@ -25,14 +25,6 @@ setlocal
 call .\Scripts\setuprepo.bat %*
 if errorlevel 1 goto failed
 
-echo Creating directories...
-
-call .\Scripts\createdir Output
-if errorlevel 1 goto failed
-
-call .\Scripts\createdir Delphi\DCU
-if errorlevel 1 goto failed
-
 echo Success!
 goto exit
 
