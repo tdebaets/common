@@ -54,7 +54,7 @@ Delphi 4 stores form layouts in binary files (`.dfm`) which of course aren't ver
 
 To let Delphi automatically create textual mirrors of form layout files, you can install the [GExperts](http://www.gexperts.org/) IDE add-in. This is a requirement if you intend to make any changes to the project's forms.
 
-GExperts isn't being actively developed anymore for older versions of Delphi, but fortunately you can still download version 1.01 for Delphi 4 [here](http://www.gexperts.org/download/#GX101) (`GX4-101.exe`). Follow the installer instructions, launch Delphi again when the installation is finished, and go to `GExperts` - `GExperts Configuration` - `IDE`. Make sure that `Save DFMs as TXT` is ticked.
+GExperts isn't being actively developed anymore for older versions of Delphi, but fortunately you can still download version 1.01 for Delphi 4 [here](http://www.gexperts.org/download/#GX101) (`GX4-101.exe`). Follow the installer instructions, launch Delphi again when the installation is finished, and go to `GExperts` - `GExperts Configuration` - `IDE`. Untick `Disable all IDE enhancements`, and tick `Save DFMs as TXT`.
 
 Notes
 -----
