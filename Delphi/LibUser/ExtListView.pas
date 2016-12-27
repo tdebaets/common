@@ -1543,7 +1543,16 @@ begin
 //  RestoreChecks;
   SetSelectionMark(FSelectionMark);
   SetHoverTime(FHoverTime);
+
+  // First, clear all the extended styles that were set by the VCL's
+  // TCustomListView.CreateWnd. This also causes the LVS_EX_CHECKBOXES style to
+  // be set *after* the small image list is set, which fixes a bug in XP with
+  // Large Fonts mode where the listview items appear too large, see
+  // https://social.msdn.microsoft.com/Forums/windows/en-US/d9fe25e8-ceb2-4468-8847-4d8782935873/listview-checkbox-doesnt-show-correctly-with-image-in-the-row?forum=winforms
+  ListView_SetExtendedListViewStyle(Handle, 0);
+
   SetExtendedStyles(FExtendedStyles);
+
   if VirtualMode and (FItemCountEx > 0) then
     SetItemCountEx(FItemCountEx, FItemCountExFlags);
 
