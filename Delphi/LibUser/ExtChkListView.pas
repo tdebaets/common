@@ -27,7 +27,8 @@ unit ExtChkListView;
 interface
 
 uses ExtListView, EnhListView, Windows, Graphics, StdCtrls, Classes, Controls,
-    ComCtrls, NewCommCtrl, Messages, SysUtils, ComStrs, Forms, UxThemeISX, Common2;
+    ComCtrls, NewCommCtrl, Messages, SysUtils, ComStrs, Forms, Math, UxThemeISX,
+    Common2;
 
 const
   LVIS_DISABLED = $40;
@@ -141,6 +142,7 @@ type
     FThemeData: HTHEME;
     FAlphaBlend: TAlphaBlend;
     FMSImgLib: Integer;
+    FIsVistaOrHigher: Boolean;
     FMemStream: TMemoryStream;
     FBeforePrimaryColumnIdx: Integer;
     FProcessItemChecked: Boolean;
@@ -515,8 +517,6 @@ end;
 
 procedure TChkListItem.SetEnabled(Value: Boolean);
 begin
-  // TODO: remove
-  //debug(Self.Caption + ': ' + IIf(Value, 'enabled', 'not enabled'));
   FEnabled := Value;
   ListView.UpdateItems(Self.Index, Self.Index);
 end;
@@ -588,6 +588,7 @@ begin
   FMSImgLib := LoadLibrary( 'msimg32.dll');
   if FMSImgLib <> 0 then
     @FAlphaBlend := GetProcAddress(FMSImgLib, 'AlphaBlend');
+  FIsVistaOrHigher := IsWindowsVistaOrHigher;
 end;
 
 procedure TCustomExtChkListView.CreateWindowHandle(const Params: TCreateParams);
@@ -742,9 +743,7 @@ var
   StateId: Integer;
   IconRect, CheckRect, BoundsRect, StateRect: TRect;
   Selected: Boolean;
-  Space: Integer;
-  {ImageInfo: TImageInfo;
-  Canvas: TCanvas;}
+  MarginTop: Integer;
 const
   CheckStateIds: array [TCheckBoxState, TCheckBoxState2] of Integer =
   (
@@ -786,8 +785,9 @@ begin
   //R.Right := R.Right - (R.Right - R.Left);
   CheckRect.Left := CheckRect.Left + CheckBoxOptions.LeftMargin;
   CheckRect.Right := CheckRect.Left + FCheckWidth;
-  Space := (CheckRect.Bottom - CheckRect.Top - FCheckHeight) div 2;
-  CheckRect.Top := CheckRect.Top + Space;
+  MarginTop := (CheckRect.Bottom - CheckRect.Top - FCheckHeight) div 2;
+  MarginTop := Max(MarginTop, 0);
+  Inc(CheckRect.Top, MarginTop);
   CheckRect.Bottom := CheckRect.Top + FCheckHeight;
   //R.Bottom := R.Bottom - CheckBoxOptions.BottomMargin;
   //R.Top := R.Bottom - FCheckHeight;
@@ -846,10 +846,19 @@ begin
     AlphaHighLight(hdc, CheckRect, FAlphaBlend)
   else if (SmallImages <> nil) and (SmallImages.Handle <> 0) then begin
     if DrawIcon and CheckBoxOptions.GrayedImages and not IEnabled then begin
-      FillRect(hDC, IconRect, ColorToRgb(Color));
+      FillRect(hDC, IconRect, ColorToRGB(Color));
+      // In Large Fonts mode, the height of the item can be larger than the
+      // small images height. In that case, Windows Vista and higher will draw
+      // the icons centered.
+      // So we need to center as well when drawing the (disabled) icon ourselves.
+      if FIsVistaOrHigher then begin
+        MarginTop := (IconRect.Bottom - IconRect.Top - SmallImages.Height) div 2;
+        MarginTop := Max(MarginTop, 0);
+        Inc(IconRect.Top, MarginTop);
+      end;
       ImageList_DrawEx(SmallImages.Handle, Items[Index].ImageIndex, hDC,
-          IconRect.Left, IconRect.Top, 0, 0, CLR_DEFAULT, ColorToRgb(clGrayText),
-          ILD_BLEND50);
+          IconRect.Left, IconRect.Top, SmallImages.Width, SmallImages.Height,
+          CLR_DEFAULT, ColorToRGB(clGrayText), ILD_BLEND50);
     end;
   end;
 end;
