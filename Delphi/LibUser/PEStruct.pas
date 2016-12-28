@@ -132,12 +132,18 @@ type
   end;
 
 function RVAToAbsolute(BaseAddress, Address: Pointer): Pointer;
+function IMAGE_ORDINAL(Ordinal: DWORD): DWORD;
 
 implementation
 
 function RVAToAbsolute(BaseAddress, Address: Pointer): Pointer;
 begin
   Result := Pointer(Cardinal(BaseAddress) + Cardinal(Address));
+end;
+
+function IMAGE_ORDINAL(Ordinal: DWORD): DWORD;
+begin
+  Result := (Ordinal and $0000FFFF);
 end;
 
 end.
