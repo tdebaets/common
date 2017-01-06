@@ -45,4 +45,12 @@ If you want to contribute new code to a project, don't clone its main repository
 
 12. [Open a pull request](https://help.github.com/articles/using-pull-requests/) with a clear title and description.
 
+### Keeping your topic branch up-to-date
+
 To keep your topic branch up-to-date with the changes from upstream, first make sure that you have committed your changes or `git stash` them. Then run `update.bat upstream master` again. Don't forget to `git stash pop` your changes again afterwards if needed.
+
+### Rebasing your topic branch on top of master
+
+If new commits were made upstream before your pull request was merged, then your topic branch will have become outdated and you will probably be asked by the reviewer to rebase your topic branch on top of master. To do so, first run `update.bat upstream master` just like you would normally do to update your topic branch. The difference here however is that this rebases commits that you already pushed to your fork. In other words, you're 'rewriting history', and if you would subsequently try a normal `git push`, it would fail due to the push being non-fast-forward.
+
+
