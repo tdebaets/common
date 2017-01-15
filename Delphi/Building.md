@@ -17,7 +17,7 @@ To build the project from the command line, open a Windows command prompt in the
 
 If you also want to compile the project from within the Delphi IDE, some additional steps are required. These are outlined in the next sections.
 
-Configuring the Library Path
+Configuring the library path
 ----------------------------
 
 Launch Delphi, go to `Tools` - `Environment Options` - `Library`, and click the `...` button for `Library Path`. Then edit your library path until it matches the following list. `COMMONPATH` should be replaced by the full path to the `common` repository or submodule.
@@ -32,7 +32,7 @@ COMMONPATH\Delphi\LibUser\Virtual Treeview\Source
 COMMONPATH\Delphi\LibUser\Virtual Treeview\Design
 ```
 
-Package Installation
+Package installation
 --------------------
 
 If you also want to view or edit the project's forms, you need to install an additional design package so that the Delphi IDE recognizes the third-party components used on these forms. Otherwise, if you just want to edit the code, you can skip this step and choose `Cancel` when the Delphi IDE tells you that a class can't be found.
@@ -47,7 +47,7 @@ However, if you intend to also make changes to files in the `common` repository 
 
 Successful compilation of `common` should result in the creation of the `tdebaets_comps.bpl` file in `COMMONPATH\Output`, which should be added as a design package in the Delphi IDE (`Component` - `Install Packages...`).
 
-Textual Form Layout Files
+Textual form layout files
 -------------------------
 
 Delphi 4 stores form layouts in binary files (`.dfm`) which of course aren't very suited for version control. Therefore, for each such `.dfm` file, a textual mirror file is also added to the repository and updated whenever the corresponding binary file is changed. For example, for a binary form layout file called `Main.dfm`, there will also be a textual mirror called `Main.txt`.
