@@ -10,7 +10,7 @@ To report issues please use the project's issue tracker on GitHub. This should o
 Contributing new code
 ---------------------
 
-If you want to contribute new code to a project, don't clone its main repository, but create your own fork first and clone that fork instead. Then commit your work on a topic branch and submit a pull request. In more detail:
+If you want to contribute new code to a project, don't clone its main repository, but create your own fork first and clone that fork instead. Then commit/push your work on a topic branch and submit a pull request. In more detail:
 
 1. [Fork](https://help.github.com/articles/fork-a-repo/) the project.
 
@@ -25,7 +25,7 @@ If you want to contribute new code to a project, don't clone its main repository
 
 4. Get the latest changes from upstream: `update.bat upstream master`.
 
-5. [Create a new topic branch](https://help.github.com/articles/creating-and-deleting-branches-within-your-repository/) on GitHub to contain your feature, change, or fix.
+5. On GitHub, [create a new topic branch](https://help.github.com/articles/creating-and-deleting-branches-within-your-repository/) to contain your feature, change, or fix.
 
 6. Checkout the new topic branch:
   ```
@@ -33,7 +33,7 @@ If you want to contribute new code to a project, don't clone its main repository
   > git checkout TOPIC_BRANCH
   ```
 
-7. While making changes to a file, please take care to follow the coding conventions currently used in the file: indentation, capitalization, function/parameter/variable naming, explicatory comments where needed etc. All indentation should be saved as spaces and never as tabs. Make sure that your text editor or IDE is set to use spaces.
+7. While making changes to a file, please take care to follow the coding conventions currently used in the file: indentation, capitalization, function/parameter/variable naming, clarifying comments where needed, and so on. All indentation should be saved as spaces and never as tabs. Make sure that your text editor or IDE is set to use spaces.
 
 8. When you're done with your changes, check if the command-line compilation (`compile.bat`) still succeeds, even if compilation was already successful in the IDE. You are also expected to properly test your changes. Pull requests with buggy code won't be accepted.
 
@@ -47,10 +47,10 @@ If you want to contribute new code to a project, don't clone its main repository
 
 ### Keeping your topic branch up-to-date
 
-To keep your topic branch up-to-date with the changes from upstream, first make sure that you have committed your changes or `git stash` them. Then run `update.bat upstream master` again. Don't forget to `git stash pop` your changes again afterwards if needed.
+To keep your topic branch up-to-date with the changes from upstream, first make sure that you have committed your changes or `git stash` them. Then run `update.bat upstream master` again. Don't forget to run `git stash pop` afterwards if needed.
 
 ### Rebasing your topic branch on top of master
 
-If new commits were made upstream before your pull request was merged, then your topic branch will have become outdated and you will probably be asked by the reviewer to rebase your topic branch on top of master. To do so, first run `update.bat upstream master` just like you would normally do to update your topic branch. The difference here however is that this rebases commits that you already pushed to your fork. In other words, you're 'rewriting history', and if you would subsequently try a normal `git push`, it would fail due to the push being non-fast-forward.
+If new commits were made in the official repository before your pull request was merged, then your topic branch will have become outdated and you will probably be asked by the reviewer to rebase your topic branch on top of master. To do so, first run `update.bat upstream master` just like you would normally do to update your topic branch. The difference here however is that this rebases commits that you already pushed to your fork. In other words, you're 'rewriting history', and if you would subsequently try a normal `git push`, it would fail due to the push being non-fast-forward.
 
-The correct way to proceed then is to force the push: `git push -f`. Usually, force pushing isn't recommended because it can cause you to lose commits. But in this case, we specifically want to get rid of the old, pre-rebase commits and replace them with the new, post-rebase commits. This will cause the topic branch on your fork to be overwritten with the state of the rebased topic branch, completely removing any record of the old branch. (This explanation is loosely based on [this StackOverflow answer](http://stackoverflow.com/questions/17182624/contributing-to-project-on-github-how-to-rebase-my-pull-request-on-top-of-mast/17182696#17182696).)
+The correct way to proceed then is to force the push: `git push -f`. Usually, force pushing isn't recommended because it can cause you to lose commits. But in this case, we specifically want to get rid of the old, pre-rebase commits and replace them with the new, post-rebase commits. As a result, the topic branch on your fork will be overwritten with the state of the rebased topic branch, completely removing any record of the old branch. (This explanation is loosely based on [this StackOverflow answer](http://stackoverflow.com/questions/17182624/contributing-to-project-on-github-how-to-rebase-my-pull-request-on-top-of-mast/17182696#17182696).)
