@@ -3,7 +3,7 @@ Common Code Utilities
 
 Common Code Utilities is a collection of source code, scripts, and various other utilities that are shared among my other projects. The purpose of this repository is to be included in my other repositories as a Git submodule. That way, those other repositories have direct access to all files in this repository. Common Code Utilities is not meant to be used as a standalone project. However, for convenience sake, it can be compiled on its own, e.g. to validate code changes.
 
-An example of files in this repository is the source code of various Delphi components. Some of these components are third-party and others have been written from scratch. Another example is shared Git/build scripts.
+An example of files in this repository is the source code of various Delphi components. Some of these components are third-party while others have been written from scratch. Another example is shared Git/build scripts.
 
 -- Tim De Baets (tdebaets)
 
@@ -28,7 +28,7 @@ If you want to contribute to this project, don't clone its main repository, but 
 Building
 --------
 
-A large portion of Common Code Uitilities consists of Borland Delphi 4 source code. This means that in order to build this project, you'll need to have Borland Delphi 4 installed and properly set up. See the [generic instructions for building Delphi projects](Delphi/Building.md).
+A large portion of Common Code Utilities consists of Borland Delphi 4 source code. This means that in order to build this project, you'll need to have Borland Delphi 4 installed and properly set up. See the [generic instructions for building Delphi projects](Delphi/Building.md).
 
 License
 -------
