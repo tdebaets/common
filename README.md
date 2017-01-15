@@ -10,7 +10,7 @@ An example of files in this repository is the source code of various Delphi comp
 Obtaining the Source Code
 -------------------------
 
-First make sure that you have the [Git client](https://git-scm.com/) (`git`) installed. Then open a Windows command prompt window (Git Bash isn't supported). In command prompt, run these commands:
+First make sure that you have a recent version of the [Git client](https://git-scm.com/) (`git`) installed. Then open a Windows command prompt window (Git Bash isn't supported). In the command prompt, run these commands:
 ```
 > git clone https://github.com/tdebaets/common.git common
 > cd common
@@ -21,9 +21,9 @@ Finally, run the `postclone.bat` script. This will take care of further setting 
 > postclone.bat
 ```
 
-To keep your clone updated, run the `update.bat` script. This script essentially runs a `git pull` but also performs some basic checks before pulling. For repositories containing submodules, it also runs a `git submodule update` after the pull to keep the submodules up-to-date.
+To keep your repository up-to-date, run the `update.bat` script. This script essentially runs a `git pull` but also performs some basic checks before pulling. For repositories containing submodules, it also runs a `git submodule update` after the pull to update the submodules as well.
 
-If you want to contribute to this project, don't clone its main repository, but create your own fork first and clone that fork instead. Then commit your work on a topic branch and submit a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+If you want to contribute to this project, don't clone its main repository, but create your own fork first and clone that fork instead. Then commit/push your work on a topic branch and submit a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 Building
 --------
