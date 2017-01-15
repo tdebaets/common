@@ -10,7 +10,7 @@ An example of files in this repository is the source code of various Delphi comp
 Obtaining the Source Code
 -------------------------
 
-First make sure that you have a recent version of the [Git client](https://git-scm.com/) (`git`) installed. Then open a Windows command prompt window (Git Bash isn't supported). In the command prompt, run these commands:
+First make sure that you have a recent version of the [Git client](https://git-scm.com/) (`git`) installed. Then open a Windows command prompt window (note that Git Bash isn't supported). In the command prompt, run these commands:
 ```
 > git clone https://github.com/tdebaets/common.git common
 > cd common
