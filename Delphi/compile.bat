@@ -52,7 +52,16 @@ set CFGFILE=
 set OLDCFGFILE=
 
 rem  Quiet compile / Build all / Output warnings
-set DCC32OPTS=-Q -B -W
+set DCC32OPTS=-Q -W
+set CUSTOMARGS=%1
+
+if "%1"=="incr" (
+    rem Incremental compile (non-default)
+    set CUSTOMARGS=%2
+) else (
+    rem Build all (default)
+    set DCC32OPTS=%DCC32OPTS% -B
+)
 
 rem Generate unique number for temporary file renames
 set RND=%RANDOM%
@@ -90,7 +99,7 @@ if errorlevel 1 goto failed
 
 echo - LibFixed
 
-"%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
+"%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %CUSTOMARGS% ^
     -U"%COMMON_LIB_PATH%" ^
     -R"%DELPHIROOT%\lib" ^
     -N"%DCU_PATH%" ^
@@ -104,7 +113,7 @@ if errorlevel 1 goto failed
 
 echo - Imports
 
-"%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
+"%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %CUSTOMARGS% ^
     -U"%COMMON_LIB_PATH%" ^
     -R"%DELPHIROOT%\lib" ^
     -N"%DCU_PATH%" ^
@@ -118,7 +127,7 @@ if errorlevel 1 goto failed
 
 echo - LibUser
 
-"%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
+"%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %CUSTOMARGS% ^
     -U"%COMMON_LIB_PATH%" ^
     -R"%DELPHIROOT%\lib" ^
     -N"%DCU_PATH%" ^
@@ -137,7 +146,7 @@ set OLDCFGFILE=tdebaets_comps.cfg
 ren tdebaets_comps.cfg.main tdebaets_comps.cfg
 if errorlevel 1 goto failed
 set CFGFILE=tdebaets_comps.cfg
-"%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %1 ^
+"%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %CUSTOMARGS% ^
     -U"%COMMON_LIB_PATH%;..\Imports;Virtual Treeview\Source;Virtual Treeview\Design" ^
     -R"%DELPHIROOT%\lib" ^
     -N"%DCU_PATH%" ^
