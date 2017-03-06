@@ -3890,6 +3890,39 @@ type
     bmConstantAlphaAndColor  // blend the destination color with the given constant color und the constant alpha value
   );
 
+{$ifndef COMPILER_5_UP}
+// The Delphi 4 compiler doesn't seem to like overloaded methods in private
+// classes (incremental compilation hangs with 100% CPU), so the
+// TClipboardFormatList class was moved to the interface section (originally it's
+// in the implementation section).
+type
+  PClipboardFormatListEntry = ^TClipboardFormatListEntry;
+  TClipboardFormatListEntry = record
+    Description: string;               // The string used to register the format with Windows.
+    TreeClass: TVirtualTreeClass;      // The tree class which supports rendering this format.
+    Priority: Cardinal;                // Number which determines the order of formats used in IDataObject.
+    FormatEtc: TFormatEtc;             // The definition of the format in the IDataObject.
+  end;
+
+  TClipboardFormatList = class
+  private
+    FList: TList;
+    procedure Sort;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Add(FormatString: string; AClass: TVirtualTreeClass; Priority: Cardinal; AFormatEtc: TFormatEtc);
+    procedure Clear;
+    procedure EnumerateFormats(TreeClass: TVirtualTreeClass; var Formats: TFormatEtcArray;
+      const AllowedFormats: TClipboardFormats = nil); overload;
+    procedure EnumerateFormats(TreeClass: TVirtualTreeClass; const Formats: TStrings); overload;
+    function FindFormat(FormatString: string): PClipboardFormatListEntry; overload;
+    function FindFormat(FormatString: string; var Fmt: Word): TVirtualTreeClass; overload;
+    function FindFormat(Fmt: Word; var Description: string): TVirtualTreeClass; overload;
+  end;
+{$endif COMPILER_5_UP}
+
 // OLE Clipboard and drag'n drop helper
 procedure EnumerateVTClipboardFormats(TreeClass: TVirtualTreeClass; const List: TStrings); overload;
 procedure EnumerateVTClipboardFormats(TreeClass: TVirtualTreeClass; var Formats: TFormatEtcArray); overload;
@@ -4169,6 +4202,7 @@ var
 
 //----------------- TClipboardFormats ----------------------------------------------------------------------------------
 
+{$ifdef COMPILER_5_UP}
 type
   PClipboardFormatListEntry = ^TClipboardFormatListEntry;
   TClipboardFormatListEntry = record
@@ -4195,6 +4229,7 @@ type
     function FindFormat(FormatString: string; var Fmt: Word): TVirtualTreeClass; overload;
     function FindFormat(Fmt: Word; var Description: string): TVirtualTreeClass; overload;
   end;
+{$endif COMPILER_5_UP}
 
 var
   InternalClipboardFormats: TClipboardFormatList;
