@@ -29,7 +29,7 @@ rem Delphi
 cd Delphi
 if errorlevel 1 goto failed
 
-call compile.bat
+call compile.bat %*
 if errorlevel 1 goto failed
 
 cd ..
