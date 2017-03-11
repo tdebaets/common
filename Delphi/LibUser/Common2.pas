@@ -390,6 +390,8 @@ function GetDlgCodeMaskFromKey(VirtualKeyCode: Cardinal): Cardinal;
 
 function ExpandEnvVars(const Str: string): string;
 
+function IsWindowsMeOrHigher: Boolean;
+function IsWindows2kOrHigher: Boolean;
 function IsWindowsVistaOrHigher: Boolean;
 function IsWindows7OrHigher: Boolean;
 
@@ -2076,6 +2078,35 @@ begin
     // Trying to expand empty string
     Result := '';
   end;
+end;
+
+function IsWindowsMeOrHigher: Boolean;
+var
+  VerInfo: TOSVersionInfo;
+begin
+  if IsWinNT then
+    Result := False
+  else begin
+    FillChar(VerInfo, SizeOf(VerInfo), 0);
+    VerInfo.dwOSVersionInfoSize := SizeOf(VerInfo);
+    GetVersionEx(VerInfo);
+    Result := ((VerInfo.dwMajorVersion = 4) and (VerInfo.dwMinorVersion >= 90))
+        or (VerInfo.dwMajorVersion > 4); // shouldn't happen but check anyway
+  end;
+end;
+
+function IsWindows2kOrHigher: Boolean;
+var
+  VerInfo: TOSVersionInfo;
+begin
+  if IsWinNT then begin
+    FillChar(VerInfo, SizeOf(VerInfo), 0);
+    VerInfo.dwOSVersionInfoSize := SizeOf(VerInfo);
+    GetVersionEx(VerInfo);
+    Result := (VerInfo.dwMajorVersion >= 5);
+  end
+  else
+    Result := False;
 end;
 
 function IsWindowsVistaOrHigher: Boolean;
