@@ -34,6 +34,7 @@ const
 
 function ProcessAppMessages: Boolean;
 function HandleAppMessage: Boolean;
+procedure PostActivateAppMessage;
 
 procedure ConvertTo32BitImageList(const ImageList: TImageList);
 function AddResIconToImageList(ResourceID: PChar;
@@ -79,6 +80,17 @@ begin
   end
   else
     Result := True;
+end;
+
+procedure PostActivateAppMessage;
+begin
+  // If ThemeMgr is being used in a DLL and together with TDllAppWindow, it
+  // usually won't be triggered to recreate window handles because there are no
+  // application messages (like e.g. CM_ACTIVATE in a regular app). So we need
+  // to post at least 1 message to the main application window, and CM_ACTIVATE
+  // seems like the most obvious choice.
+  if Application.Handle <> 0 then
+    PostMessage(Application.Handle, CM_ACTIVATE, 0, 0);
 end;
 
 procedure ConvertTo32BitImageList(const ImageList: TImageList);
