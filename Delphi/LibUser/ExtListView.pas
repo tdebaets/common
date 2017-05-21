@@ -3007,6 +3007,14 @@ begin
   begin
     if FRecreateStream <> nil then
     begin
+      // Items are sorted in TCustomEnhListView.Loaded, so make sure that this
+      // method already has been called, otherwise the checks would be restored
+      // in the wrong order!
+      if csLoading in ComponentState then begin
+        Items.Clear;
+        raise EComponentError.CreateFmt('%s: cannot restore checks while ' +
+            'component is still loading', [Name]);
+      end;
       FRecreateStream.Read(Value, SizeOf(Value));
       IsChecked[i] := Value;
       for q := 0 to Columns.Count - 2 do

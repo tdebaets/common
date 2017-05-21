@@ -607,6 +607,14 @@ begin
   inherited CreateWnd;
   if FMemStream <> nil then begin
     FMemStream.Read(Count, SizeOf(Count));
+    // Items are sorted in TCustomEnhListView.Loaded, so make sure that this
+    // method already has been called, otherwise the item enabled states would
+    // be restored in the wrong order!
+    if (Count > 0) and (csLoading in ComponentState) then begin
+      Items.Clear;
+      raise EComponentError.CreateFmt('%s: cannot restore item states while ' +
+          'component is still loading', [Name]);
+    end;
     for i := 0 to Count - 1 do begin
       FMemStream.Read(Value, SizeOf(Value));
       TChkListItem(Items[i]).Enabled := Value;

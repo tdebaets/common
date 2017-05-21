@@ -1465,11 +1465,24 @@ begin
     RedrawWindow(Form.Handle, nil, 0, RDW_INVALIDATE or RDW_UPDATENOW or RDW_ALLCHILDREN or RDW_VALIDATE);
   end;
 
-  while FPendingRecreationList.Count > 0 do
+  // Check for CM_WINDOWHOOK added by Tim De Baets on May 21, 2017
+  // *Don't* recreate the window handles of the recreation candidates on the
+  // CM_WINDOWHOOK message. This message is sent by the HookMainWindow call in
+  // TThemeManager.Create which usually occurs during form creation. During this
+  // time, components' Loaded calls are globally delayed (instead of immediately
+  // being called by TReader.ReadRootComponent, right after the handle has been
+  // recreated but before CreateWnd returns). This inversion of CreateWnd/Loaded
+  // calling order can cause bugs with some components, eg. with TExtListView
+  // where the listview item checks would be restored in the wrong order on
+  // listview handle recreation if the listview is sorted.
+  if Message.Msg <> CM_WINDOWHOOK then
   begin
-    TWinControl(FPendingRecreationList[0]).HandleNeeded;
-    CollectControls(TWinControl(FPendingRecreationList[0]));
-    FPendingRecreationList.Delete(0);
+    while FPendingRecreationList.Count > 0 do
+    begin
+      TWinControl(FPendingRecreationList[0]).HandleNeeded;
+      CollectControls(TWinControl(FPendingRecreationList[0]));
+      FPendingRecreationList.Delete(0);
+    end;
   end;
 
   if Message.Msg = WM_THEMECHANGED then
