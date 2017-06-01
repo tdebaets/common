@@ -216,11 +216,17 @@ var
     pszSizeBuff: LPWSTR; cchMaxSizeChars: Integer): HRESULT; stdcall;
 
 
+// The following defines were modified to fix a crash of the Delphi 4 compiler
+// on incremental compilation.
 const
-  SZ_THDOCPROP_DISPLAYNAME               = WideString('DisplayName');
+  {SZ_THDOCPROP_DISPLAYNAME               = WideString('DisplayName');
   SZ_THDOCPROP_CANONICALNAME             = WideString('ThemeName');
   SZ_THDOCPROP_TOOLTIP                   = WideString('ToolTip');
-  SZ_THDOCPROP_AUTHOR                    = WideString('author');
+  SZ_THDOCPROP_AUTHOR                    = WideString('author');}
+  SZ_THDOCPROP_DISPLAYNAME: PWideChar    = 'DisplayName';
+  SZ_THDOCPROP_CANONICALNAME: PWideChar  = 'ThemeName';
+  SZ_THDOCPROP_TOOLTIP: PWideChar        = 'ToolTip';
+  SZ_THDOCPROP_AUTHOR: PWideChar         = 'author';
 
 var
   GetThemeDocumentationProperty: function(pszThemeName, pszPropertyName: LPCWSTR;
