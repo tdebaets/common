@@ -25,14 +25,18 @@ uses
   {$else}
     DsgnIntf,
   {$endif}                       
-  //ColnEdit,
+  {$ifdef COMPILER_5_UP}
+    ColnEdit,
+  {$endif COMPILER_5_UP}
   VirtualTrees, VTHeaderPopup;
 
-{type
+{$ifdef VIRTUALTREES_FULL_BUILD}
+type
   TVirtualTreeEditor = class (TDefaultEditor)
   public
     procedure Edit; override;
-  end;}
+  end;
+{$endif VIRTUALTREES_FULL_BUILD}
 
 procedure Register;
 
@@ -141,11 +145,15 @@ type
 
 //----------------------------------------------------------------------------------------------------------------------
 
-{procedure TVirtualTreeEditor.Edit;
+{$ifdef VIRTUALTREES_FULL_BUILD}
+
+procedure TVirtualTreeEditor.Edit;
 
 begin
   ShowCollectionEditor(Designer, Component, TVirtualTreeCast(Component).Header.Columns, 'Columns');
-end;}
+end;
+
+{$endif VIRTUALTREES_FULL_BUILD}
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -521,8 +529,10 @@ procedure Register;
 
 begin
   RegisterComponents('Virtual Controls', [TVirtualStringTree, TVirtualDrawTree, TVTHeaderPopupMenu]);
-  //RegisterComponentEditor(TVirtualStringTree, TVirtualTreeEditor);
-  //RegisterComponentEditor(TVirtualDrawTree, TVirtualTreeEditor);
+  {$ifdef VIRTUALTREES_FULL_BUILD}
+  RegisterComponentEditor(TVirtualStringTree, TVirtualTreeEditor);
+  RegisterComponentEditor(TVirtualDrawTree, TVirtualTreeEditor);
+  {$endif VIRTUALTREES_FULL_BUILD}
   RegisterPropertyEditor(TypeInfo(TClipboardFormats), nil, '', TClipboardFormatsProperty);
   RegisterPropertyEditor(TypeInfo(TCheckImageKind), nil, '', TCheckImageKindProperty);  
 

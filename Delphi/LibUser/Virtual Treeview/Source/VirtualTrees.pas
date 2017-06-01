@@ -3965,8 +3965,11 @@ uses
   AnsiStrings,
   {$endif UNICODE}
   StrUtils,
-  VTAccessibilityFactory,  // accessibility helper class
-  Common2; // UTF8Encode/UTF8Decode for Delphi 5 and lower
+  VTAccessibilityFactory  // accessibility helper class
+  {$ifndef COMPILER_5_UP}
+    , Common2 // UTF8Encode/UTF8Decode for Delphi 4
+  {$endif COMPILER_5_UP}
+  ;
 
 resourcestring
   // Localizable strings.
@@ -4180,7 +4183,7 @@ var
 
 //----------------------------------------------------------------------------------------------------------------------
 
-  function IfThen(AValue: Boolean; const ATrue: Integer; const AFalse: Integer = 0): Integer; overload;
+  function IfThen(AValue: Boolean; const ATrue: Integer; const AFalse: Integer = 0): Integer; {$ifndef COMPILER_5_UP} overload; {$endif}
 
   begin
     if AValue then
@@ -4189,6 +4192,8 @@ var
       Result := AFalse;
   end;
 
+  {$ifndef COMPILER_5_UP}
+  
   function IfThen(AValue: Boolean; const ATrue: String; const AFalse: String = ''): String; overload;
 
   begin
@@ -4197,6 +4202,8 @@ var
     else
       Result := AFalse;
   end;
+
+  {$endif COMPILER_5_UP}
 
 {$endif COMPILER_6_UP}
 
@@ -6039,14 +6046,16 @@ begin
         SetEvent(WorkEvent);
 
         // The following work around is no longer necessary with Delphi 6 and up.
-        {$ifndef COMPILER_6_UP}
+        //{$ifndef COMPILER_6_UP}
+        // modified conditional check to always disabled - suspending a thread is never a good solution
+        {$ifdef 0}
           // There is a problem when the thread is freed in the exit code of a DLL. This can happen when a tree is
           // destroyed on unload of a DLL (e.g. control panel applet). In this case only the main thread will get
           // CPU time, other threads will never awake again. The VCL however waits for a thread when freeing it
           // which will result in a deadlock (the WaitFor call does not return because the thread does not get CPU time).
           // If a thread is however suspended then the VCL does not wait and all is fine.
-          {if IsLibrary then
-            Suspend;}
+          if IsLibrary then
+            Suspend;
         {$endif COMPILER_6_UP}
 
         WorkerThread.Free;
