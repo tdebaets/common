@@ -34,7 +34,7 @@ uses Messages, Classes, SysUtils, Graphics, Controls, ComCtrls, CmnFunc2,
 // TODO: fix high CPU usage on Vista x64 and Win7 x64
 // TODO: flicker when checking/unchecking and adding items
 // TODO: add option to toggle background (invisible) processes
-// TODO; add unicode support
+// TODO: add unicode support
 
 type
 
@@ -1326,7 +1326,7 @@ begin
   end;
 end;
 
-// TODO; use set of enum flags here
+// TODO: use set of enum flags here
 procedure TCustomProcessListView.RefreshProcesses(Startup, Full,
     RemoveOnly: Boolean);
 var
