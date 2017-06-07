@@ -67,19 +67,8 @@ rem Generate unique number for temporary file renames
 set RND=%RANDOM%
 
 rem  Retrieve user-specific settings from file
-if exist ..\userprefs.bat goto userprefsfound
-:userprefserror
-echo userprefs.bat (in the root of the repository) is missing or incomplete.
-echo It needs to be created with the following lines, adjusted for your
-echo system:
-echo.
-echo   set DELPHIROOT=c:\delphi4              [Path to Delphi 4 (or later)]
-goto failed2
-
-:userprefsfound
-set DELPHIROOT=
-call ..\userprefs.bat
-if "%DELPHIROOT%"=="" goto userprefserror
+call ..\Scripts\getuserprefs.bat
+if errorlevel 1 goto failed2
 
 set COMMON_LIB_PATH=..\LibFixed;%DELPHIROOT%\lib
 set DCU_PATH=..\DCU
