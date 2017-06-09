@@ -107,7 +107,6 @@ type
   TIntArray = array[0..(MaxInt div SizeOf(Integer)-1)] of Integer;
   PIntArray = ^TIntArray;
 
-  //TRegHive = (CURRENT_USER, LOCAL_MACHINE, CLASSES_ROOT, USERS, PERFORMANCE_DATA, CURRENT_CONFIG, DYN_DATA);
   TResizeMethod = (rmFitText, rmFitHeader);
   TAutoColumnSort = (acsNoSort, acsSort, acsSortToggle);
   TAutoSortStyle = (assSmart, assDefault);
@@ -199,8 +198,6 @@ type
     FSearchStr: string;
     FSearchTickCount: Double;
     FColumnSearch: boolean;
-
-    //Fdoublebuf: Boolean;
 
     FOnSortBegin: TLVSortStatusEvent;
     FOnSortFinished: TLVSortStatusEvent;
@@ -335,6 +332,8 @@ type
       read FSortUpBmp;
     property SortDownBmp: TBitmap
       read FSortDownBmp;
+    property UpdateCount: Integer
+      read FUpdateCount;
 
     { Should be made public by descendants as needed }
     property LastColumnClicked: Integer
@@ -592,10 +591,6 @@ type
     property DoubleBuffered;
   end;
 
-{const
-  RegHives: array[TRegHive] of Integer =
-    (HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, HKEY_CLASSES_ROOT, HKEY_USERS, HKEY_PERFORMANCE_DATA, HKEY_CURRENT_CONFIG, HKEY_DYN_DATA);}
-
 var
   { Default drawing variables }
   DefDraw_TextOffset: integer; // Offset for the text -- 5
@@ -793,7 +788,6 @@ begin
 
   FAutoSave := FALSE;
   FRootKey := HKEY_CURRENT_USER;
-  //FTest := 0;
   FRegistryKey := '';
   FSaveViewStyle := TRUE;
   FSaveColumnSizes := TRUE;

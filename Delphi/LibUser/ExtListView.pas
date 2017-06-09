@@ -3010,7 +3010,9 @@ begin
       // Items are sorted in TCustomEnhListView.Loaded, so make sure that this
       // method already has been called, otherwise the checks would be restored
       // in the wrong order!
-      if csLoading in ComponentState then begin
+      // If UpdateCount > 0, the listview is still being created during which
+      // sorting is suppressed.
+      if (csLoading in ComponentState) and (UpdateCount < 1) then begin
         Items.Clear;
         raise EComponentError.CreateFmt('%s: cannot restore checks while ' +
             'component is still loading', [Name]);
