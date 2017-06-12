@@ -853,7 +853,7 @@ var
   R: TRect;
 begin
   if TObject(NMLVCD.nmcd.lItemlParam) is TProcessListItem then begin
-  Item := TProcessListItem(NMLVCD.nmcd.lItemlParam);
+    Item := TProcessListItem(NMLVCD.nmcd.lItemlParam);
     if (Item <> FCheckAllItem) and (Item.ImageIcon > -1)
         and Assigned(SmallImages) then begin
       DrawIcon := False;
@@ -1362,24 +1362,24 @@ begin
       if Update then
         BeginUpdate;
       try
-          for i := 0 to FExitedProcesses.Count - 1 do begin
-            Process := TProcess(FExitedProcesses.Objects[i]);
-            if Assigned(FOnBeforeProcessRemove) then
-              FOnBeforeProcessRemove(Self, Process);
-            RemoveProcess(Process);
-            FProcesses.Erase(FExitedProcesses[i]);
-          end;
-          // only required with GetModuleFileNameEx
-          if not FNewProcessFilenameFuncAvailable
-              and not Full and not RemoveOnly then
-            FProcesses.Iterate2(UpdatePathsProc, False, Self);
-          for i := 0 to FNewProcesses.Count - 1 do begin
-            TempProcess := PTempProcess(FNewProcesses.Objects[i]);
-            Process := AddProcess(TempProcess);
-            FProcesses.Insert(FNewProcesses[i], Process);
-            if Assigned(FOnProcessAdded) then
-              FOnProcessAdded(Self, Process);
-          end;
+        for i := 0 to FExitedProcesses.Count - 1 do begin
+          Process := TProcess(FExitedProcesses.Objects[i]);
+          if Assigned(FOnBeforeProcessRemove) then
+            FOnBeforeProcessRemove(Self, Process);
+          RemoveProcess(Process);
+          FProcesses.Erase(FExitedProcesses[i]);
+        end;
+        // only required with GetModuleFileNameEx
+        if not FNewProcessFilenameFuncAvailable
+            and not Full and not RemoveOnly then
+          FProcesses.Iterate2(UpdatePathsProc, False, Self);
+        for i := 0 to FNewProcesses.Count - 1 do begin
+          TempProcess := PTempProcess(FNewProcesses.Objects[i]);
+          Process := AddProcess(TempProcess);
+          FProcesses.Insert(FNewProcesses[i], Process);
+          if Assigned(FOnProcessAdded) then
+            FOnProcessAdded(Self, Process);
+        end;
       finally
         if Update then begin
           UpdateAllChecked; // added or deleted items can change 'all checked'-state

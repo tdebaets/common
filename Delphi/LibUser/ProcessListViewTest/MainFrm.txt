@@ -1,0 +1,263 @@
+object MainForm: TMainForm
+  Left = 239
+  Top = 104
+  Width = 870
+  Height = 728
+  Caption = 'TProcessListView Test'
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = True
+  OnCreate = FormCreate
+  PixelsPerInch = 96
+  TextHeight = 13
+  object ProcListView: TProcessListView
+    Left = 0
+    Top = 0
+    Width = 854
+    Height = 417
+    ProcIDColumnIdx = 1
+    NameColumnIdx = 0
+    PathColumnIdx = 4
+    UserColumnIdx = 5
+    DescriptionColumnIdx = 2
+    CompanyColumnIdx = 3
+    AutoRefresh = True
+    AutoRefreshInterval = 100
+    RefreshOnLoad = True
+    ShowSystemProcess = True
+    ShowSystem = False
+    ShowOtherUser = True
+    ShowCheckAll = True
+    CheckAllCaption = '(All programs)'
+    OnProcessAdded = ProcListViewProcessAdded
+    OnBeforeProcessRemove = ProcListViewBeforeProcessRemove
+    Columns = <
+      item
+        Caption = 'Name'
+        Width = -2
+        WidthType = (
+          -2)
+      end
+      item
+        Caption = 'ID'
+        Width = -2
+        WidthType = (
+          -2)
+      end
+      item
+        Caption = 'Description'
+        Width = -2
+        WidthType = (
+          -2)
+      end
+      item
+        Caption = 'Company'
+        Width = -2
+        WidthType = (
+          -2)
+      end
+      item
+        Caption = 'Path'
+        Width = -2
+        WidthType = (
+          -2)
+      end
+      item
+        Caption = 'User'
+        Width = -2
+        WidthType = (
+          -2)
+      end>
+    ExtendedStyles = [lvxCheckboxes, lvxHeaderDragDrop, lvxFullRowSelect, lvxLabelTip]
+    NoColumnResize = False
+    SaveSettings.RegistryKey = 'Software\BM-productions\ProcessListViewTest'
+    SaveSettings.SaveColumnSizes = False
+    SaveSettings.SaveCurrentSort = False
+    SaveSettings.SaveViewStyle = False
+    SaveSettings.SaveColumnOrder = False
+    ColumnsFormat = <>
+    ShowSortArrows = True
+    AutoColumnSort = acsSortToggle
+    Align = alClient
+    OnDblClick = ProcListViewDblClick
+    MultiSelect = True
+    OnMouseUp = ProcListViewMouseUp
+    TabOrder = 0
+    ViewStyle = vsReport
+    SmallImages = ImageList
+    DoubleBuffered = False
+  end
+  object Panel1: TPanel
+    Left = 0
+    Top = 417
+    Width = 854
+    Height = 273
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 1
+    object Label1: TLabel
+      Left = 568
+      Top = 63
+      Width = 128
+      Height = 13
+      Caption = 'Total number of processes:'
+    end
+    object lblProcCount: TLabel
+      Left = 709
+      Top = 63
+      Width = 60
+      Height = 13
+      Caption = 'lblProcCount'
+    end
+    object GroupBox1: TGroupBox
+      Left = 16
+      Top = 19
+      Width = 133
+      Height = 117
+      Caption = 'Timer Thread'
+      TabOrder = 0
+      object btnStartTimer: TButton
+        Left = 8
+        Top = 20
+        Width = 109
+        Height = 25
+        Caption = 'Start'
+        TabOrder = 0
+        OnClick = btnStartTimerClick
+      end
+      object btnResetTimer: TButton
+        Left = 8
+        Top = 52
+        Width = 109
+        Height = 25
+        Caption = 'Reset'
+        TabOrder = 1
+        OnClick = btnResetTimerClick
+      end
+      object btnStopTimer: TButton
+        Left = 8
+        Top = 84
+        Width = 109
+        Height = 25
+        Caption = 'Stop'
+        TabOrder = 2
+        OnClick = btnStopTimerClick
+      end
+    end
+    object GroupBox2: TGroupBox
+      Left = 156
+      Top = 19
+      Width = 189
+      Height = 117
+      Caption = 'Options'
+      TabOrder = 1
+      object chkHideSelection: TCheckBox
+        Left = 8
+        Top = 20
+        Width = 153
+        Height = 17
+        Caption = 'Hide selection'
+        TabOrder = 0
+        OnClick = chkHideSelectionClick
+      end
+      object chkColumnClick: TCheckBox
+        Left = 8
+        Top = 40
+        Width = 141
+        Height = 17
+        Caption = 'ColumnClick'
+        TabOrder = 1
+        OnClick = chkColumnClickClick
+      end
+      object chkShowIcons: TCheckBox
+        Left = 8
+        Top = 60
+        Width = 141
+        Height = 17
+        Caption = 'Show icons'
+        TabOrder = 2
+        OnClick = chkShowIconsClick
+      end
+      object chkSortArrows: TCheckBox
+        Left = 8
+        Top = 80
+        Width = 145
+        Height = 17
+        Caption = 'Show sort arrows'
+        TabOrder = 3
+        OnClick = chkSortArrowsClick
+      end
+    end
+    object GroupBox3: TGroupBox
+      Left = 360
+      Top = 19
+      Width = 189
+      Height = 117
+      Caption = 'Items to show'
+      TabOrder = 2
+      object chkShowCheckAll: TCheckBox
+        Left = 8
+        Top = 20
+        Width = 149
+        Height = 17
+        Caption = 'Check all'
+        TabOrder = 0
+        OnClick = chkShowCheckAllClick
+      end
+      object chkShowSystemProcess: TCheckBox
+        Left = 8
+        Top = 40
+        Width = 153
+        Height = 17
+        Caption = 'System'
+        TabOrder = 1
+        OnClick = chkShowSystemProcessClick
+      end
+      object chkShowSystem: TCheckBox
+        Left = 8
+        Top = 60
+        Width = 149
+        Height = 17
+        Caption = 'System processes'
+        TabOrder = 2
+        OnClick = chkShowSystemClick
+      end
+      object chkShowOtherUser: TCheckBox
+        Left = 8
+        Top = 80
+        Width = 149
+        Height = 17
+        Caption = 'Other users'
+        TabOrder = 3
+        OnClick = chkShowOtherUserClick
+      end
+    end
+    object btnRefresh: TButton
+      Left = 568
+      Top = 19
+      Width = 137
+      Height = 33
+      Caption = 'Refresh'
+      TabOrder = 3
+      OnClick = btnRefreshClick
+    end
+    object txtLog: TMemo
+      Left = 0
+      Top = 160
+      Width = 854
+      Height = 113
+      Align = alBottom
+      ScrollBars = ssBoth
+      TabOrder = 4
+      WordWrap = False
+    end
+  end
+  object ImageList: TImageList
+    Left = 20
+    Top = 144
+  end
+end
