@@ -36,7 +36,7 @@ unit ThemeMgr;
 //
 // January 2005
 //   - Bug fix: Test for Windows XP was wrong.
-//
+// 
 // For full development history see help file.
 // 
 // Credits for their valuable help go to:
@@ -71,11 +71,11 @@ const
   CM_DENYSUBCLASSING = CM_BASE + 2000;
 
   {$ifndef COMPILER_5_UP}
-    {EXTERNALSYM WM_CHANGEUISTATE}
+    {$EXTERNALSYM WM_CHANGEUISTATE}
     WM_CHANGEUISTATE = $0127;
-    {EXTERNALSYM WM_UPDATEUISTATE}
+    {$EXTERNALSYM WM_UPDATEUISTATE}
     WM_UPDATEUISTATE = $0128;
-    {EXTERNALSYM WM_QUERYUISTATE}
+    {$EXTERNALSYM WM_QUERYUISTATE}
     WM_QUERYUISTATE = $0129;
     UIS_CLEAR = 2;
     UISF_HIDEFOCUS = 1;
@@ -152,7 +152,7 @@ type
     destructor Destroy; override;
 
     function Add(Control: TControl): Integer;
-    procedure Clear;
+    procedure Clear; override;
     procedure DispatchMessage(Control: TControl; var Message: TMessage);
     function Find(Control: TControl; out Index: Integer): Boolean;
     procedure Remove(Control: TControl);
@@ -245,7 +245,7 @@ type
     procedure DrawBitBtn(Control: TBitBtn; var DrawItemStruct: TDrawItemStruct);
     procedure DrawButton(Control: TControl; Button: TThemedButton; DC: HDC; R: TRect; Focused: Boolean);
     function FindListener(AControlMessage: TControlMessageEvent; var Index: Integer): Boolean;
-    procedure FixControls(Form: TCustomForm);
+    procedure FixControls(Form: TCustomForm = nil);
     procedure ForceAsMainManager; virtual;
     procedure HandleControlChange(Control: TControl; Inserting: Boolean); virtual;
     function IsRecreationCandidate(Control: TControl): Boolean;
@@ -261,7 +261,7 @@ type
     destructor Destroy; override;
 
     procedure ClearLists;
-    procedure CollectForms(Form: TCustomForm);
+    procedure CollectForms(Form: TCustomForm = nil);
     procedure CollectControls(Parent: TWinControl);
     procedure PerformEraseBackground(Control: TControl; DC: HDC);
     procedure RegisterListener(AControlMessage: TControlMessageEvent);
@@ -287,7 +287,7 @@ implementation
 
 uses
   SysUtils, ComCtrls, CommCtrl, SyncObjs, ExtCtrls, Grids, UxTheme, ComCtrls95,
-      SysLink, IconMessage
+  SysLink, IconMessage
   {$ifdef CheckListSupport}
     , CheckLst
   {$endif CheckListSupport}
@@ -597,7 +597,7 @@ begin
     // the window's real destruction.
     if Message.Msg = CM_RECREATEWND then
       MainManager.AddRecreationCandidate(Control);
-    
+
     Entry := Items[I];
     Entry.OldWndProc(Message);
 
@@ -770,9 +770,11 @@ begin
         FSubclassingDisabled := True;
         FOptions := MainManager.FOptions;
         if IsOnUnownedForm then
+        begin
           // the main theme manager will not see forms with Owner set to nil (eg TDialogForm),
           // so call Notification manually
           Notification(Owner, opInsert);
+        end;
       end;
     finally
       Lock.Leave;
@@ -825,9 +827,11 @@ begin
             SendAppMessage(WM_MAINMANAGERRELEASED, 0, 0);
         end
         else if IsOnUnownedForm then
+        begin
           // the main theme manager will not see forms with Owner set to nil (eg TDialogForm),
           // so call Notification manually
           Notification(Owner, opRemove);
+        end;
       finally
         Lock.Leave;
       end;
@@ -905,19 +909,19 @@ begin
         CN_CTLCOLORBTN: // TButton background erasing. Necessary for some themes (like EclipseOSX).
           with TWMCtlColorBtn(Message) do
           begin
-            {if TWinControl(Control.Parent).DoubleBuffered then
+            if TWinControl(Control.Parent).DoubleBuffered then
               PerformEraseBackground(Control, ChildDC)
-            else}
+            else
               ThemeServices.DrawParentBackground(TWinControl(Control).Handle, ChildDC, nil, False, nil);
             // Return an empty brush to prevent Windows from overpainting we just have created.
             Result := GetStockObject(NULL_BRUSH);
           end;
-        CN_CTLCOLORSTATIC: // Background erasing for check boxes and radio buttons.
+        CN_CTLCOLORSTATIC: // Background erasing for check boxes and radio buttons. 
           with TWMCtlColorStatic(Message) do
           begin
-            {if TWinControl(Control.Parent).DoubleBuffered then
+            if TWinControl(Control.Parent).DoubleBuffered then
               PerformEraseBackground(Control, ChildDC)
-            else}
+            else
               ThemeServices.DrawParentBackground(TWinControl(Control).Handle, ChildDC, nil, False, nil);
             // Return an empty brush to prevent Windows from overpainting we just have created.
             Result := GetStockObject(NULL_BRUSH);
@@ -1027,16 +1031,16 @@ end;
           Enable := Enabled {$ifdef COMPILER_6_UP} and ItemEnabled[Index] {$endif COMPILER_6_UP};
           if {$ifdef COMPILER_6_UP} not Header[Index] {$else} True {$endif COMPILER_6_UP} then
           begin
-            {if not UseRightToLeftAlignment then
-            begin}
+            if not UseRightToLeftAlignment then
+            begin
               R.Right := Rect.Left;
               R.Left := R.Right - ACheckWidth;
-            {end
+            end
             else
             begin
               R.Left := Rect.Right;
               R.Right := R.Left + ACheckWidth;
-            end;}
+            end;
             DrawCheck(R, State[Index], Enable);
           end
           else
@@ -1057,12 +1061,11 @@ end;
           Canvas.FillRect(Rect);
           if Index < {$ifdef COMPILER_6_UP} Count {$else} Items.Count {$endif COMPILER_6_UP}then
           begin
-            Flags := 0;
-            {Flags := DrawTextBiDiModeFlags(DT_SINGLELINE or DT_VCENTER or DT_NOPREFIX);
-            if not UseRightToLeftAlignment then}
-              Inc(Rect.Left, 2);
-            {else
-              Dec(Rect.Right, 2);}
+            Flags := DrawTextBiDiModeFlags(DT_SINGLELINE or DT_VCENTER or DT_NOPREFIX);
+            if not UseRightToLeftAlignment then
+              Inc(Rect.Left, 2)
+            else
+              Dec(Rect.Right, 2);
             Data := '';
             {$ifdef COMPILER_6_UP}
               if (Style in [lbVirtual, lbVirtualOwnerDraw]) then
@@ -1091,9 +1094,9 @@ end;
               with TWMDrawItem(Message).DrawItemStruct^, ListBox do
               begin
                 if {$ifdef COMPILER_6_UP} not Header[itemID] {$else} True {$endif COMPILER_6_UP} then
-                  {if not UseRightToLeftAlignment then
+                  if not UseRightToLeftAlignment then
                     rcItem.Left := rcItem.Left + GetCheckWidth
-                  else}
+                  else
                     rcItem.Right := rcItem.Right - GetCheckWidth;
                 {$ifdef COMPILER_5_UP}
                   DrawState := TOwnerDrawState(LongRec(itemState).Lo);
@@ -1145,8 +1148,8 @@ procedure TThemeManager.FormWindowProc(Control: TControl; var Message: TMessage)
     end;
   end;
   
-{var
-  DC: HDC;}
+var
+  DC: HDC;
 
 begin
   case Message.Msg of
@@ -1160,37 +1163,38 @@ begin
     if ThemeServices.ThemesEnabled then
     begin
       case Message.Msg of
-//        WM_PRINTCLIENT,
-//        WM_ERASEBKGND:
-//          begin
-//            if (Message.Msg=WM_PRINTCLIENT) then
-//              DC := TWMPrintClient(Message).DC
-//            else
-//              DC := TWMEraseBkGnd(Message).DC;
-//
-//            // Get the parent to draw its background into the form's background.
-//            {if not (Control.Parent is TWinControl) then
-//              FFormList.DispatchMessage(Control, Message)
-//            else
-//              if TWinControl(Control.Parent).DoubleBuffered then
-//                PerformEraseBackground(Control, DC)
-//              else
-//                if TWinControl(Control).DoubleBuffered then
-//                begin
-//                  if (Message.Msg <> WM_ERASEBKGND) or (Longint(DC) = TWMEraseBkGnd(Message).Unused) then
-//                    //  VCL mark for second pass, this time into the offscreen bitmap
-//                    PerformEraseBackground(Control, DC);
-//                end
-//            else}
-//              DrawThemeParentBackground(TWinControl(Control).Handle, DC, nil);
-//            Message.Result := 1;
-//          end;
-        WM_UPDATEUISTATE: begin
-          FFormList.DispatchMessage(Control, Message);
-          // work around a bug on Vista and higher - http://qc.embarcadero.com/wc/qcmain.aspx?d=37403
-          if IsWindowsVistaOrHigher then
-            DoInvalidate(Control);
-        end;
+        WM_PRINTCLIENT,
+        WM_ERASEBKGND:
+          begin
+            if (Message.Msg=WM_PRINTCLIENT) then
+              DC := TWMPrintClient(Message).DC
+            else
+              DC := TWMEraseBkGnd(Message).DC;
+
+            // Get the parent to draw its background into the form's background.
+            if not (Control.Parent is TWinControl) then
+              FFormList.DispatchMessage(Control, Message)
+            else
+              if TWinControl(Control.Parent).DoubleBuffered then
+                PerformEraseBackground(Control, DC)
+              else
+                if TWinControl(Control).DoubleBuffered then
+                begin
+                  if (Message.Msg <> WM_ERASEBKGND) or (Longint(DC) = TWMEraseBkGnd(Message).Unused) then
+                    //  VCL mark for second pass, this time into the offscreen bitmap
+                    PerformEraseBackground(Control, DC);
+                end
+            else
+              DrawThemeParentBackground(TWinControl(Control).Handle, DC, nil);
+            Message.Result := 1;
+          end;
+        WM_UPDATEUISTATE:
+          begin
+            FFormList.DispatchMessage(Control, Message);
+            // work around a bug on Vista and higher - http://qc.embarcadero.com/wc/qcmain.aspx?d=37403
+            if IsWindowsVistaOrHigher then
+              DoInvalidate(Control);
+          end;
       else
         FFormList.DispatchMessage(Control, Message);
       end;
@@ -1288,7 +1292,8 @@ procedure TThemeManager.GroupBoxWindowProc(Control: TControl; var Message: TMess
         Str := Text
       else
         Str := 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      {begin}
+      {if Text <> '' then
+      begin}
         SetTextColor(DC, Graphics.ColorToRGB(Font.Color));
         // Determine size and position of text rectangle.
         // This must be clipped out before painting the frame.
@@ -1296,10 +1301,10 @@ procedure TThemeManager.GroupBoxWindowProc(Control: TControl; var Message: TMess
         if Text = '' then
           Size.cx := 0;
         CaptionRect := Rect(0, 0, Size.cx, Size.cy);
-        //if not UseRightToLeftAlignment then
-          OffsetRect(CaptionRect, 8, 0);
-        {else
-          OffsetRect(CaptionRect, Width - 8 - CaptionRect.Right, 0);}
+        if not UseRightToLeftAlignment then
+          OffsetRect(CaptionRect, 8, 0)
+        else
+          OffsetRect(CaptionRect, Width - 8 - CaptionRect.Right, 0);
       {end
       else
         CaptionRect := Rect(0, 0, 0, 0);}
@@ -1345,13 +1350,13 @@ begin
           with TWMEraseBkGnd(Message) do
           begin
             // Get the parent to draw its background into the control's background.
-            {if TWinControl(Control.Parent).DoubleBuffered then
+            if TWinControl(Control.Parent).DoubleBuffered then
               PerformEraseBackground(Control, DC)
             else
-            begin}
+            begin
               Details := ThemeServices.GetElementDetailsButton(tbGroupBoxNormal);
               ThemeServices.DrawParentBackground(TGroupBoxCast(Control).Handle, DC, @Details, True, nil);
-            //end;
+            end;
             Result := 1;
           end;
         WM_PAINT:
@@ -1426,7 +1431,7 @@ function TThemeManager.MainWindowHook(var Message: TMessage): Boolean;
 
 var
   Form: TCustomForm;
-
+  
 begin
   Result := False;
 
@@ -1442,7 +1447,7 @@ begin
       begin
         MainManager := Self;
         FSubclassingDisabled := False;
-        CollectForms(nil);
+        CollectForms;
       end;
     finally
       Lock.Leave;
@@ -1557,13 +1562,13 @@ var
         end;
         if ParentColor or ((Control.Parent <> nil) and (Control.Parent.Brush.Color = Color)) then
         begin
-          {if TWinControl(Control.Parent).DoubleBuffered then
+          if TWinControl(Control.Parent).DoubleBuffered then
             PerformEraseBackground(Control, PS.hdc)
           else
-          begin}
+          begin
             Details := ThemeServices.GetElementDetailsButton(tbGroupBoxNormal);
             ThemeServices.DrawParentBackground(Handle, DC, @Details, False, @Rect);
-          //end
+          end
         end
         else
         begin
@@ -1578,7 +1583,7 @@ var
           Bottom := Top + FontHeight;
         end;
         Flags := DT_EXPANDTABS or DT_VCENTER or Alignments[Alignment];
-        //Flags := DrawTextBiDiModeFlags(Flags);
+        Flags := DrawTextBiDiModeFlags(Flags);
         OldFont := SelectObject(DC, Font.Handle);
         SetBKMode(DC, TRANSPARENT);
         SetTextColor(DC, ColorToRGB(Font.Color));
@@ -1604,13 +1609,13 @@ begin
           begin
             DC := TWMEraseBkGnd(Message).DC;
             // Get the parent to draw its background into the control's background.
-            {if TWinControl(Control.Parent).DoubleBuffered then
+            if TWinControl(Control.Parent).DoubleBuffered then
               PerformEraseBackground(Control, DC)
             else
-            begin}
+            begin
               Details := ThemeServices.GetElementDetailsButton(tbGroupBoxNormal);
               ThemeServices.DrawParentBackground(Handle, DC, @Details, False, nil);
-            //end;
+            end;
             Message.Result := 1;
           end;
         WM_NCPAINT:
@@ -1710,27 +1715,6 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-{===================================
- Returns True if the Mouse cursor
- is within the bounds of a control
- ===================================}
-function CursorInControl(Control: TControl): Boolean;
-var
-  ScrnCursor: TPoint;
-  CtrlCursor: TPoint;
-begin
-Result := False;
-if Control = nil then Exit;
-GetCursorPos(ScrnCursor);
-CtrlCursor := Control.ScreenToClient(ScrnCursor);
-if (CtrlCursor.X >= 0) and
-   (CtrlCursor.Y >= 0) and
-   (CtrlCursor.X < Control.Width) and
-   (CtrlCursor.Y < Control.Height) and
-    Control.Visible then
-  Result := True;
-end;
-
 type
   TSpeedButtonCast = class(TSpeedButton);
 
@@ -1767,8 +1751,7 @@ begin
                 Button := tbPushButtonNormal;
                 if Flat then
                 begin
-                  //if MouseInControl then
-                  if CursorInControl(Control) then
+                  if MouseInControl then
                     Button := tbPushButtonHot;
                 end
                 else
@@ -1888,12 +1871,12 @@ begin
             try
               // Exclude the client area from painting. We only want to erase the non-client area.
               DrawRect := ClientRect;
-              //OffsetRect(DrawRect, BorderWidth, BorderWidth);
+              OffsetRect(DrawRect, BorderWidth, BorderWidth);
               with DrawRect do
                 ExcludeClipRect(DC, Left, Top, Right, Bottom);
               // The parent paints relative to the control's client area. We have to compensate for this by
               // shifting the dc's window origin.
-              //SetWindowOrgEx(DC, -BorderWidth, -BorderWidth, nil);
+              SetWindowOrgEx(DC, -BorderWidth, -BorderWidth, nil);
               Details := ThemeServices.GetElementDetailsTab(ttBody);
               ThemeServices.DrawParentBackground(TWinControl(Control).Handle, DC, @Details, False, nil);
             finally
@@ -2132,6 +2115,7 @@ procedure TThemeManager.WinControlWindowProc(Control: TControl; var Message: TMe
 var
   DC: HDC;
   SavedDC: Integer;
+
 begin
   if not DoControlMessage(Control, Message) then
   begin
@@ -2152,9 +2136,9 @@ begin
               with Control as TWinControl do
               begin
                 DC := TWMEraseBkGnd(Message).DC;                     
-                {if DoubleBuffered then
+                if DoubleBuffered then
                   PerformEraseBackground(Control, DC)
-                else}
+                else
                   ThemeServices.DrawParentBackground(Handle, DC, nil, False, nil);
                 Message.Result := 1;
               end
@@ -2168,10 +2152,7 @@ begin
           end;
         CN_CTLCOLORSTATIC:
           if Control is TCustomStaticText
-              //or (Control is TCustomEdit)
-              or (Control is TCustomSysLink)
-              //or (Control is TCustomMemo)
-              {or (Control.ClassNameIs( 'TIconView'))} then
+              or (Control is TCustomSysLink) then
             with TWMCtlColorStatic(Message), Control as TWinControl do
             begin
               SetBkMode(ChildDC, Windows.TRANSPARENT);
@@ -2627,7 +2608,7 @@ begin
   with TControlCast(Control) do
   begin
     LastFont := SelectObject(DC, Font.Handle);
-    CalcButtonLayout(Control, DC, R, Offset, GlyphPos, TextBounds, {DrawTextBidiModeFlags(0)} 0);
+    CalcButtonLayout(Control, DC, R, Offset, GlyphPos, TextBounds, DrawTextBidiModeFlags(0));
     // Note: Currently we cannot do text output via the themes services because the second flags parameter (which is
     // used for graying out strings) is ignored (bug in XP themes implementation?).
     // Hence we have to do it the "usual" way.
@@ -2711,8 +2692,8 @@ var
       if Control is TToolBar then
       begin
         ToolBar := TToolBar(Control);
-        {if MakeTransparent then
-          ToolBar.Transparent := True;}
+        if MakeTransparent then
+          ToolBar.Transparent := True;
         if RemoveMouseCapture then
         begin
           for J := 0 to ToolBar.ButtonCount - 1 do
@@ -2772,7 +2753,7 @@ begin
 
       MainManager := Self;
       FSubclassingDisabled := False;
-      CollectForms(nil);
+      CollectForms;
     finally
       Lock.Release;
     end;
@@ -2835,76 +2816,76 @@ begin
                 List := FTabSheetList;
             end
             else
-              if Control is TTab95Sheet then
+              if Control is TCustomPanel then
               begin
-                if (toSubclassTabSheet in FOptions) or not Inserting then
-                  List := FTab95SheetList;
+                if (toSubclassPanel in FOptions) or not Inserting then
+                  List := FPanelList;
               end
               else
-                if Control is TCustomPanel then
-                begin
-                  if (toSubclassPanel in FOptions) or not Inserting then
-                    List := FPanelList;
-                end
-                else
-                  {$ifdef COMPILER_5_UP}
-                    if Control is TCustomFrame then
+                {$ifdef COMPILER_5_UP}
+                  if Control is TCustomFrame then
+                  begin
+                    if (toSubclassFrame in FOptions) or not Inserting then
+                      List := FFrameList;
+                  end
+                  else
+                {$endif COMPILER_5_UP}  
+                  if Control is TCustomListView then
+                  begin
+                    if (toSubclassListView in FOptions) or not Inserting then
                     begin
-                      if (toSubclassFrame in FOptions) or not Inserting then
-                        List := FFrameList;
+                      List := FListViewList;
+                      // We have to force the listview to recreate its window handle (to reapply all the control settings).
+                      // However if it is already in our list then don't touch the window anymore.
+                      WinControl := Control as TWinControl;
+                      if Inserting and not List.Find(Control, Index) and WinControl.HandleAllocated then
+                        PostMessage(WinControl.Handle, CM_RECREATEWND, 0, 0);
+                    end;
+                  end
+                  else
+                    if Control is TTrackBar then
+                    begin
+                      if (toSubclassTrackBar in FOptions) or not Inserting then
+                        List := FTrackBarList;
                     end
                     else
-                  {$endif COMPILER_5_UP}
-                    if Control is TCustomListView then
-                    begin
-                      if (toSubclassListView in FOptions) or not Inserting then
-                      begin
-                        List := FListViewList;
-                        // We have to force the listview to recreate its window handle (to reapply all the control settings).
-                        // However if it is already in our list then don't touch the window anymore.
-                        WinControl := Control as TWinControl;
-                        if Inserting and not List.Find(Control, Index) and WinControl.HandleAllocated then
-                          PostMessage(WinControl.Handle, CM_RECREATEWND, 0, 0);
-                      end;
-                    end
-                    else
-                      if Control is TTrackBar then
-                      begin
-                        if (toSubclassTrackBar in FOptions) or not Inserting then
-                          List := FTrackBarList;
-                      end
-                      else
-                        {$ifdef CheckListSupport}
-                          if Control is TCheckListBox then
+                      {$ifdef CheckListSupport}
+                        if Control is TCheckListBox then
+                        begin
+                          if (toSubclassCheckListBox in FOptions) or not Inserting then
+                            List := FCheckListBoxList;
+                        end
+                        else
+                      {$endif CheckListSupport}
+                        if Control is TCustomStatusBar then
+                        begin
+                          if (toSubclassStatusBar in FOptions) or not Inserting then
+                            List := FStatusBarList;
+                        end
+                        else
+                          if Control is TSplitter then
                           begin
-                            if (toSubclassCheckListBox in FOptions) or not Inserting then
-                              List := FCheckListBoxList;
+                            if (toSubclassSplitter in FOptions) or not Inserting then
+                              List := FSplitterList;
                           end
                           else
-                        {$endif CheckListSupport}
-                          if Control is TCustomStatusBar then
-                          begin
-                            if (toSubclassStatusBar in FOptions) or not Inserting then
-                              List := FStatusBarList;
-                          end
-                          else
-                            if Control is TSplitter then
+                            if Control is TAnimate then
                             begin
-                              if (toSubclassSplitter in FOptions) or not Inserting then
-                                List := FSplitterList;
+                              if (toSubclassAnimate in FOptions) or not Inserting then
+                                List := FAnimateList;
                             end
                             else
-                              if Control is TAnimate then
+                              if Control is TCustomForm then
                               begin
-                                if (toSubclassAnimate in FOptions) or not Inserting then
-                                  List := FAnimateList;
+                                List := FFormList;
+                                if Inserting then
+                                  FPendingFormsList.Remove(Control);
                               end
                               else
-                                if Control is TCustomForm then
+                                if Control is TTab95Sheet then
                                 begin
-                                  List := FFormList;
-                                  if Inserting then
-                                    FPendingFormsList.Remove(Control);
+                                  if (toSubclassTabSheet in FOptions) or not Inserting then
+                                    List := FTab95SheetList;
                                 end
                                 else
                                   if Control is TWinControl then
@@ -2948,15 +2929,10 @@ end;
 procedure TThemeManager.Loaded;
 
 begin
-  {if (Application.Handle = 0) and Assigned(Owner) and (Owner is TCustomForm)
-      and Assigned(MainManager)
-      and not (csDesigning in ComponentState) then
-    MainManager.CollectForms(Owner as TCustomForm)
-  else}
   // Collect all controls which already exist. Those controls, which are later added/removed are handled by the
   // subclassing of their old/new parent.
   if (MainManager = Self) and not (csDesigning in ComponentState) then
-    CollectForms(nil);
+    CollectForms;
 
   inherited;
 end;
@@ -3143,7 +3119,7 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TThemeManager.CollectForms(Form: TCustomForm);
+procedure TThemeManager.CollectForms(Form: TCustomForm = nil);
 
 // (Re)initiates collecting all controls which need to be subclassed to fixed one or more problems.
 
