@@ -38,6 +38,8 @@ set IMPORTS_UNITS= ^
 
 rem Units in LibUser to compile separately (keep alphabetical please)
 set LIBUSER_UNITS= ^
+    cUnicode.pas ^
+    cUnicodeChar.pas ^
     GIFImage.pas ^
     HugeIni.pas ^
     MBCSUtil.pas ^
