@@ -44,6 +44,7 @@ set LIBUSER_UNITS= ^
     HugeIni.pas ^
     MBCSUtil.pas ^
     NewDialogs.pas ^
+    PathFuncWide.pas ^
     PEStruct.pas ^
     PJMessageDialog ^
     ShellApi2.pas ^
@@ -119,7 +120,7 @@ if errorlevel 1 goto failed
 echo - LibUser
 
 "%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %CUSTOMARGS% ^
-    -U"%COMMON_LIB_PATH%" ^
+    -U"%COMMON_LIB_PATH%;TntUnicodeControls" ^
     -R"%DELPHIROOT%\lib" ^
     -N"%DCU_PATH%" ^
     %LIBUSER_UNITS%
