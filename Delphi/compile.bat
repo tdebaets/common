@@ -148,6 +148,20 @@ set CFGFILE=
 if not "%OLDCFGFILE%"=="" ren %OLDCFGFILE%.%RND% %OLDCFGFILE%
 set OLDCFGFILE=
 
+cd TntUnicodeControls\Packages
+if errorlevel 1 goto failed
+
+echo - TntUnicodeVcl_R40.dpk
+
+"%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %CUSTOMARGS% ^
+    -U"%COMMON_LIB_PATH%;..\.." ^
+    -R"%DELPHIROOT%\lib" ^
+    -N"..\..\%DCU_PATH%" ^
+    TntUnicodeVcl_R40.dpk
+if errorlevel 1 goto failed
+
+cd ..\..
+
 echo Success!
 cd ..
 goto exit

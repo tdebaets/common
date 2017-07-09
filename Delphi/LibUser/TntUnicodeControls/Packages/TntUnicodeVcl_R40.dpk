@@ -1,0 +1,57 @@
+package TntUnicodeVcl_R40;
+
+{$R *.RES}
+{$ALIGN ON}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS ON}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'Tnt Unicode Controls - Runtime'}
+{$IMPLICITBUILD ON}
+
+requires
+  vcl40,
+  Vclx40,
+  VCLSMP40;
+
+contains
+  TntSystem in '..\TntSystem.pas',
+  TntAxCtrls in '..\TntAxCtrls.pas',
+  TntTypInfo in '..\TntTypInfo.pas',
+  TntClipbrd in '..\TntClipbrd.pas',
+  TntWindows in '..\TntWindows.pas',
+  TntSysUtils in '..\TntSysUtils.pas',
+  TntClasses in '..\TntClasses.pas',
+  TntDialogs in '..\TntDialogs.pas',
+  TntFileCtrl in '..\TntFileCtrl.pas',
+  TntExtDlgs in '..\TntExtDlgs.pas',
+  TntRegistry in '..\TntRegistry.pas',
+  TntGraphics in '..\TntGraphics.pas',
+  TntControls in '..\TntControls.pas',
+  TntActnList in '..\TntActnList.pas',
+  TntMenus in '..\TntMenus.pas',
+  TntForms in '..\TntForms.pas',
+  TntStdCtrls in '..\TntStdCtrls.pas',
+  TntExtCtrls in '..\TntExtCtrls.pas',
+  TntButtons in '..\TntButtons.pas',
+  TntStdActns in '..\TntStdActns.pas',
+  TntFormatStrUtils in '..\TntFormatStrUtils.pas',
+  TntUnicodeVcl_Register in '..\Design\TntUnicodeVcl_Register.pas';
+
+end.
