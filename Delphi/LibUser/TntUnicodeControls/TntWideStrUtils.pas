@@ -78,12 +78,8 @@ function WideDequotedStr(const S: WideString; AQuote: WideChar): WideString;
 implementation
 
 uses
-  {$IFDEF COMPILER_9_UP} WideStrUtils, {$ENDIF} Math, Windows, TntWindows;
-
-{$IFNDEF COMPILER_5_UP}
-type
-  PCardinal = ^Cardinal;
-{$ENDIF}
+  {$IFDEF COMPILER_9_UP} WideStrUtils, {$ENDIF} Math, Windows, TntWindows,
+  TntSystem; // need PCardinal for Delphi 5 and lower
 
 {$IFNDEF COMPILER_9_UP}
 function WStrAlloc(Size: Cardinal): PWideChar;
