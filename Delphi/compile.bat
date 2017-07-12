@@ -47,6 +47,8 @@ set LIBUSER_UNITS= ^
     PathFuncWide.pas ^
     PEStruct.pas ^
     PJMessageDialog ^
+    Scanf.pas ^
+    Scanf_c.pas ^
     ShellApi2.pas ^
     ShlObj2.pas ^
     uProcessMemMgr.pas
