@@ -34,7 +34,8 @@ set LIBFIXED_UNITS= ^
 rem  Units in Imports to compile separately (keep alphabetical please)
 set IMPORTS_UNITS= ^
     Accessibility_TLB.pas ^
-    SHDocVw_TLB.pas
+    SHDocVw_TLB.pas ^
+    WMPLib_TLB.pas
 
 rem Units in LibUser to compile separately (keep alphabetical please)
 set LIBUSER_UNITS= ^
@@ -51,7 +52,10 @@ set LIBUSER_UNITS= ^
     Scanf_c.pas ^
     ShellApi2.pas ^
     ShlObj2.pas ^
-    uProcessMemMgr.pas
+    uProcessMemMgr.pas ^
+    WMPAttribs.pas ^
+    WMPUndocumented.pas ^
+    WMPUtil.pas
 
 set CFGFILE=
 set OLDCFGFILE=
@@ -122,7 +126,7 @@ if errorlevel 1 goto failed
 echo - LibUser
 
 "%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %CUSTOMARGS% ^
-    -U"%COMMON_LIB_PATH%;TntUnicodeControls" ^
+    -U"%COMMON_LIB_PATH%;..\Imports;TntUnicodeControls" ^
     -R"%DELPHIROOT%\lib" ^
     -N"%DCU_PATH%" ^
     %LIBUSER_UNITS%
