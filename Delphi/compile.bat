@@ -52,6 +52,7 @@ set LIBUSER_UNITS= ^
     Scanf_c.pas ^
     ShellApi2.pas ^
     ShlObj2.pas ^
+    StreamUtil.pas ^
     uProcessMemMgr.pas ^
     WMPAttribs.pas ^
     WMPUndocumented.pas ^
