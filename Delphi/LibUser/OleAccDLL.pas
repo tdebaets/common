@@ -91,7 +91,7 @@ function CreateStdAccessibleObject(H : HWND; idObject : LongInt;
     const riid : TIID; out vObject) : HRESULT; stdcall;
 
 {$EXTERNALSYM AccessibleChildren}
-// STDAPI   	   AccessibleChildren (IAccessible* paccContainer, LONG iChildStart, LONG cChildren, VARIANT* rgvarChildren,LONG* pcObtained);
+// STDAPI        AccessibleChildren (IAccessible* paccContainer, LONG iChildStart, LONG cChildren, VARIANT* rgvarChildren,LONG* pcObtained);
 function AccessibleChildren(AccContainer : IAccessible;
     iChildStart, cChildren : LongInt; var rgvarChildren : OleVariant;
     var cObtained) : HRESULT; stdcall;
