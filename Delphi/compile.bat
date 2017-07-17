@@ -56,7 +56,8 @@ set LIBUSER_UNITS= ^
     uProcessMemMgr.pas ^
     WMPAttribs.pas ^
     WMPUndocumented.pas ^
-    WMPUtil.pas
+    WMPUtil.pas ^
+    WMPWSZFormat.pas
 
 set CFGFILE=
 set OLDCFGFILE=
