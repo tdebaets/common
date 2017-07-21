@@ -66,8 +66,8 @@ rem  Quiet compile / Build all / Output warnings
 set DCC32OPTS=-Q -W
 set CUSTOMARGS=%1
 
-if "%1"=="incr" (
-    rem Incremental compile (non-default)
+if "%1"=="/incr" (
+    echo * Incremental compilation enabled ^(non-default^)
     set CUSTOMARGS=%2
 ) else (
     rem Build all (default)
