@@ -162,12 +162,16 @@ if errorlevel 1 goto failed
 
 echo - TntUnicodeVcl_R40.dpk
 
+:tntunicode
 "%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %CUSTOMARGS% ^
     -U"..\..\..\LibFixed;%DELPHIROOT%\lib;..\.." ^
     -R"%DELPHIROOT%\lib" ^
     -N"..\..\%DCU_PATH%" ^
     TntUnicodeVcl_R40.dpk
-if errorlevel 1 goto failed
+if errorlevel 1 (
+    cd ..\..
+    goto failed
+)
 
 cd ..\..
 
