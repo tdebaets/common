@@ -40,3 +40,5 @@ userprefs.bat
 # Per-project compiler options created by Delphi
 # <project-name>.cfg.main is always used instead for command-line compile
 tdebaets_comps.cfg
+# no command-line compile supported
+dfm2text.cfg
