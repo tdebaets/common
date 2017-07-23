@@ -116,7 +116,7 @@ type
         default False;
     property UpDownKeys: Boolean read FUpDownKeys write FUpDownKeys
         default True;
-    property Empty: Boolean read GetEmpty write SetEmpty;
+    property Empty: Boolean read GetEmpty write SetEmpty default True;
     property OnHideBalloon: THideBalloonEvent read FOnHideBalloon
         write FOnHideBalloon;
     property Anchors;
