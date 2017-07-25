@@ -108,6 +108,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    // the following property isn't published for backwards compatibility
+    property Empty: Boolean read GetEmpty write SetEmpty;
   published
     property Maximum: Integer read GetMaximum write SetMaximum default 100;
     property Minimum: Integer read GetMinimum write SetMinimum default 0;
@@ -116,7 +118,6 @@ type
         default False;
     property UpDownKeys: Boolean read FUpDownKeys write FUpDownKeys
         default True;
-    property Empty: Boolean read GetEmpty write SetEmpty default True;
     property OnHideBalloon: THideBalloonEvent read FOnHideBalloon
         write FOnHideBalloon;
     property Anchors;
@@ -508,7 +509,7 @@ begin
   if Empty then
     Text := ''
   else
-    Text := '0';
+    Text := IntToStr(FValue);
 end;
 
 procedure TSpinIntEdit.SetAllowPlusMin(const Value: Boolean);
