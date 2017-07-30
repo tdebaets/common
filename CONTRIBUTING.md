@@ -33,7 +33,7 @@ If you want to contribute new code to a project, don't clone its main repository
   > git checkout TOPIC_BRANCH
   ```
 
-7. While making changes to a file, please take care to follow the coding conventions currently used in the file: indentation, capitalization, function/parameter/variable naming, clarifying comments where needed, and so on. All indentation should be saved as spaces and never as tabs. Make sure that your text editor or IDE is set to use spaces.
+7. While making changes to a file, please take care to follow the coding conventions currently used in the file: indentation, capitalization, function/parameter/variable naming, clarifying comments where needed, and so on. All indentation should be saved as spaces and never as tabs. Make sure that your text editor or IDE is configured to use spaces.
 
 8. When you're done with your changes, check if the command-line compilation (`compile.bat`) still succeeds, even if compilation was already successful in the IDE. You are also expected to properly test your changes. Pull requests with buggy code won't be accepted.
 
@@ -47,7 +47,7 @@ If you want to contribute new code to a project, don't clone its main repository
 
 ### Keeping your topic branch up-to-date
 
-To keep your topic branch up-to-date with the changes in the official repository, first make sure that you have committed your changes or `git stash` them. Then run `update.bat upstream master` again. Don't forget to run `git stash pop` afterwards if needed.
+To keep your topic branch up-to-date with the changes in the official repository, first make sure that you have either committed your changes or have stashed them using `git stash`. Then run `update.bat upstream master` again. Don't forget to run `git stash pop` afterwards if needed.
 
 ### Rebasing your topic branch on top of master
 
