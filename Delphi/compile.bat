@@ -53,6 +53,7 @@ set LIBUSER_UNITS= ^
     ShellApi2.pas ^
     ShlObj2.pas ^
     StreamUtil.pas ^
+    UIntList.pas ^
     uProcessMemMgr.pas ^
     WMPAttribs.pas ^
     WMPUndocumented.pas ^
