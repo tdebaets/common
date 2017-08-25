@@ -32,6 +32,7 @@ const
 
 // Resources - verified in WMP 10-12
 const
+  WMPDll: PChar = 'wmp.dll';
   WMPLocDll: PChar = 'wmploc.dll';
   WMErrorDll: PChar = 'wmerror.dll';
   WMPLocSkinResType = 256;

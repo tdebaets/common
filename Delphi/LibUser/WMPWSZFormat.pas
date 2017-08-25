@@ -24,7 +24,8 @@ unit WMPWSZFormat;
 
 interface
 
-uses Windows, Classes, SysUtils, Common2, StreamUtil, ComObj;
+uses Windows, Classes, SysUtils, Common2, StreamUtil, ActiveX, ComObj, EZDslHsh,
+    PathFunc, CmnFunc2, UIntList;
 
 const
   WSZ_ELEMENTID_THEME   = $0B;
@@ -75,13 +76,23 @@ type
   TWMPWSZParser = class
   private
     fLogProc: TWMPWSZLogProc;
+    fWMPTypeLib: ITypeLib;
+    fWMPDispIDs: TIntList; // int: disp ID; object: property name (referenced string)
     procedure Log(Level: TWMPWSZLogLevel; const Msg: String;
         const Args: array of const);
     procedure LogInfo(const Msg: String; const Args: array of const);
     procedure LogWarning(const Msg: String; const Args: array of const);
     procedure ParseAttrib(Stream: TSafeStream; EndOfElement: Longint);
     procedure ParseElement(Stream: TSafeStream; Flags: TWMPWSZParseFlags);
+    procedure LoadWMPTypeLib;
+    function ResolveWMPObjectCLSID(const CLSID: TCLSID; var Name: String): Boolean;
+    function ResolveWMPDispID(ID: Integer): String;
+    procedure LoadWMPDispIDsForType(TypInfo: ITypeInfo);
+    procedure LoadWMPDispIDs;
+    procedure FreeWMPDispIDs;
   public
+    constructor Create;
+    destructor Destroy; override;
     procedure Parse(Stream: TStream);
     property LogProc: TWMPWSZLogProc read fLogProc write fLogProc;
   end;
@@ -91,11 +102,35 @@ function ParseWSZAttributeType(WSZType: Byte;
 
 implementation
 
+uses WMPUtil;
+
+{ EWMPWSZParseError }
+
 constructor EWMPWSZParseError.CreateFmt(Position: Longint; const Msg: String;
     const Args: array of const);
 begin
   inherited CreateFmt(Msg, Args);
   fPosition := Position;
+end;
+
+{ TWMPWSZParser }
+
+constructor TWMPWSZParser.Create;
+begin
+  inherited;
+  fWMPDispIDs := TIntList.Create;
+  fWMPDispIDs.Sorted := True; // for faster lookup
+  fWMPDispIDs.Duplicates := dupError;
+  LoadWMPTypeLib;
+  LoadWMPDispIDs;
+end;
+
+destructor TWMPWSZParser.Destroy;
+begin
+  FreeWMPDispIDs;
+  fWMPTypeLib := nil;
+  FreeAndNil(fWMPDispIDs);
+  inherited;
 end;
 
 procedure TWMPWSZParser.Log(Level: TWMPWSZLogLevel; const Msg: String;
@@ -152,7 +187,8 @@ begin
       AttrDispId := Stream.ReadWord(EndOfAttrib);
       Stream.SkipPaddingWord(EndOfAttrib);
       AttribValue := Stream.ReadWideString(EndOfAttrib);
-      LogInfo('  dispid %u=%s', [AttrDispId, AttribValue]);
+      LogInfo('  dispid %u %s=%s',
+          [AttrDispId, ResolveWMPDispID(AttrDispId), String(AttribValue)]);
     end;
     else begin
       AttrDispId := Stream.ReadWord(EndOfAttrib);
@@ -173,7 +209,8 @@ begin
               'Unexpected attribute type: %u', [Cardinal(Typ)]);
         end;
       end;
-      LogInfo('  dispid %u=%s', [AttrDispId, String(AttribValue)]);
+      LogInfo('  dispid %u %s=%s',
+          [AttrDispId, ResolveWMPDispID(AttrDispId), String(AttribValue)]);
     end;
   end;
 end;
@@ -186,6 +223,7 @@ var
   ElementType: Byte;
   NumChildren, NumAttribs: Byte;
   ElementName: WideString;
+  ObjName: String;
   CLSID: TGUID;
   i: Integer;
 begin
@@ -229,7 +267,8 @@ begin
       // CLSID element
       Stream.SkipPaddingWord(EndOfElement);
       CLSID := Stream.ReadGUID(EndOfElement);
-      LogInfo('  clsid=%s', [GUIDToString(CLSID)]);
+      ResolveWMPObjectCLSID(CLSID, ObjName);
+      LogInfo('  object=%s', [ObjName]);
     end
     else begin
       // Named element
@@ -253,6 +292,130 @@ begin
     ParseElement(SafeStream, [wszpfIsRootElement]);
   finally
     FreeAndNil(SafeStream);
+  end;
+end;
+
+procedure TWMPWSZParser.LoadWMPTypeLib;
+var
+  WMPDLLPath: WideString;
+begin
+  WMPDLLPath := AddBackslash(GetSystemDir) + WMPDll;
+  if not Succeeded(LoadTypeLib(PWideChar(WMPDLLPath), fWMPTypeLib)) then
+    LogWarning('Failed to load wmp.dll type library', []);  
+end;
+
+function TWMPWSZParser.ResolveWMPObjectCLSID(const CLSID: TCLSID;
+    var Name: String): Boolean;
+var
+  TypInfo: ITypeInfo;
+  ObjName: WideString;
+begin
+  Result := False;
+  Name := GUIDToString(CLSID);
+  if not Assigned(fWMPTypeLib) then
+    Exit;
+  try
+    if not Succeeded(fWMPTypeLib.GetTypeInfoOfGuid(CLSID, TypInfo)) then
+      Exit;
+    if not Succeeded(TypInfo.GetDocumentation(MEMBERID_NIL,
+        @ObjName, nil, nil, nil)) then
+      Exit;
+    if Length(ObjName) > 0 then begin
+      Result := True;
+      Name := String(ObjName) + ' ' + Name;
+    end;
+  finally
+    if not Result then
+      LogWarning('Unknown object for CLSID %s', [GUIDToString(CLSID)]);
+  end;
+end;
+
+function TWMPWSZParser.ResolveWMPDispID(ID: Integer): String;
+var
+  Idx: Integer;
+begin
+  if fWMPDispIDs.Find(ID, Idx) then
+    Result := String(fWMPDispIDs.Objects[Idx])
+  else begin
+    Result := '<unknown property>';
+    if Assigned(fWMPTypeLib) then
+      LogWarning('Unknown property for dispid %u', [ID]);
+  end;
+end;
+
+procedure TWMPWSZParser.LoadWMPDispIDsForType(TypInfo: ITypeInfo);
+var
+  pTypAttr: PTypeAttr;
+  pFunDesc: PFuncDesc;
+  i: Integer;
+  FuncName: WideString;
+begin
+  if not Assigned(TypInfo) then
+    Exit;
+  pTypAttr := nil;
+  if not Succeeded(TypInfo.GetTypeAttr(pTypAttr)) or not Assigned(pTypAttr) then
+    Exit;
+  try
+    for i := 0 to pTypAttr.cFuncs - 1 do begin
+      pFunDesc := nil;
+      if not Succeeded(TypInfo.GetFuncDesc(i, pFunDesc))
+          or not Assigned(pFunDesc) then
+        Continue;
+      try
+        // Ignore non-property functions as regular functions may have the same
+        // dispid as properties. Check for 'property-get' because read-only
+        // properties (eg. ID) can also be used in the skin.
+        if pFunDesc.invkind <> INVOKE_PROPERTYGET then
+          Continue;
+        if not Succeeded(TypInfo.GetDocumentation(pFunDesc.memid,
+            @FuncName, nil, nil, nil)) then
+          Continue;
+        try
+          if Length(FuncName) > 0 then try
+            fWMPDispIDs.AddObject(pFunDesc.memid, RefString(FuncName));
+          except
+            on EStringListError do
+              Continue;
+          end;
+        finally
+          FuncName := ''; // required to free the string before it gets reassigned
+        end;
+      finally
+        TypInfo.ReleaseFuncDesc(pFunDesc);
+      end;
+    end;
+  finally
+    TypInfo.ReleaseTypeAttr(pTypAttr);
+  end;
+end;
+
+procedure TWMPWSZParser.LoadWMPDispIDs;
+var
+  Count, i: Integer;
+  TypInfo: ITypeInfo;
+  TypeKind: TTypeKind;
+begin
+  if not Assigned(fWMPTypeLib) then
+    Exit;
+  Count := fWMPTypeLib.GetTypeInfoCount;
+  for i := 0 to Count - 1 do begin
+    TypInfo := nil;
+    if not Succeeded(fWMPTypeLib.GetTypeInfoType(i, TypeKind)) then
+      Continue;
+    if TypeKind <> TKIND_DISPATCH then
+      Continue;
+    if not Succeeded(fWMPTypeLib.GetTypeInfo(i, TypInfo)) then
+      Continue;
+    LoadWMPDispIDsForType(TypInfo);
+  end;
+end;
+
+procedure TWMPWSZParser.FreeWMPDispIDs;
+begin
+  while fWMPDispIDs.Count > 0 do begin
+    ReleaseString(fWMPDispIDs.Objects[0]);
+    fWMPDispIDs.Objects[0] := nil;
+    fWMPDispIDs.Delete(0);
   end;
 end;
 
