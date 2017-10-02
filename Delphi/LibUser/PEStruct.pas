@@ -131,15 +131,48 @@ type
                                           // Otherwise, date/time of the target DLL
   end;
 
-function RVAToAbsolute(BaseAddress, Address: Pointer): Pointer;
+function RVAToAbsolute(pBaseAddress, pRVA: Pointer): Pointer;
+function RVAIsInSection(pRVA: Pointer; pSectionHdr: PImageSectionHeader): Boolean;
+function FindImportsSectionHdr(pNtHeaders: PImageNtHeaders;
+    pRVAImportDir: Pointer): PImageSectionHeader;
 function IMAGE_ORDINAL(Ordinal: DWORD): DWORD;
 
 implementation
 
-function RVAToAbsolute(BaseAddress, Address: Pointer): Pointer;
+function RVAToAbsolute(pBaseAddress, pRVA: Pointer): Pointer;
 begin
-  Result := Pointer(Cardinal(BaseAddress) + Cardinal(Address));
+  Result := Pointer(Cardinal(pBaseAddress) + Cardinal(pRVA));
 end;
+
+function RVAIsInSection(pRVA: Pointer; pSectionHdr: PImageSectionHeader): Boolean;
+var
+  SectionHdrEnd: Cardinal;
+begin
+  SectionHdrEnd := Cardinal(pSectionHdr.VirtualAddress) +
+      pSectionHdr.SizeOfRawData;
+  Result := (pSectionHdr.VirtualAddress <= Cardinal(pRVA))
+      and (SectionHdrEnd > Cardinal(pRVA))
+end;
+
+function FindImportsSectionHdr(pNtHeaders: PImageNtHeaders;
+    pRVAImportDir: Pointer): PImageSectionHeader;
+var
+  pSectionHdr: PImageSectionHeader;
+  i: Integer;
+begin
+  // Section header exists immediately after optional header
+  pSectionHdr := PImageSectionHeader(Cardinal(@pNtHeaders.OptionalHeader)
+      + pNtHeaders.FileHeader.SizeOfOptionalHeader);
+  // Locate section containing import directory
+  for i := 0 to pNtHeaders.FileHeader.NumberOfSections - 1 do begin
+    if RVAIsInSection(pRVAImportDir, pSectionHdr) then begin
+      Result := pSectionHdr;
+      Exit;
+    end;
+    Inc(pSectionHdr);
+  end;
+  Result := nil;
+end; 
 
 function IMAGE_ORDINAL(Ordinal: DWORD): DWORD;
 begin
