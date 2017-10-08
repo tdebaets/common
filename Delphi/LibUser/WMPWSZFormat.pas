@@ -28,12 +28,10 @@ uses Windows, Classes, SysUtils, Common2, StreamUtil, ActiveX, ComObj, EZDslHsh,
     PathFunc, CmnFunc2, UIntList;
 
 const
-  WSZ_ELEMENTID_THEME   = $0B;
-  WSZ_ELEMENTID_VIEW    = $0C;
-  WSZ_ELEMENTID_SUBVIEW = $0D;
-  WSZ_ELEMENTID_CLSID   = $82;
-  WSZ_ELEMENTID_CLSID_2 = $87;
-  WSZ_ELEMENTID_CLSID_3 = $88;
+  WSZ_ELEMENTID_THEME       = $0B;
+  WSZ_ELEMENTID_VIEW        = $0C;
+  WSZ_ELEMENTID_SUBVIEW     = $0D;
+  WSZ_ELEMENTID_CLSID_MASK  = $80;
 
 const
   WSZ_ATTRIBUTE_TYPE_NAMED        = $00;
@@ -260,10 +258,8 @@ begin
     WSZ_ELEMENTID_SUBVIEW: begin
       // Predefined element
       Stream.SkipPaddingWord(EndOfElement);
-    end;
-    WSZ_ELEMENTID_CLSID,
-    WSZ_ELEMENTID_CLSID_2,
-    WSZ_ELEMENTID_CLSID_3: begin
+    end
+    else if (ElementType and WSZ_ELEMENTID_CLSID_MASK) <> 0 then begin
       // CLSID element
       Stream.SkipPaddingWord(EndOfElement);
       CLSID := Stream.ReadGUID(EndOfElement);
