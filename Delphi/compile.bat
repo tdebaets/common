@@ -41,6 +41,7 @@ rem Units in LibUser to compile separately (keep alphabetical please)
 set LIBUSER_UNITS= ^
     cUnicode.pas ^
     cUnicodeChar.pas ^
+    FastMM4\FastMM4.pas ^
     GIFImage.pas ^
     HugeIni.pas ^
     MBCSUtil.pas ^
