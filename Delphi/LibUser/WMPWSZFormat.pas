@@ -345,6 +345,7 @@ var
   pFunDesc: PFuncDesc;
   i: Integer;
   FuncName: WideString;
+  pFuncName: Pointer;
 begin
   if not Assigned(TypInfo) then
     Exit;
@@ -367,11 +368,15 @@ begin
             @FuncName, nil, nil, nil)) then
           Continue;
         try
+          pFuncName := nil;
           if Length(FuncName) > 0 then try
-            fWMPDispIDs.AddObject(pFunDesc.memid, RefString(FuncName));
+            pFuncName := RefString(FuncName);
+            fWMPDispIDs.AddObject(pFunDesc.memid, pFuncName);
           except
-            on EStringListError do
+            on EStringListError do begin
+              ReleaseString(pFuncName);
               Continue;
+            end;
           end;
         finally
           FuncName := ''; // required to free the string before it gets reassigned
