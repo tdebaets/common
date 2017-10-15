@@ -34,21 +34,22 @@ const
   WSZ_ELEMENTID_CLSID_MASK  = $80;
 
 const
-  WSZ_ATTRIBUTE_TYPE_NAMED        = $00;
-  WSZ_ATTRIBUTE_TYPE_WORDBOOL     = $01;
-  WSZ_ATTRIBUTE_TYPE_INTEGER      = $04;
-  WSZ_ATTRIBUTE_TYPE_STRING       = $08;
-  WSZ_ATTRIBUTE_TYPE_SYSINT       = $0D;
-  WSZ_ATTRIBUTE_TYPE_RESSTRING    = $18;
-  WSZ_ATTRIBUTE_TYPE_WMPENABLED   = $28;
-  WSZ_ATTRIBUTE_TYPE_WMPPROP      = $48;
-  WSZ_ATTRIBUTE_TYPE_NAMED_EVENT  = $E0;
-  WSZ_ATTRIBUTE_TYPE_GLOBAL_VAR   = $88;
+  WSZ_ATTRIBUTE_TYPE_NAMED          = $00;
+  WSZ_ATTRIBUTE_TYPE_WORDBOOL       = $01;
+  WSZ_ATTRIBUTE_TYPE_INTEGER        = $04;
+  WSZ_ATTRIBUTE_TYPE_STRING         = $08;
+  WSZ_ATTRIBUTE_TYPE_SYSINT         = $0D;
+  WSZ_ATTRIBUTE_TYPE_RESSTRING      = $18;
+  WSZ_ATTRIBUTE_TYPE_WMPENABLED     = $28;
+  WSZ_ATTRIBUTE_TYPE_NAMED_WMPPROP  = $40;
+  WSZ_ATTRIBUTE_TYPE_WMPPROP        = $48;
+  WSZ_ATTRIBUTE_TYPE_NAMED_EVENT    = $E0;
+  WSZ_ATTRIBUTE_TYPE_GLOBAL_VAR     = $88;
 
 type
   TWMPWSZAttributeType = (wszatNamed, wszatWordBool, wszatInteger, wszatString,
-      wszatSysInt, wszatResString, wszatWmpEnabled, wszatWmpProp,
-      wszatNamedEvent, wszatGlobalVar);
+      wszatSysInt, wszatResString, wszatWmpEnabled, wszatNamedWmpProp,
+      wszatWmpProp, wszatNamedEvent, wszatGlobalVar);
 
 type
   EWMPWSZParseError = class(Exception)
@@ -157,6 +158,7 @@ var
   AttribName: WideString;
   AttribValue: Variant;
   AttrDispId: Word;
+  Unknown: Integer;
 begin
   EndOfAttrib := 0;
   NextAttribOffset := Stream.ReadWord(0);
@@ -180,8 +182,18 @@ begin
       AttribValue := Stream.ReadWideString(EndOfAttrib);
       LogInfo('  %s=%s', [AttribName, AttribValue]);
     end;
+    wszatNamedWmpProp: begin
+      Unknown := Stream.ReadInteger(EndOfAttrib);
+      // TODO: try to find out its meaning - could be an offset?
+      LogInfo('  unknown: %d', [Unknown]);
+      AttribName := Stream.ReadWideString(EndOfAttrib);
+      AttribValue := Stream.ReadWideString(EndOfAttrib);
+      LogInfo('  %s=%s', [AttribName, AttribValue]);
+    end;
     wszatWmpProp: begin
-      Stream.SkipPaddingInteger(EndOfAttrib);
+      Unknown := Stream.ReadInteger(EndOfAttrib);
+      // TODO: try to find out its meaning - could be an offset?
+      LogInfo('  unknown: %d', [Unknown]);
       AttrDispId := Stream.ReadWord(EndOfAttrib);
       Stream.SkipPaddingWord(EndOfAttrib);
       AttribValue := Stream.ReadWideString(EndOfAttrib);
@@ -425,16 +437,17 @@ function ParseWSZAttributeType(WSZType: Byte;
 begin
   Result := True;
   case WSZType of
-    WSZ_ATTRIBUTE_TYPE_NAMED:       Typ := wszatNamed;
-    WSZ_ATTRIBUTE_TYPE_WORDBOOL:    Typ := wszatWordBool;
-    WSZ_ATTRIBUTE_TYPE_INTEGER:     Typ := wszatInteger;
-    WSZ_ATTRIBUTE_TYPE_STRING:      Typ := wszatString;
-    WSZ_ATTRIBUTE_TYPE_SYSINT:      Typ := wszatSysInt;
-    WSZ_ATTRIBUTE_TYPE_RESSTRING:   Typ := wszAtResString;
-    WSZ_ATTRIBUTE_TYPE_WMPENABLED:  Typ := wszatWmpEnabled;
-    WSZ_ATTRIBUTE_TYPE_WMPPROP:     Typ := wszatWmpProp;
-    WSZ_ATTRIBUTE_TYPE_NAMED_EVENT: Typ := wszatNamedEvent;
-    WSZ_ATTRIBUTE_TYPE_GLOBAL_VAR:  Typ := wszatGlobalVar;
+    WSZ_ATTRIBUTE_TYPE_NAMED:         Typ := wszatNamed;
+    WSZ_ATTRIBUTE_TYPE_WORDBOOL:      Typ := wszatWordBool;
+    WSZ_ATTRIBUTE_TYPE_INTEGER:       Typ := wszatInteger;
+    WSZ_ATTRIBUTE_TYPE_STRING:        Typ := wszatString;
+    WSZ_ATTRIBUTE_TYPE_SYSINT:        Typ := wszatSysInt;
+    WSZ_ATTRIBUTE_TYPE_RESSTRING:     Typ := wszAtResString;
+    WSZ_ATTRIBUTE_TYPE_WMPENABLED:    Typ := wszatWmpEnabled;
+    WSZ_ATTRIBUTE_TYPE_NAMED_WMPPROP: Typ := wszatNamedWmpProp;
+    WSZ_ATTRIBUTE_TYPE_WMPPROP:       Typ := wszatWmpProp;
+    WSZ_ATTRIBUTE_TYPE_NAMED_EVENT:   Typ := wszatNamedEvent;
+    WSZ_ATTRIBUTE_TYPE_GLOBAL_VAR:    Typ := wszatGlobalVar;
     else
       Result := False;
   end;
