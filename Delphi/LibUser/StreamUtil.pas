@@ -32,6 +32,7 @@ type
     fhModule: HMODULE;
     fStream: TStream;
   public
+    constructor CreateFromFile(const Filename: String; Mode: Word);
     constructor CreateFromResource(const ResFilePath: String;
         const ResName: String; pResType: PChar);
     destructor Destroy; override;
@@ -67,6 +68,12 @@ type
   end;
 
 implementation
+
+constructor TBundledStream.CreateFromFile(const Filename: String; Mode: Word);
+begin
+  inherited Create;
+  fStream := TFileStream.Create(Filename, Mode);
+end;
 
 constructor TBundledStream.CreateFromResource(const ResFilePath: String;
     const ResName: String; pResType: PChar);
