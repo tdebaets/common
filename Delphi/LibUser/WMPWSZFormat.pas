@@ -22,6 +22,8 @@
 
 unit WMPWSZFormat;
 
+// TODO: investigate unknown dispIDs and CLSIDs with WMP12's MAINAPPSKIN2.WSZ
+
 interface
 
 uses Windows, Classes, SysUtils, Common2, StreamUtil, ActiveX, ComObj, EZDslHsh,
@@ -44,12 +46,13 @@ const
   WSZ_ATTRIBUTE_TYPE_NAMED_WMPPROP  = $40;
   WSZ_ATTRIBUTE_TYPE_WMPPROP        = $48;
   WSZ_ATTRIBUTE_TYPE_NAMED_EVENT    = $E0;
+  WSZ_ATTRIBUTE_TYPE_NAMED_TERNARY  = $80;
   WSZ_ATTRIBUTE_TYPE_GLOBAL_VAR     = $88;
 
 type
   TWMPWSZAttributeType = (wszatNamed, wszatWordBool, wszatInteger, wszatString,
       wszatSysInt, wszatResString, wszatWmpEnabled, wszatNamedWmpProp,
-      wszatWmpProp, wszatNamedEvent, wszatGlobalVar);
+      wszatWmpProp, wszatNamedEvent, wszatNamedTernary, wszatGlobalVar);
 
 type
   EWMPWSZParseError = class(Exception)
@@ -159,6 +162,7 @@ var
   AttribValue: Variant;
   AttrDispId: Word;
   Unknown: Integer;
+  Unknown2: Word;
 begin
   EndOfAttrib := 0;
   NextAttribOffset := Stream.ReadWord(0);
@@ -178,6 +182,14 @@ begin
   case Typ of
     wszatNamed,
     wszatNamedEvent: begin
+      AttribName := Stream.ReadWideString(EndOfAttrib);
+      AttribValue := Stream.ReadWideString(EndOfAttrib);
+      LogInfo('  %s=%s', [AttribName, AttribValue]);
+    end;
+    wszatNamedTernary: begin
+      Unknown2 := Stream.ReadWord(EndOfAttrib);
+      // TODO: try to find out its meaning - could be the relative file offset of the start of value_if_false in AttribValue?
+      LogInfo('  unknown2: %d', [Unknown2]);
       AttribName := Stream.ReadWideString(EndOfAttrib);
       AttribValue := Stream.ReadWideString(EndOfAttrib);
       LogInfo('  %s=%s', [AttribName, AttribValue]);
@@ -447,6 +459,7 @@ begin
     WSZ_ATTRIBUTE_TYPE_NAMED_WMPPROP: Typ := wszatNamedWmpProp;
     WSZ_ATTRIBUTE_TYPE_WMPPROP:       Typ := wszatWmpProp;
     WSZ_ATTRIBUTE_TYPE_NAMED_EVENT:   Typ := wszatNamedEvent;
+    WSZ_ATTRIBUTE_TYPE_NAMED_TERNARY: Typ := wszatNamedTernary;
     WSZ_ATTRIBUTE_TYPE_GLOBAL_VAR:    Typ := wszatGlobalVar;
     else
       Result := False;
