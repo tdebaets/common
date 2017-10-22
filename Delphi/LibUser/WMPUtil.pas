@@ -28,7 +28,9 @@ uses Windows, Messages, SysUtils, ComObj, WMPLib_TLB, Common2, CommCtrl,
     cUnicode, TntSysUtils, ActiveX, WMPAttribs, MyRegistry, WMPUndocumented;
 
 const
-  WMPPreferencesKey = 'Software\Microsoft\MediaPlayer\Preferences';
+  WMPBaseRegKey = 'Software\Microsoft\MediaPlayer';
+  WMPPreferencesRegKey = WMPBaseRegKey + '\Preferences';
+  WMPObjectsRegKey = WMPBaseRegKey + '\Objects';
 
 // Resources - verified in WMP 10-12
 const
@@ -1265,7 +1267,7 @@ function GetWMPBoolSetting(Setting: TWMPBoolSetting): Boolean;
 begin
   with TMyRegistry.Create do try
     RootKey := HKEY_CURRENT_USER;
-    if OpenKeyReadOnly(WMPPreferencesKey) then begin
+    if OpenKeyReadOnly(WMPPreferencesRegKey) then begin
       Result := ReadBoolDef(WMPBoolSettingValues[Setting],
           WMPBoolSettingDefaults[Setting])
     end

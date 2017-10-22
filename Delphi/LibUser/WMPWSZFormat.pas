@@ -22,12 +22,12 @@
 
 unit WMPWSZFormat;
 
-// TODO: investigate unknown dispIDs and CLSIDs with WMP12's MAINAPPSKIN2.WSZ
+// TODO: check for warnings in parsing output
 
 interface
 
-uses Windows, Classes, SysUtils, Common2, StreamUtil, ActiveX, ComObj, EZDslHsh,
-    PathFunc, CmnFunc2, UIntList;
+uses Windows, Classes, SysUtils, Common2, StreamUtil, ActiveX, ComObj, PathFunc,
+    CmnFunc2, MyRegistry, UIntList, EZDslHsh, EZStrHsh, EZDslSup;
 
 const
   WSZ_ELEMENTID_THEME       = $0B;
@@ -79,6 +79,7 @@ type
   private
     fLogProc: TWMPWSZLogProc;
     fWMPTypeLib: ITypeLib;
+    fWMPObjCLSIDs: TStringHashTable; // key: CLSID as string; value: object name
     fWMPDispIDs: TIntList; // int: disp ID; object: property name (referenced string)
     procedure Log(Level: TWMPWSZLogLevel; const Msg: String;
         const Args: array of const);
@@ -87,11 +88,14 @@ type
     procedure ParseAttrib(Stream: TSafeStream; EndOfElement: Longint);
     procedure ParseElement(Stream: TSafeStream; Flags: TWMPWSZParseFlags);
     procedure LoadWMPTypeLib;
-    function ResolveWMPObjectCLSID(const CLSID: TCLSID; var Name: String): Boolean;
+    function ResolveWMPObjCLSIDFromTypeLib(const CLSID: TCLSID;
+        var Name: String): Boolean;
+    function ResolveWMPObjCLSID(const CLSID: TCLSID; var Name: String): Boolean;
     function ResolveWMPDispID(ID: Integer): String;
     procedure LoadWMPDispIDsForType(TypInfo: ITypeInfo);
     procedure LoadWMPDispIDs;
     procedure FreeWMPDispIDs;
+    procedure LoadWMPObjsFromRegistry;
   public
     constructor Create;
     destructor Destroy; override;
@@ -120,11 +124,15 @@ end;
 constructor TWMPWSZParser.Create;
 begin
   inherited;
+  fWMPObjCLSIDs := TStringHashTable.Create;
+  fWMPObjCLSIDs.HashFunction := HashELF; // default hash causes integer overflows
+  fWMPObjCLSIDs.IgnoreCase := True;
   fWMPDispIDs := TIntList.Create;
   fWMPDispIDs.Sorted := True; // for faster lookup
   fWMPDispIDs.Duplicates := dupError;
   LoadWMPTypeLib;
   LoadWMPDispIDs;
+  LoadWMPObjsFromRegistry;
 end;
 
 destructor TWMPWSZParser.Destroy;
@@ -132,6 +140,7 @@ begin
   FreeWMPDispIDs;
   fWMPTypeLib := nil;
   FreeAndNil(fWMPDispIDs);
+  FreeAndNil(fWMPObjCLSIDs);
   inherited;
 end;
 
@@ -287,7 +296,7 @@ begin
       // CLSID element
       Stream.SkipPaddingWord(EndOfElement);
       CLSID := Stream.ReadGUID(EndOfElement);
-      ResolveWMPObjectCLSID(CLSID, ObjName);
+      ResolveWMPObjCLSID(CLSID, ObjName);
       LogInfo('  object=%s', [ObjName]);
     end
     else begin
@@ -324,36 +333,51 @@ begin
     LogWarning('Failed to load wmp.dll type library', []);  
 end;
 
-function TWMPWSZParser.ResolveWMPObjectCLSID(const CLSID: TCLSID;
+function TWMPWSZParser.ResolveWMPObjCLSIDFromTypeLib(const CLSID: TCLSID;
     var Name: String): Boolean;
 var
   TypInfo: ITypeInfo;
-  ObjName: WideString;
+  WideName: WideString;
 begin
   Result := False;
-  Name := GUIDToString(CLSID);
   if not Assigned(fWMPTypeLib) then
     Exit;
-  try
-    if not Succeeded(fWMPTypeLib.GetTypeInfoOfGuid(CLSID, TypInfo)) then
-      Exit;
-    if not Succeeded(TypInfo.GetDocumentation(MEMBERID_NIL,
-        @ObjName, nil, nil, nil)) then
-      Exit;
-    if Length(ObjName) > 0 then begin
-      Result := True;
-      Name := String(ObjName) + ' ' + Name;
-    end;
-  finally
-    if not Result then
-      LogWarning('Unknown object for CLSID %s', [GUIDToString(CLSID)]);
+  if not Succeeded(fWMPTypeLib.GetTypeInfoOfGuid(CLSID, TypInfo)) then
+    Exit;
+  if not Succeeded(TypInfo.GetDocumentation(MEMBERID_NIL, @WideName, nil, nil,
+      nil)) then
+    Exit;
+  if Length(WideName) > 0 then begin
+    Name := WideName;
+    Result := True;
   end;
+end;
+
+function TWMPWSZParser.ResolveWMPObjCLSID(const CLSID: TCLSID;
+    var Name: String): Boolean;
+var
+  ObjName: String;
+begin
+  Name := GUIDToString(CLSID);
+  Result := ResolveWMPObjCLSIDFromTypeLib(CLSID, ObjName);
+  if not Result then begin
+    // Fallback for internal objects not in the typelib, e.g. taskcenter -
+    // {395BF287-6477-495F-8427-2C09A23C3248} (ITaskCntrCtrl)
+    Result := fWMPObjCLSIDs.Search(Name, ObjName);
+  end;
+  if Result then
+    Name := String(ObjName) + ' ' + Name
+  else
+    LogWarning('Unknown object for CLSID %s', [GUIDToString(CLSID)]);
 end;
 
 function TWMPWSZParser.ResolveWMPDispID(ID: Integer): String;
 var
   Idx: Integer;
 begin
+  // NOTE: when parsing a WMP12 WSZ skin on a system with WMP11, some dispIDs
+  // new to WMP12 won't be recognized. These will be shown as warnings in the
+  // parsing output.
   if fWMPDispIDs.Find(ID, Idx) then
     Result := String(fWMPDispIDs.Objects[Idx])
   else begin
@@ -398,6 +422,7 @@ begin
             fWMPDispIDs.AddObject(pFunDesc.memid, pFuncName);
           except
             on EStringListError do begin
+              // TODO: implement this as a separate method of a new class
               ReleaseString(pFuncName);
               Continue;
             end;
@@ -441,6 +466,51 @@ begin
     ReleaseString(fWMPDispIDs.Objects[0]);
     fWMPDispIDs.Objects[0] := nil;
     fWMPDispIDs.Delete(0);
+  end;
+end;
+
+procedure TWMPWSZParser.LoadWMPObjsFromRegistry;
+const
+  CLSIDValueName = 'classid';
+  CLSIDPrefix = 'clsid:';
+var
+  Keys: TStringList;
+  i: Integer;
+  ObjName: String;
+  CLSIDStr: String;
+begin
+  Keys := TStringList.Create;
+  try
+    with TMyRegistry.Create do try
+      RootKey := HKEY_LOCAL_MACHINE;
+      if not OpenKeyReadOnly(WMPObjectsRegKey) then
+        Exit;
+      GetKeyNames(Keys);
+      CloseKey;
+      for i := 0 to Keys.Count - 1 do begin
+        ObjName := Keys[i];
+        if OpenKeyReadOnly(WMPObjectsRegKey + '\' + ObjName) then try
+          // Value has the form "clsid:<CLSID without curly braces>"
+          CLSIDStr := ReadStringSafe(CLSIDValueName, '');
+          if not IsPrefix(CLSIDStr, CLSIDPrefix) then
+            Continue;
+          Delete(CLSIDStr, 1, Length(CLSIDPrefix));
+          CLSIDStr := '{' + CLSIDStr + '}';
+          try
+            fWMPObjCLSIDs.Insert(CLSIDStr, ObjName);
+          except
+            on EEZContainerError do
+              // duplicate CLSID; ignore
+          end;
+        finally
+          CloseKey;
+        end;
+      end;
+    finally
+      Free;
+    end;
+  finally
+    FreeAndNil(Keys);
   end;
 end;
 
