@@ -23,6 +23,7 @@
 unit WMPWSZFormat;
 
 // TODO: check for warnings in parsing output
+// TODO: check objects in parsing output
 
 interface
 
@@ -45,6 +46,7 @@ const
   WSZ_ATTRIBUTE_TYPE_WMPENABLED     = $28;
   WSZ_ATTRIBUTE_TYPE_NAMED_WMPPROP  = $40;
   WSZ_ATTRIBUTE_TYPE_WMPPROP        = $48;
+  WSZ_ATTRIBUTE_TYPE_WMPPROP2       = $C8;
   WSZ_ATTRIBUTE_TYPE_NAMED_EVENT    = $E0;
   WSZ_ATTRIBUTE_TYPE_NAMED_TERNARY  = $80;
   WSZ_ATTRIBUTE_TYPE_GLOBAL_VAR     = $88;
@@ -528,6 +530,7 @@ begin
     WSZ_ATTRIBUTE_TYPE_WMPENABLED:    Typ := wszatWmpEnabled;
     WSZ_ATTRIBUTE_TYPE_NAMED_WMPPROP: Typ := wszatNamedWmpProp;
     WSZ_ATTRIBUTE_TYPE_WMPPROP:       Typ := wszatWmpProp;
+    WSZ_ATTRIBUTE_TYPE_WMPPROP2:      Typ := wszatWmpProp;
     WSZ_ATTRIBUTE_TYPE_NAMED_EVENT:   Typ := wszatNamedEvent;
     WSZ_ATTRIBUTE_TYPE_NAMED_TERNARY: Typ := wszatNamedTernary;
     WSZ_ATTRIBUTE_TYPE_GLOBAL_VAR:    Typ := wszatGlobalVar;
