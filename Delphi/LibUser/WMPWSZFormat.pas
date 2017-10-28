@@ -107,6 +107,7 @@ type
 
 function ParseWSZAttributeType(WSZType: Byte;
     out Typ: TWMPWSZAttributeType): Boolean;
+function FormatWmpPropValue(const Value: String; Addend: Integer): String;
 
 implementation
 
@@ -172,8 +173,8 @@ var
   AttribName: WideString;
   AttribValue: Variant;
   AttrDispId: Word;
-  Unknown: Integer;
-  Unknown2: Word;
+  Addend: Integer;
+  Unknown: Word;
 begin
   EndOfAttrib := 0;
   NextAttribOffset := Stream.ReadWord(0);
@@ -198,30 +199,27 @@ begin
       LogInfo('  %s=%s', [AttribName, AttribValue]);
     end;
     wszatNamedJscript: begin
-      Unknown2 := Stream.ReadWord(EndOfAttrib);
+      Unknown := Stream.ReadWord(EndOfAttrib);
       // TODO: try to find out its meaning
-      LogInfo('  unknown2: %d', [Unknown2]);
+      LogInfo('  unknown=%d', [Unknown]);
       AttribName := Stream.ReadWideString(EndOfAttrib);
       AttribValue := Stream.ReadWideString(EndOfAttrib);
       LogInfo('  %s=%s', [AttribName, AttribValue]);
     end;
     wszatNamedWmpProp: begin
-      Unknown := Stream.ReadInteger(EndOfAttrib);
-      // TODO: try to find out its meaning - could be an offset?
-      LogInfo('  unknown: %d', [Unknown]);
+      Addend := Stream.ReadInteger(EndOfAttrib);
       AttribName := Stream.ReadWideString(EndOfAttrib);
       AttribValue := Stream.ReadWideString(EndOfAttrib);
-      LogInfo('  %s=%s', [AttribName, AttribValue]);
+      LogInfo('  %s=%s', [AttribName, FormatWmpPropValue(AttribValue, Addend)]);
     end;
     wszatWmpProp: begin
-      Unknown := Stream.ReadInteger(EndOfAttrib);
-      // TODO: try to find out its meaning - could be an offset?
-      LogInfo('  unknown: %d', [Unknown]);
+      Addend := Stream.ReadInteger(EndOfAttrib);
       AttrDispId := Stream.ReadWord(EndOfAttrib);
       Stream.SkipPaddingWord(EndOfAttrib);
       AttribValue := Stream.ReadWideString(EndOfAttrib);
       LogInfo('  dispid %u %s=%s',
-          [AttrDispId, ResolveWMPDispID(AttrDispId), String(AttribValue)]);
+          [AttrDispId, ResolveWMPDispID(AttrDispId),
+           FormatWmpPropValue(AttribValue, Addend)]);
     end;
     else begin
       AttrDispId := Stream.ReadWord(EndOfAttrib);
@@ -537,6 +535,15 @@ begin
     else
       Result := False;
   end;
+end;
+
+function FormatWmpPropValue(const Value: String; Addend: Integer): String;
+begin
+  Result := Value;
+  if Addend > 0 then
+    Result := Result + '+' + IntToStr(Addend)
+  else if Addend < 0 then
+    Result := Result + IntToStr(Addend);
 end;
 
 end.
