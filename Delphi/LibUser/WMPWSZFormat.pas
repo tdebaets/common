@@ -48,13 +48,13 @@ const
   WSZ_ATTRIBUTE_TYPE_WMPPROP        = $48;
   WSZ_ATTRIBUTE_TYPE_WMPPROP2       = $C8;
   WSZ_ATTRIBUTE_TYPE_NAMED_EVENT    = $E0;
-  WSZ_ATTRIBUTE_TYPE_NAMED_TERNARY  = $80;
-  WSZ_ATTRIBUTE_TYPE_GLOBAL_VAR     = $88;
+  WSZ_ATTRIBUTE_TYPE_NAMED_JSCRIPT  = $80;
+  WSZ_ATTRIBUTE_TYPE_JSCRIPT        = $88;
 
 type
   TWMPWSZAttributeType = (wszatNamed, wszatWordBool, wszatInteger, wszatString,
       wszatSysInt, wszatResString, wszatWmpEnabled, wszatNamedWmpProp,
-      wszatWmpProp, wszatNamedEvent, wszatNamedTernary, wszatGlobalVar);
+      wszatWmpProp, wszatNamedEvent, wszatNamedJscript, wszatJscript);
 
 type
   EWMPWSZParseError = class(Exception)
@@ -197,9 +197,9 @@ begin
       AttribValue := Stream.ReadWideString(EndOfAttrib);
       LogInfo('  %s=%s', [AttribName, AttribValue]);
     end;
-    wszatNamedTernary: begin
+    wszatNamedJscript: begin
       Unknown2 := Stream.ReadWord(EndOfAttrib);
-      // TODO: try to find out its meaning - could be the relative file offset of the start of value_if_false in AttribValue?
+      // TODO: try to find out its meaning
       LogInfo('  unknown2: %d', [Unknown2]);
       AttribName := Stream.ReadWideString(EndOfAttrib);
       AttribValue := Stream.ReadWideString(EndOfAttrib);
@@ -235,7 +235,7 @@ begin
         wszatString,
         wszatWmpEnabled,
         wszatSysInt,
-        wszatGlobalVar:
+        wszatJscript:
           AttribValue := Stream.ReadWideString(EndOfAttrib);
         else begin
           raise EWMPWSZParseError.CreateFmt(Stream.Position,
@@ -532,8 +532,8 @@ begin
     WSZ_ATTRIBUTE_TYPE_WMPPROP:       Typ := wszatWmpProp;
     WSZ_ATTRIBUTE_TYPE_WMPPROP2:      Typ := wszatWmpProp;
     WSZ_ATTRIBUTE_TYPE_NAMED_EVENT:   Typ := wszatNamedEvent;
-    WSZ_ATTRIBUTE_TYPE_NAMED_TERNARY: Typ := wszatNamedTernary;
-    WSZ_ATTRIBUTE_TYPE_GLOBAL_VAR:    Typ := wszatGlobalVar;
+    WSZ_ATTRIBUTE_TYPE_NAMED_JSCRIPT: Typ := wszatNamedJscript;
+    WSZ_ATTRIBUTE_TYPE_JSCRIPT:       Typ := wszatJscript;
     else
       Result := False;
   end;
