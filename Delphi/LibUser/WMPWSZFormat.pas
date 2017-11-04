@@ -23,7 +23,6 @@
 unit WMPWSZFormat;
 
 // TODO: check for warnings in parsing output
-// TODO: check objects in parsing output
 
 interface
 
@@ -82,7 +81,7 @@ type
     fLogProc: TWMPWSZLogProc;
     fWMPTypeLib: ITypeLib;
     fWMPObjCLSIDs: TStringHashTable; // key: CLSID as string; value: object name
-    fWMPDispIDs: TIntList; // int: disp ID; object: property name (referenced string)
+    fWMPDispIDs: TIntList; // int: disp ID; object: property name (TStringRec pointer)
     procedure Log(Level: TWMPWSZLogLevel; const Msg: String;
         const Args: array of const);
     procedure LogInfo(const Msg: String; const Args: array of const);
@@ -379,7 +378,7 @@ begin
   // new to WMP12 won't be recognized. These will be shown as warnings in the
   // parsing output.
   if fWMPDispIDs.Find(ID, Idx) then
-    Result := String(fWMPDispIDs.Objects[Idx])
+    Result := GetString(fWMPDispIDs.Objects[Idx])
   else begin
     Result := '<unknown property>';
     if Assigned(fWMPTypeLib) then
@@ -418,12 +417,12 @@ begin
         try
           pFuncName := nil;
           if Length(FuncName) > 0 then try
-            pFuncName := RefString(FuncName);
+            pFuncName := AllocStringRec(FuncName);
             fWMPDispIDs.AddObject(pFunDesc.memid, pFuncName);
           except
             on EStringListError do begin
               // TODO: implement this as a separate method of a new class
-              ReleaseString(pFuncName);
+              FreeStringRec(pFuncName);
               Continue;
             end;
           end;
@@ -463,7 +462,7 @@ end;
 procedure TWMPWSZParser.FreeWMPDispIDs;
 begin
   while fWMPDispIDs.Count > 0 do begin
-    ReleaseString(fWMPDispIDs.Objects[0]);
+    FreeStringRec(fWMPDispIDs.Objects[0]);
     fWMPDispIDs.Objects[0] := nil;
     fWMPDispIDs.Delete(0);
   end;

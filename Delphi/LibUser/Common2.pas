@@ -190,8 +190,9 @@ function IIfInt(Condition: Boolean; TrueVal, FalseVal: Integer): Integer;
 procedure Debug(const Text: String);
 procedure DebugWithTID(const Text: String);
 
-function RefString(const S: string): Pointer;
-procedure ReleaseString(P: Pointer);
+function AllocStringRec(const Str: String): Pointer;
+procedure FreeStringRec(pRec: Pointer);
+function GetString(pRec: Pointer): String;
 
 type
   TQueryInterface = function(This: Pointer; IID: PGUID;
@@ -970,24 +971,33 @@ begin
   OutputDebugString(PChar(Text + ' - ' + IntToStr(GetCurrentThreadID)));
 end;
 
-// Save a reference to a string and return a raw pointer
-// to the string.
-function RefString(const S: string): Pointer;
+type
+  PStringRec = ^TStringRec;
+  TStringRec = packed record
+    Str: String;
+  end;
+
+function AllocStringRec(const Str: String): Pointer;
 var
-  Local: string;
+  pResult: PStringRec;
 begin
-  Local := S;                // Increment the reference count.
-  Result := Pointer(Local);  // Save the string pointer.
-  Pointer(Local) := nil;     // Prevent decrementing the ref count.
+  New(pResult);
+  pResult.Str := Str;
+  Result := pResult;
 end;
- 
-// Release a string that was referenced with RefString.
-procedure ReleaseString(P: Pointer);
+
+procedure FreeStringRec(pRec: Pointer);
 var
-  Local: string;
+  pStrRec: PStringRec;
 begin
-  Pointer(Local) := P;
-  // Delphi frees the string when Local goes out of scope.
+  pStrRec := PStringRec(pRec);
+  pStrRec.Str := ''; // not really needed, but just to be sure
+  Dispose(pStrRec);
+end;
+
+function GetString(pRec: Pointer): String;
+begin
+  Result := PStringRec(pRec).Str;
 end;
 
 // Cast an interface to a Pointer such that the reference
