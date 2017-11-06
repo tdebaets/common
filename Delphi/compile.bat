@@ -44,6 +44,7 @@ set LIBUSER_UNITS= ^
     FastMM4\FastMM4.pas ^
     GIFImage.pas ^
     HugeIni.pas ^
+    IntToStrList.pas ^
     MBCSUtil.pas ^
     NewDialogs.pas ^
     PathFuncWide.pas ^

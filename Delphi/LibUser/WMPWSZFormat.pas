@@ -27,7 +27,7 @@ unit WMPWSZFormat;
 interface
 
 uses Windows, Classes, SysUtils, Common2, StreamUtil, ActiveX, ComObj, PathFunc,
-    CmnFunc2, MyRegistry, UIntList, EZDslHsh, EZStrHsh, EZDslSup;
+    CmnFunc2, MyRegistry, IntToStrList, EZDslHsh, EZStrHsh, EZDslSup;
 
 const
   WSZ_ELEMENTID_THEME       = $0B;
@@ -81,7 +81,7 @@ type
     fLogProc: TWMPWSZLogProc;
     fWMPTypeLib: ITypeLib;
     fWMPObjCLSIDs: TStringHashTable; // key: CLSID as string; value: object name
-    fWMPDispIDs: TIntList; // int: disp ID; object: property name (TStringRec pointer)
+    fWMPDispIDs: TIntToStrList; // int: disp ID; string: property name
     procedure Log(Level: TWMPWSZLogLevel; const Msg: String;
         const Args: array of const);
     procedure LogInfo(const Msg: String; const Args: array of const);
@@ -95,7 +95,6 @@ type
     function ResolveWMPDispID(ID: Integer): String;
     procedure LoadWMPDispIDsForType(TypInfo: ITypeInfo);
     procedure LoadWMPDispIDs;
-    procedure FreeWMPDispIDs;
     procedure LoadWMPObjsFromRegistry;
   public
     constructor Create;
@@ -129,8 +128,9 @@ begin
   fWMPObjCLSIDs := TStringHashTable.Create;
   fWMPObjCLSIDs.HashFunction := HashELF; // default hash causes integer overflows
   fWMPObjCLSIDs.IgnoreCase := True;
-  fWMPDispIDs := TIntList.Create;
+  fWMPDispIDs := TIntToStrList.Create;
   fWMPDispIDs.Sorted := True; // for faster lookup
+  // TODO: compare output with dupError and dupIgnore and change to dupIgnore if all looks ok
   fWMPDispIDs.Duplicates := dupError;
   LoadWMPTypeLib;
   LoadWMPDispIDs;
@@ -139,7 +139,6 @@ end;
 
 destructor TWMPWSZParser.Destroy;
 begin
-  FreeWMPDispIDs;
   fWMPTypeLib := nil;
   FreeAndNil(fWMPDispIDs);
   FreeAndNil(fWMPObjCLSIDs);
@@ -378,7 +377,7 @@ begin
   // new to WMP12 won't be recognized. These will be shown as warnings in the
   // parsing output.
   if fWMPDispIDs.Find(ID, Idx) then
-    Result := GetString(fWMPDispIDs.Objects[Idx])
+    Result := fWMPDispIDs.Strings[Idx]
   else begin
     Result := '<unknown property>';
     if Assigned(fWMPTypeLib) then
@@ -392,7 +391,6 @@ var
   pFunDesc: PFuncDesc;
   i: Integer;
   FuncName: WideString;
-  pFuncName: Pointer;
 begin
   if not Assigned(TypInfo) then
     Exit;
@@ -415,16 +413,12 @@ begin
             @FuncName, nil, nil, nil)) then
           Continue;
         try
-          pFuncName := nil;
           if Length(FuncName) > 0 then try
-            pFuncName := AllocStringRec(FuncName);
-            fWMPDispIDs.AddObject(pFunDesc.memid, pFuncName);
+            fWMPDispIDs.AddString(pFunDesc.memid, FuncName);
           except
-            on EStringListError do begin
-              // TODO: implement this as a separate method of a new class
-              FreeStringRec(pFuncName);
+            // TODO: remove?
+            on EStringListError do
               Continue;
-            end;
           end;
         finally
           FuncName := ''; // required to free the string before it gets reassigned
@@ -456,15 +450,6 @@ begin
     if not Succeeded(fWMPTypeLib.GetTypeInfo(i, TypInfo)) then
       Continue;
     LoadWMPDispIDsForType(TypInfo);
-  end;
-end;
-
-procedure TWMPWSZParser.FreeWMPDispIDs;
-begin
-  while fWMPDispIDs.Count > 0 do begin
-    FreeStringRec(fWMPDispIDs.Objects[0]);
-    fWMPDispIDs.Objects[0] := nil;
-    fWMPDispIDs.Delete(0);
   end;
 end;
 
