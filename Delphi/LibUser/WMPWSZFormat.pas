@@ -130,8 +130,7 @@ begin
   fWMPObjCLSIDs.IgnoreCase := True;
   fWMPDispIDs := TIntToStrList.Create;
   fWMPDispIDs.Sorted := True; // for faster lookup
-  // TODO: compare output with dupError and dupIgnore and change to dupIgnore if all looks ok
-  fWMPDispIDs.Duplicates := dupError;
+  fWMPDispIDs.Duplicates := dupIgnore;
   LoadWMPTypeLib;
   LoadWMPDispIDs;
   LoadWMPObjsFromRegistry;
@@ -413,13 +412,8 @@ begin
             @FuncName, nil, nil, nil)) then
           Continue;
         try
-          if Length(FuncName) > 0 then try
+          if Length(FuncName) > 0 then
             fWMPDispIDs.AddString(pFunDesc.memid, FuncName);
-          except
-            // TODO: remove?
-            on EStringListError do
-              Continue;
-          end;
         finally
           FuncName := ''; // required to free the string before it gets reassigned
         end;
