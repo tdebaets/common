@@ -30,6 +30,7 @@ $(DELPHI)\Imports
 COMMONPATH\Delphi\Imports
 COMMONPATH\Delphi\LibUser\Virtual Treeview\Source
 COMMONPATH\Delphi\LibUser\Virtual Treeview\Design
+COMMONPATH\Delphi\LibUser\FastMM4
 ```
 
 Package installation
