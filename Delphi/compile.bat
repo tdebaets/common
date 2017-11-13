@@ -64,6 +64,7 @@ set LIBUSER_UNITS= ^
 
 set CFGFILE=
 set OLDCFGFILE=
+set FULLBUILD=0
 
 rem  Quiet compile / Build all / Output warnings
 set DCC32OPTS=-Q -W
@@ -75,6 +76,7 @@ if "%1"=="/incr" (
 ) else (
     rem Build all (default)
     set DCC32OPTS=%DCC32OPTS% -B
+    set FULLBUILD=1
 )
 
 rem Generate unique number for temporary file renames
@@ -85,7 +87,17 @@ call ..\Scripts\getuserprefs.bat
 if errorlevel 1 goto failed2
 
 set COMMON_LIB_PATH=..\LibFixed;%DELPHIROOT%\lib
-set DCU_PATH=..\DCU
+set DCU_PATH=DCU
+
+if %FULLBUILD% equ 1 (
+    if exist %DCU_PATH%\*.dcu (
+        echo Removing previous output DCU files...
+        del %DCU_PATH%\*.dcu
+        if errorlevel 1 goto failed
+    )
+)
+
+set DCU_PATH=..\%DCU_PATH%
 
 rem -------------------------------------------------------------------------
 
