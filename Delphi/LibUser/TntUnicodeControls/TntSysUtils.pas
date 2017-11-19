@@ -343,7 +343,9 @@ function WideGetLocaleStr(LocaleID: LCID; LocaleType: Integer; const Default: Wi
 const
   CR = WideChar(#13);
   LF = WideChar(#10);
-  CRLF = WideString(#13#10);
+  // The explicit 'WideString' type is required here to fix a Delphi 4 compiler
+  // crash on incremental compile!
+  CRLF: WideString = WideString(#13#10);
   WideLineSeparator = WideChar($2028);
 
 var
