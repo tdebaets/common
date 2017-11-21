@@ -383,9 +383,7 @@ function ExtractStringsFromStringArray(P: PWideChar; Separator: WideChar = #0): 
 
 function IsWideCharMappableToAnsi(const WC: WideChar): Boolean;
 function IsWideStringMappableToAnsi(const WS: WideString): Boolean;
-{$IFDEF COMPILER_5_UP}
 function IsRTF(const Value: WideString): Boolean;
-{$ENDIF COMPILER_5_UP}
 
 function ENG_US_FloatToStr(Value: Extended): WideString;
 function ENG_US_StrToFloat(const S: WideString): Extended;
@@ -1873,18 +1871,16 @@ begin
   Result := not UsedDefaultChar;
 end;
 
-{$IFDEF COMPILER_5_UP}
-// The WideString constants below cause the Delphi 4 compiler to crash when it
-// does an incremental compile!!!
 function IsRTF(const Value: WideString): Boolean;
 const
-  RTF_BEGIN_1  = WideString('{\RTF');
-  RTF_BEGIN_2  = WideString('{URTF');
+  // The explicit 'WideString' types are required here to fix a Delphi 4 compiler
+  // crash on incremental compile!
+  RTF_BEGIN_1: WideString  = WideString('{\RTF');
+  RTF_BEGIN_2: WideString  = WideString('{URTF');
 begin
   Result := (WideTextPos(RTF_BEGIN_1, Value) = 1)
          or (WideTextPos(RTF_BEGIN_2, Value) = 1);
 end;
-{$ENDIF COMPILER_5_UP}
 
 {$IFDEF COMPILER_7_UP}
 var
