@@ -1979,6 +1979,8 @@ begin
     FOnDrawHeader(Self, Canvas, Index, Rect, Selected, DefaultDrawing);
 end;
 
+{$WRITEABLECONST ON}
+
 procedure TCustomEnhListView.WMNotify(var Message: TWMNotify);
 const
   RECURSE_FLAG: boolean = FALSE;
@@ -2058,6 +2060,8 @@ begin
   end;
 *)
 end;
+
+{$WRITEABLECONST OFF}
 
 procedure TCustomEnhListView.WMDrawHeader(var Message: TWMDrawItem);
 var

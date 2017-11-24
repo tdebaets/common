@@ -29,7 +29,7 @@
 -$G+                // imported data references on
 -$H+                // long strings on
 -$I+                // I/O checks on
--$J+                // writeable constants on
+-$J-                // writeable constants off
 -$K-                // smart callbacks of (legacy)
 -$L-                // local symbol info off
 -$M-                // runtime type information off

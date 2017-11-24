@@ -50,7 +50,6 @@ unit OleAccDLL;
 //   Hint: Parameter 'var' of IAccPropServices.SetHmenuProp changed to 'var_'
 // ************************************************************************ //
 {$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers.
-{$WRITEABLECONST ON}
 interface
 
 uses Windows, ActiveX, Classes, Graphics, StdVCL, Accessibility_TLB;
