@@ -41,10 +41,10 @@ for /f tokens^=*^ delims^=^ eol^= %%g in ('git log --pretty^=format: --name-only
         echo %%g: no such file; skipping
     ) else if errorlevel 1 (
         set COPYRIGHT_FOUND=0
-        rem Only search the first 6 lines of the file for the year (should be
+        rem Only search the first 7 lines of the file for the year (should be
         rem enough to get the copyright)
-        rem Using sed seems to be much faster than 'head -6 | grep'
-        for /f %%h in ('sed -n "/%YEAR%/p;6q" "%%g"') do (
+        rem Using sed seems to be much faster than 'head -7 | grep'
+        for /f %%h in ('sed -n "/%YEAR%/p;7q" "%%g"') do (
             set COPYRIGHT_FOUND=1
         )
         if !COPYRIGHT_FOUND! equ 0 (
