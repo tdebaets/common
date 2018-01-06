@@ -25,6 +25,7 @@ rem **************************************************************************
 
 setlocal enabledelayedexpansion
 
+set SCRIPTPATH=%~dp0
 set YEAR=%1
 
 if [%YEAR%]==[] (
@@ -35,9 +36,10 @@ if [%YEAR%]==[] (
 set /a YEARPLUS1=%YEAR%+1
 
 for /f tokens^=*^ delims^=^ eol^= %%g in ('git log --pretty^=format: --name-only --since^="1/1/%YEAR%" --until^="1/1/%YEARPLUS1%" ^| sort -u') do (
-    if not exist %%g (
+    call %SCRIPTPATH%\checkdir.bat "%%g"
+    if errorlevel 2 (
         echo %%g: no such file; skipping
-    ) else (
+    ) else if errorlevel 1 (
         set COPYRIGHT_FOUND=0
         rem Only search the first 6 lines of the file for the year (should be
         rem enough to get the copyright)
@@ -48,5 +50,7 @@ for /f tokens^=*^ delims^=^ eol^= %%g in ('git log --pretty^=format: --name-only
         if !COPYRIGHT_FOUND! equ 0 (
             echo %%g
         )
+    ) else (
+        rem %%g points to a directory (probably a submodule): skip it
     )
 )
