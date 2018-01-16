@@ -22,14 +22,14 @@
 
 unit WMPWSZFormat;
 
-// TODO: check for warnings in parsing output
-
 interface
 
 uses Windows, Classes, SysUtils, Common2, StreamUtil, ActiveX, ComObj, PathFunc,
     CmnFunc2, MyRegistry, IntToStrList, EZDslHsh, EZStrHsh, EZDslSup;
 
 const
+  WSZ_ELEMENTID_NAMED       = $00;
+  WSZ_ELEMENTID_BUTTON      = $03;
   WSZ_ELEMENTID_THEME       = $0B;
   WSZ_ELEMENTID_VIEW        = $0C;
   WSZ_ELEMENTID_SUBVIEW     = $0D;
@@ -72,10 +72,6 @@ type
       const Msg: String) of object;
 
 type
-  TWMPWSZParseFlag = (wszpfIsRootElement);
-  TWMPWSZParseFlags = set of TWMPWSZParseFlag;      
-
-type
   TWMPWSZParser = class
   private
     fLogProc: TWMPWSZLogProc;
@@ -87,7 +83,7 @@ type
     procedure LogInfo(const Msg: String; const Args: array of const);
     procedure LogWarning(const Msg: String; const Args: array of const);
     procedure ParseAttrib(Stream: TSafeStream; EndOfElement: Longint);
-    procedure ParseElement(Stream: TSafeStream; Flags: TWMPWSZParseFlags);
+    procedure ParseElement(Stream: TSafeStream; Level: Cardinal);
     procedure LoadWMPTypeLib;
     function ResolveWMPObjCLSIDFromTypeLib(const CLSID: TCLSID;
         var Name: String): Boolean;
@@ -103,6 +99,7 @@ type
     property LogProc: TWMPWSZLogProc read fLogProc write fLogProc;
   end;
 
+function IsButtonElementName(const Name: String): Boolean;
 function ParseWSZAttributeType(WSZType: Byte;
     out Typ: TWMPWSZAttributeType): Boolean;
 function FormatWmpPropValue(const Value: String; Addend: Integer): String;
@@ -197,7 +194,9 @@ begin
     end;
     wszatNamedJscript: begin
       Unknown := Stream.ReadWord(EndOfAttrib);
-      // TODO: try to find out its meaning
+      // TODO: try to find out its meaning (WMP12 skins only, always seems to be $78)
+      // suggestion: try to load a skin with different value, and check if and
+      // where in WMP's code the loading fails
       LogInfo('  unknown=%d', [Unknown]);
       AttribName := Stream.ReadWideString(EndOfAttrib);
       AttribValue := Stream.ReadWideString(EndOfAttrib);
@@ -243,9 +242,9 @@ begin
   end;
 end;
 
-procedure TWMPWSZParser.ParseElement(Stream: TSafeStream;
-    Flags: TWMPWSZParseFlags);
+procedure TWMPWSZParser.ParseElement(Stream: TSafeStream; Level: Cardinal);
 var
+  IsRootElement: Boolean;
   NextSiblingOffset, FirstChildOffset: Word;
   EndOfElement: Longint;
   ElementType: Byte;
@@ -256,6 +255,7 @@ var
   i: Integer;
 begin
   EndOfElement := 0;
+  IsRootElement := (Level = 0);
   NextSiblingOffset := Stream.ReadWord(0);
   FirstChildOffset := Stream.ReadWord(0);
   if FirstChildOffset <> 0 then begin
@@ -268,21 +268,35 @@ begin
         SizeOf(NextSiblingOffset) + NextSiblingOffset;
   end;
   ElementType := Stream.ReadByte(EndOfElement);
-  LogInfo('Element found: type=0x%.02x, next=%u, first=%u',
-      [ElementType, NextSiblingOffset, FirstChildOffset]);
-  if (wszpfIsRootElement in Flags)
-      and (ElementType <> WSZ_ELEMENTID_THEME) then begin
+  LogInfo('Element found: type=0x%.02x, level=%d, next=%u, first=%u',
+      [ElementType, Level, NextSiblingOffset, FirstChildOffset]);
+  if IsRootElement and (ElementType <> WSZ_ELEMENTID_THEME) then begin
     raise EWMPWSZParseError.CreateFmt(Stream.Position,
         'Root element isn''t a THEME element, type: %u', [ElementType]);
   end
-  else if not (wszpfIsRootElement in Flags)
-      and (ElementType = WSZ_ELEMENTID_THEME) then begin
+  else if not IsRootElement and (ElementType = WSZ_ELEMENTID_THEME) then begin
     raise EWMPWSZParseError.CreateFmt(Stream.Position,
         'Found a THEME element that isn''t the root element', []);
   end;
   NumChildren := Stream.ReadByte(EndOfElement);
   NumAttribs := Stream.ReadByte(EndOfElement);
   case ElementType of
+    WSZ_ELEMENTID_NAMED,
+    WSZ_ELEMENTID_BUTTON: begin
+      // Named element
+      ElementName := Stream.ReadWideString(EndOfElement);
+      if (ElementType = WSZ_ELEMENTID_NAMED)
+          and IsButtonElementName(ElementName) then begin
+        raise EWMPWSZParseError.CreateFmt(Stream.Position,
+            'Unexpected element ID for BUTTONGROUP element', []);
+      end
+      else if (ElementType = WSZ_ELEMENTID_BUTTON)
+          and not IsButtonElementName(ElementName) then begin
+        raise EWMPWSZParseError.CreateFmt(Stream.Position,
+            'Unexpected element ID for %s element', [ElementName]);
+      end;
+      LogInfo('  name=%s', [ElementName]);
+    end;
     WSZ_ELEMENTID_THEME,
     WSZ_ELEMENTID_VIEW,
     WSZ_ELEMENTID_SUBVIEW: begin
@@ -297,25 +311,26 @@ begin
       LogInfo('  object=%s', [ObjName]);
     end
     else begin
-      // Named element
-      ElementName := Stream.ReadWideString(EndOfElement);
-      LogInfo('  name=%s', [ElementName]);
+      raise EWMPWSZParseError.CreateFmt(Stream.Position,
+          'Unrecognized element ID: 0x%.02x', [ElementType]);
     end;
   end;
   for i := 0 to NumAttribs - 1 do
     ParseAttrib(Stream, EndOfElement);
   for i := 0 to NumChildren - 1 do
-    ParseElement(Stream, []);
+    ParseElement(Stream, Level + 1);
 end;
 
 procedure TWMPWSZParser.Parse(Stream: TStream);
+const
+  RootElementLevel = 0;
 var
   SafeStream: TSafeStream;
 begin
   Stream.Seek(0, soFromBeginning);
   SafeStream := TSafeStream.Create(Stream);
   try
-    ParseElement(SafeStream, [wszpfIsRootElement]);
+    ParseElement(SafeStream, RootElementLevel);
   finally
     FreeAndNil(SafeStream);
   end;
@@ -490,6 +505,13 @@ begin
   finally
     FreeAndNil(Keys);
   end;
+end;
+
+function IsButtonElementName(const Name: String): Boolean;
+const
+  ButtonElementName = 'buttonelement';
+begin
+  Result := (CompareText(Name, ButtonElementName) = 0);
 end;
 
 function ParseWSZAttributeType(WSZType: Byte;
