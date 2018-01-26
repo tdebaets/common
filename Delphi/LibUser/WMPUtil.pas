@@ -77,14 +77,17 @@ const
   LibraryContainerCaption: PChar = 'LibraryContainer';
   BasketListViewCaption: PChar = 'BasketListView';
   PrimaryListViewCaption: PChar = 'PrimaryListView';
-  LibraryTreeViewCaption: PChar = 'LibraryTree';
   WMPPluginHostClass: PChar = 'WMP Plugin UI Host';
   ATLListViewClass: PChar = 'ATL:SysListView32';
   WMPFullScreenClass: PChar = 'WMPTransition';
   WMPControlContainerClass: PChar = 'CWmpControlCntr';
   RebarWindowClass: PChar = 'ReBarWindow32';
 
+  // WMP 11
+  LibraryTreeViewCaption11: PChar = 'LibraryTree';
+
   // WMP 12
+  LibraryTreeViewCaption12: PChar = 'Library Treeview';
   WMPListTitleCaptionBeta: PChar = 'BasketPlaylistToolbar'; // Windows 7 Beta
   WMPPlayHistoryBackCaption: PChar = 'PlayHistory Back Toolbar';
   WMPPlayHistoryForwardCaption: PChar = 'PlayHistory Forward Toolbar';
