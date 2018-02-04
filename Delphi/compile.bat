@@ -190,6 +190,29 @@ if errorlevel 1 (
 
 cd ..\..
 
+echo - tdebaets_comps_unicode.dpk
+
+rem  Rename user-generated .cfg file if it exists
+if not exist tdebaets_comps_unicode.cfg goto tdebaets_comps_unicode
+ren tdebaets_comps_unicode.cfg tdebaets_comps_unicode.cfg.%RND%
+if errorlevel 1 goto failed
+set OLDCFGFILE=tdebaets_comps_unicode.cfg
+
+:tdebaets_comps_unicode
+ren tdebaets_comps_unicode.cfg.main tdebaets_comps_unicode.cfg
+if errorlevel 1 goto failed
+set CFGFILE=tdebaets_comps_unicode.cfg
+"%DELPHIROOT%\bin\dcc32.exe" %DCC32OPTS% %CUSTOMARGS% ^
+    -U"%COMMON_LIB_PATH%;..\..\Output" ^
+    -R"%DELPHIROOT%\lib" ^
+    -N"%DCU_PATH%" ^
+    tdebaets_comps_unicode.dpk
+if errorlevel 1 goto failed
+ren %CFGFILE% %CFGFILE%.main
+set CFGFILE=
+if not "%OLDCFGFILE%"=="" ren %OLDCFGFILE%.%RND% %OLDCFGFILE%
+set OLDCFGFILE=
+
 echo Success!
 cd ..
 goto exit

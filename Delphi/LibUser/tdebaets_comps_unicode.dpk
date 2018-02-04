@@ -1,0 +1,65 @@
+(****************************************************************************
+ *
+ * Copyright 2018 Tim De Baets
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ****************************************************************************
+ *
+ * Tim De Baets Unicode Components Collection package
+ *
+ ****************************************************************************)
+
+package tdebaets_comps_unicode;
+
+{$R *.RES}
+{$ALIGN ON}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $00400000}
+{$DESCRIPTION 'Tim De Baets Components Collection (Unicode)'}
+{$DESIGNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  vcl40,
+  vclx40,
+  vclsmp40,
+  // specifying tdebaets_comps first because Delphi's compiler seems to carry
+  // directives from the first compiled package onto the next ones
+  tdebaets_comps,
+  TntUnicodeVcl_R40;
+
+contains
+  AgOpenDialogW in 'AgOpenDialogW.pas',
+  EnhCombo in 'EnhCombo.pas',
+  EnhMemo in 'EnhMemo.pas';
+
+end.
