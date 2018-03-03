@@ -402,6 +402,7 @@ function MsgWaitForObjectWithTimeout(hHandle: THandle;
 
 function IsWin32Success(ErrorCode: DWORD): Boolean;
 
+function ComparePointers(P1, P2: Pointer): Integer;
 function InterlockedExchangePointer(var Target: Pointer;
     Value: Pointer): Pointer;
 
@@ -2716,6 +2717,16 @@ end;
 function IsWin32Success(ErrorCode: DWORD): Boolean;
 begin
   Result := (ErrorCode = ERROR_SUCCESS);
+end;
+
+function ComparePointers(P1, P2: Pointer): Integer;
+begin
+  if Cardinal(P1) < Cardinal(P2) then
+    Result := -1
+  else if Cardinal(P1) > Cardinal(P2) then
+    Result := 1
+  else
+    Result := 0;
 end;
 
 function InterlockedExchangePointer(var Target: Pointer;
