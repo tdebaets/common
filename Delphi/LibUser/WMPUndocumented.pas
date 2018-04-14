@@ -831,8 +831,8 @@ type
     Unknown: TIUnknown;
     WeakAdvise: function: HResult; stdcall; // prototype not known - do not use
     Unadvise: function: HResult; stdcall; // prototype not known - do not use
-    GetSortOrder: function: HResult; stdcall; // thiscall
-    Sort: function: HResult; stdcall; // prototype not known - do not use
+    GetSortOrder: function: HResult; stdcall; // prototype not known - do not use
+    Sort: function(Order1, Order2: Integer): HResult; stdcall; // thiscall
     GetItemCount: function: Integer; stdcall; // thiscall
     CapabilitySupported: function: HResult; stdcall; // prototype not known - do not use
     ItemCapabilitySupported: function: HResult; stdcall; // prototype not known - do not use
@@ -851,8 +851,8 @@ type
   IWMPList = interface(IUnknown)
     function WeakAdvise: HResult; stdcall; // prototype not known - do not use
     function Unadvise: HResult; stdcall; // prototype not known - do not use
-    function GetSortOrder: HResult; stdcall; // thiscall
-    function Sort: HResult; stdcall; // prototype not known - do not use
+    function GetSortOrder: HResult; stdcall; // prototype not known - do not use
+    function Sort(Order1, Order2: Integer): HResult; stdcall; // thiscall
     function GetItemCount: Integer; stdcall; // thiscall
     function CapabilitySupported: HResult; stdcall; // prototype not known - do not use
     function ItemCapabilitySupported: HResult; stdcall; // prototype not known - do not use
