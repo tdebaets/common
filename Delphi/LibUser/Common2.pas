@@ -563,7 +563,6 @@ var
   VarRec: TVarRec;
 begin
   for i := High(Args) downto Low(Args) do begin
-    pArg := nil;
     VarRec := TVarRec(Args[i]);
     case VarRec.VType of
       vtInteger:     pArg := @VarRec.VInteger;
@@ -584,7 +583,7 @@ begin
       vtWideString:  pArg := @VarRec.VWideString;
       //vtInt64:       pArg := VarRec.VInt64;
       else
-        Exception.Create('Unsupported type');
+        raise Exception.Create('Unsupported type');
     end;
     iArg := PInteger(pArg)^;
     asm
