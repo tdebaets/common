@@ -840,8 +840,9 @@ type
     GetAttribute: function: HResult; stdcall; // prototype not known - do not use
     SetAttribute: function: HResult; stdcall; // prototype not known - do not use
     GetItemAttributeCount: function: HResult; stdcall; // prototype not known - do not use
-    GetItemAttribute: function: HResult; stdcall; // prototype not known - do not use
-    SetItemAttribute: function(Unknown: Integer; lAtom: Integer; lIndex: Integer;
+    GetItemAttribute: function(lItemlParam: LPARAM; lAtom: Integer; lIndex: Integer;
+        pvarValue: PVariantArg): HResult; stdcall; // thiscall
+    SetItemAttribute: function(lItemlParam: LPARAM; lAtom: Integer; lIndex: Integer;
         pvarValue: PVariantArg): HResult; stdcall; // prototype not tested yet
     {wmp_1.CMediaList::GetItemAttributeString
     wmp_1.CMediaList::FireMetadataChange}
