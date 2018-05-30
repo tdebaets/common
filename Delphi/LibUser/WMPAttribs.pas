@@ -69,6 +69,7 @@ type
     wmpaCopyright,
     wmpaCurrentBitrate,
     wmpaDescription,
+    wmpaDisplayArtist,
     wmpaDuration,
     wmpaFileSize,
     wmpaFileType,
@@ -194,6 +195,9 @@ const
     (Name: 'Description'; Typ: wmpadtString; MultipleValues: True;
         StoreTypes: [wmpastFile];
         AppliesTo: [wmpmtMusic]),
+    (Name: 'DisplayArtist'; Typ: wmpadtString; MultipleValues: False;
+        StoreTypes: [wmpastLibrary];
+        AppliesTo: [wmpmtAudio]),
     (Name: 'Duration'; Typ: wmpadtInt; MultipleValues: False;
         StoreTypes: [wmpastLibrary, wmpastFile];
         AppliesTo: [wmpmtAudio]),
