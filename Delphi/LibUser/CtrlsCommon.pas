@@ -124,11 +124,7 @@ begin
   Ico := TIcon.Create;
   try
     Ico.Handle := LoadIcon(hInstance, ResourceID);
-    try
-      Result := ImageList.AddIcon(Ico);
-    finally
-      Ico.ReleaseHandle;
-    end;
+    Result := ImageList.AddIcon(Ico);
   finally
     Ico.Free;
   end;
