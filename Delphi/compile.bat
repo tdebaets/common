@@ -45,6 +45,8 @@ set LIBUSER_UNITS= ^
     GIFImage.pas ^
     HugeIni.pas ^
     IntToStrList.pas ^
+    JclResources.pas ^
+    JclWideFormat.pas ^
     MBCSUtil.pas ^
     NewDialogs.pas ^
     PathFuncWide.pas ^
