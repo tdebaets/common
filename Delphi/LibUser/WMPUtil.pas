@@ -25,7 +25,8 @@ unit WMPUtil;
 interface
 
 uses Windows, Messages, SysUtils, ComObj, WMPLib_TLB, Common2, CommCtrl,
-    cUnicode, TntSysUtils, ActiveX, WMPAttribs, MyRegistry, WMPUndocumented;
+    cUnicode, CommonUnicode, TntSysUtils, ActiveX, WMPAttribs, MyRegistry,
+    WMPUndocumented;
 
 const
   WMPBaseRegKey = 'Software\Microsoft\MediaPlayer';
@@ -153,6 +154,30 @@ function WMPGetItemInfo(Media: IWMPMedia;
 function FindAtlWindow(hwndParent: HWND; const WindowTitle: String): Integer;
 procedure GetWMPLocalizedCaptions(hWMPLoc: HMODULE;
     var Captions: TWMPLocalizedCaptions);
+
+type
+  // On WMP 12, there's a single 'playlists' location for all media types. On WMP
+  // 11 and earlier, there's a separate 'playlists' location for each media type.
+  TWMPLibraryCategory = (
+    wmplcPlaylists, wmplcAllTracks, wmplcArtist, wmplcContributingArtist,
+    wmplcAlbum, wmplcGenre, wmplcYear, wmplcComposer, wmplcRating,
+    wmplcParentalRating, wmplcOnlineStores, wmplcFolder);
+
+const
+  // tested on WMP 11 and 12
+  WMPLibraryCategoryStrs: array[TWMPLibraryCategory] of WideString = (
+    'Playlists', 'AllTracks', 'DisplayArtist', 'Author',
+    'AlbumID', 'WM/Genre', 'ReleaseDateYear', 'WM/Composer', 'UserRatingStars',
+    'WM/ParentalRating', 'WM/ContentDistributor', 'Folder00');
+
+type
+  EWMPNavigateException = class(Exception);
+
+function WMPNavigateToAddress(WMPAppDispatch: IDispatch;
+    const Address: WideString): Boolean;
+function WMPNavigateToLibraryCategory(WMPAppDispatch: IDispatch; WMPVersion: Byte;
+    MediaType: TWMPMediaType; Category: TWMPLibraryCategory;
+    const CategoryValue: WideString; const WordWheelText: WideString = ''): Boolean;
 
 type
   TWMPPlayState = (
@@ -906,6 +931,76 @@ begin
     if Temp >= 0 then
       TotalDiscs := Temp;
   end;
+end;
+
+function WMPNavigateToAddress(WMPAppDispatch: IDispatch;
+    const Address: WideString): Boolean;
+var
+  VarWMPAppDispatch: OleVariant;
+begin
+  // interfaces are different between WMP versions, so call navigateToAddress
+  // through IDispatch as OleVariant
+  VarWMPAppDispatch := WMPAppDispatch;
+  // navigateToAddress may sometimes throw an EOleException, such as being called
+  // when closing WMP. Make sure that such exceptions are handled somewhere,
+  // otherwise WMP could crash!
+  VarWMPAppDispatch.navigateToAddress(Address);
+  Result := True;
+end;
+
+// In the following constants, %s is always a placeholder for the media type
+// (e.g. "Music")
+const
+  WMPLocalLibraryAddress = '\MediaLibrary\LocalLibrary\%s';
+  WMPRootLibraryAddress11 = '\MediaLibrary\%s';
+  WMPLocalLibraryAddress11 = WMPRootLibraryAddress11 + '\LocalLibrary';
+  WMPPlaylistsLibraryAddress11 = WMPRootLibraryAddress11 + '\Playlists';
+  WMPLibraryAddressLibraryTypes: array[TWMPMediaType] of WideString = (
+    'Music', '', '', '', '', 'Other', 'Pictures', 'Playlists', '', 'Video', '');
+  WMPLibraryWordWheelGUID = '95ca482e-7442-463e-8df7-fb71f3607ff7';
+
+function WMPNavigateToLibraryCategory(WMPAppDispatch: IDispatch; WMPVersion: Byte;
+    MediaType: TWMPMediaType; Category: TWMPLibraryCategory;
+    const CategoryValue: WideString; const WordWheelText: WideString = ''): Boolean;
+var
+  LocalLibraryAddress, Address: WideString;
+begin
+  if (MediaType = wmpmtPlaylist)
+      or (WMPLibraryAddressLibraryTypes[MediaType] = '') then begin
+    raise EWMPNavigateException.CreateFmt('Invalid media type: %u',
+        [Cardinal(MediaType)]);
+  end;
+  if WMPVersion > 11 then
+    LocalLibraryAddress := WMPLocalLibraryAddress
+  else
+    LocalLibraryAddress := WMPLocalLibraryAddress11;
+  if Category = wmplcPlaylists then begin
+    if WMPVersion > 11 then begin
+      // Here, there's a single 'playlists' location for all media types, so we
+      // ignore MediaType
+      Address := RealWideFormat(LocalLibraryAddress,
+          [WMPLibraryAddressLibraryTypes[wmpmtPlaylist]]);
+    end
+    else begin
+      Address := RealWideFormat(WMPPlaylistsLibraryAddress11,
+          [WMPLibraryAddressLibraryTypes[MediaType]]);
+    end;
+  end
+  else begin
+    Address := RealWideFormat(LocalLibraryAddress + '\%s',
+        [WMPLibraryAddressLibraryTypes[MediaType],
+         WMPLibraryCategoryStrs[Category]]);
+  end;
+  // ignore CategoryValue when navigating to 'all tracks'
+  if (Category <> wmplcAllTracks) and (CategoryValue <> '') then begin
+    // escape backslashes in CategoryValue
+    Address := Address + '\' + WideEscapeChars(CategoryValue, ['\'], '\');
+  end;
+  if WordWheelText <> '' then begin
+    Address := Address + RealWideFormat('\%s!%s',
+        [WMPLibraryWordWheelGUID, WordWheelText]);
+  end;
+  Result := WMPNavigateToAddress(WMPAppDispatch, Address);
 end;
 
 function WMPGetItemInfo(Media: IWMPMedia;
