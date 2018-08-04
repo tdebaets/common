@@ -69,7 +69,7 @@ set CFGFILE=
 set OLDCFGFILE=
 set FULLBUILD=0
 
-rem  Quiet compile / Build all / Output warnings
+rem Quiet compile / Output warnings
 set DCC32OPTS=-Q -W
 set CUSTOMARGS=%1
 
