@@ -30,6 +30,9 @@ $(DELPHI)\Imports
 COMMONPATH\Delphi\Imports
 COMMONPATH\Delphi\LibUser\Virtual Treeview\Source
 COMMONPATH\Delphi\LibUser\Virtual Treeview\Design
+COMMONPATH\Delphi\LibUser\TntUnicodeControls
+COMMONPATH\Delphi\LibUser\TntUnicodeControls\Packages
+COMMONPATH\Delphi\LibUser\TntUnicodeControls\Design
 COMMONPATH\Delphi\LibUser\FastMM4
 ```
 
@@ -46,7 +49,11 @@ First, make sure that you have built the `common` repository successfully. This 
 
 However, if you intend to also make changes to files in the `common` repository itself, you should create a separate clone of that repository and build that clone instead.
 
-Successful compilation of `common` should result in the creation of the `tdebaets_comps.bpl` file in `COMMONPATH\Output`, which should be added as a design package in the Delphi IDE (`Component` - `Install Packages...`).
+Successful compilation of `common` should result in the creation of the following files in `COMMONPATH\Output`. Individually add each file as a design package in the Delphi IDE (`Component` - `Install Packages...`), in the order in which they are listed:
+
+- `tdebaets_comps.bpl`
+- `TntUnicodeVcl_R40.bpl`
+- `tdebaets_comps_unicode.bpl`
 
 Textual form layout files
 -------------------------
