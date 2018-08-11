@@ -64,6 +64,8 @@ To let Delphi automatically create textual mirrors of form layout files, you can
 
 GExperts isn't being actively developed anymore for older versions of Delphi, but fortunately you can still download version 1.01 for Delphi 4 [here](http://www.gexperts.org/download/#GX101) (`GX4-101.exe`). Follow the installer instructions and launch Delphi when the installation is finished. You should now see a new `GExperts` entry in the main menu at the top. Click it, and go to `GExperts Configuration` - `IDE`. Untick `Disable all IDE enhancements`, and tick `Save DFMs as TXT`.
 
+Optionally, after installing GExperts, you may want to replace it with the [GExperts-unofficial](https://github.com/tdebaets/gexperts-unofficial) fork. This fork provides additional Delphi enhancements that the official version doesn't have. See the GExperts-unofficial [README.md](https://github.com/tdebaets/gexperts-unofficial/blob/master/README.md) for more details and further instructions.
+
 Notes
 -----
 
@@ -72,3 +74,5 @@ Notes
 - The Delphi IDE doesn't work well if it's being run without administrator rights. So if you have User Account Control (UAC) turned on, it's recommended to always run Delphi as administrator. The easiest way to do so, is to mark the IDE's executable as requiring administrator rights. In Windows Explorer, head to Delphi's installation directory. In the `Bin` subdirectory, right-click `delphi32.exe` and select `Properties`. Go to the `Compatibility` tab and tick `Run this program as an administrator`. Now Windows will show an UAC prompt each time you launch the Delphi IDE.
 
 - Most of my Delphi projects support the `Debug` conditional compilation define. Compiling with this define includes additional debugging code in the build, which are usually extra calls to the `OutputDebugString` API function. When the project is run under the Delphi debugger, you can capture the debug output using the `Send OutputDebugString To GExperts` feature of GExperts. Outside of Delphi, you can use the [DebugView](https://technet.microsoft.com/en-us/sysinternals/debugview.aspx) tool.
+
+    > **Note:** the `Send OutputDebugString To GExperts` feature doesn't work with the official version of GExperts for Delphi 4. To be able to use it, you'll need the [GExperts-unofficial](https://github.com/tdebaets/gexperts-unofficial) fork.
