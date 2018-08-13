@@ -69,8 +69,6 @@ Optionally, after installing GExperts, you may want to replace it with the [GExp
 Notes
 -----
 
-- There seems to be a bug in Delphi 4 where the IDE generates an access violation in module `dcc40.dll` on the first compilation (incremental, `Ctrl+F9`) after opening a project. It seems to depend on which project is compiled as not all ones are affected. The workaround is to simply make sure that the first compilation after opening a project is a *full* rebuild (`Project` - `Build <projectname>` in the IDE). All subsequent incremental compilations should then work fine. To avoid being bitten by this bug, it's a good idea to always do a full rebuild immediately after opening a project.
-
 - The Delphi IDE doesn't work well if it's being run without administrator rights. So if you have User Account Control (UAC) turned on, it's recommended to always run Delphi as administrator. The easiest way to do so, is to mark the IDE's executable as requiring administrator rights. In Windows Explorer, head to Delphi's installation directory. In the `Bin` subdirectory, right-click `delphi32.exe` and select `Properties`. Go to the `Compatibility` tab and tick `Run this program as an administrator`. Now Windows will show an UAC prompt each time you launch the Delphi IDE.
 
 - Most of my Delphi projects support the `Debug` conditional compilation define. Compiling with this define includes additional debugging code in the build, which are usually extra calls to the `OutputDebugString` API function. When the project is run under the Delphi debugger, you can capture the debug output using the `Send OutputDebugString To GExperts` feature of GExperts. Outside of Delphi, you can use the [DebugView](https://technet.microsoft.com/en-us/sysinternals/debugview.aspx) tool.
