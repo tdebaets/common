@@ -218,6 +218,8 @@ function MenuItemExists(hMenu: HMENU; ID: Cardinal): Boolean;
 procedure ClearMenuItems(hMenu: HMENU);
 function IsSubmenuItem(hMenu: Integer; uItem: Cardinal;
     ByPosition: Boolean): Boolean;
+function IsSeparatorItem(hMenu: Integer; uItem: Cardinal;
+    ByPosition: Boolean): Boolean;
 
 // Files
 function GetExeDisplayName(const Filename: String): String;
@@ -1243,6 +1245,20 @@ begin
   ItemInfo.fMask := MIIM_SUBMENU;
   GetMenuItemInfo(hMenu, uItem, ByPosition, ItemInfo);
   Result := (ItemInfo.hSubMenu <> 0);
+end;
+
+function IsSeparatorItem(hMenu: Integer; uItem: Cardinal;
+    ByPosition: Boolean): Boolean;
+var
+  ItemInfo: TMenuItemInfo;
+begin
+  Result := False;
+  FillChar(ItemInfo, SizeOf(ItemInfo), 0);
+  ItemInfo.cbSize := SizeOf(ItemInfo);
+  ItemInfo.fMask := MIIM_TYPE;
+  if not GetMenuItemInfo(hMenu, uItem, ByPosition, ItemInfo) then
+    Exit;
+  Result := ((ItemInfo.fType and MFT_SEPARATOR) <> 0);
 end;
 
 function GetExeDisplayName(const Filename: String): String;
