@@ -41,6 +41,7 @@ function WideGetParentDirectory(const Path: WideString): WideString;
 function WideIsFileOrDirReadOnly(const FileName: WideString;
     var ReadOnly: Boolean): Boolean;
 function QuoteArgvForCmdLine(const Argv: WideString): WideString;
+procedure SafeWideStrCopy(pDest, pSource: PWideChar; MaxLen: Cardinal);
 
 implementation
 
@@ -225,6 +226,28 @@ begin
     Inc(pArgv);
   end;
   AppendResultChar('"');
+end;
+
+procedure SafeWideStrCopy(pDest, pSource: PWideChar; MaxLen: Cardinal);
+var
+  i: Integer;
+  TerminatorFound: Boolean;
+begin
+  TerminatorFound := False;
+  for i := 0 to MaxLen - 1 do begin
+    pDest^ := pSource^;
+    if pSource^ = #0 then begin
+      TerminatorFound := True;
+      Break;
+    end;
+    Inc(pDest);
+    Inc(pSource);
+  end;
+  // make sure that the destination buffer is null-terminated
+  if not TerminatorFound then begin
+    Dec(pDest);
+    pDest^ := #0;
+  end;
 end;
 
 end.
