@@ -823,6 +823,7 @@ type
     procedure ItemActivate; virtual;
     function HotTrack(var Item: TNMListView): boolean; virtual;
     procedure GetInfoTip(InfoTip: PNMLVGetInfoTip); virtual;
+    function GetExtListColumnClass: TCollectionItemClass; virtual;
 
     procedure VMGetDispInfo(var ItemInfo: TLVItemEx); virtual;
     procedure VMCacheHint(var HintInfo: TNMCacheHint); virtual;
@@ -2409,6 +2410,11 @@ begin
   end;
 end;
 
+function TCustomExtListView.GetExtListColumnClass: TCollectionItemClass;
+begin
+  Result := TdfsExtListColumn;
+end;
+
 procedure TCustomExtListView.VMGetDispInfo(var ItemInfo: TLVItemEx);
   function MaskFlagsToSet(Mask: UINT): TLVVMMaskItems;
   begin
@@ -3161,7 +3167,7 @@ end;
 
 constructor TdfsExtListColumns.Create(AListView: TCustomExtListView);
 begin
-  inherited Create(TdfsExtListColumn);
+  inherited Create(AListView.GetExtListColumnClass);
   FListView := AListView;
 end;
 

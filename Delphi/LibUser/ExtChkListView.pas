@@ -57,6 +57,18 @@ type
 
   THackCustomListView = class(TCustomListView);
 
+  TExtChkListColumn = class(TdfsExtListColumn)
+  private
+    FShowChecks: Boolean;
+    procedure SetShowChecks(Value: Boolean);
+  public
+    constructor Create(Collection: TCollection); override;
+    procedure Assign(Source: TPersistent); override;
+  published
+    property ShowChecks: Boolean read FShowChecks write SetShowChecks
+        default False;
+  end;
+
   TChkListItem = class(TListItem)
   private
     FEnabled: Boolean;
@@ -130,16 +142,19 @@ type
     procedure GetCheckRect(const IconRect: TRect; var CheckRect: TRect);
     procedure GetStateRect(Index: Integer; const IconRect: TRect;
         var StateRect: TRect);
+    procedure GetSubItemCheckRect(const BoundsRect: TRect; var CheckRect: TRect);
     procedure DrawCheck(hDC: Integer; const CheckRect: TRect;
         State: TCheckBoxState; CheckState: TCheckState);
     procedure DrawDisabledIcon(hDC: Integer; Index: Integer;
         const IconRect: TRect);
     procedure UpdateItemCheck(Index: Integer);
+    procedure UpdateColumn(Index: Integer);
     procedure EndCapture(Cancel: Boolean);
     function CanFocusItem(Index: Integer): Boolean;
     function GetItemEnabled(Index: Integer): Boolean;
     procedure SetItemEnabled(Index: Integer; Value: Boolean);
     function GetChecksEnabled: Boolean;
+    function ColumnHasSubItemChecks(Index: Integer): Boolean;
     procedure SetHideItemFocusRect(Value: Boolean);
     procedure UpdateBeforePrimaryColumnIdx;
     function NMCustomDraw(NMCustomDraw: PNMCustomDraw): Integer;
@@ -169,6 +184,7 @@ type
     procedure CreateWnd; override;
     procedure DestroyWnd; override;
     procedure SetCheckBoxOptions(Value: TCheckBoxOptions);
+    function GetExtListColumnClass: TCollectionItemClass; override;
     function CreateListItem: TListItem; override;
     procedure ItemChecked(ItemIndex: integer; Checked: Boolean); override;
     procedure LVItemPostPaint(const NMLVCD: TNMLVCustomDraw;
@@ -412,6 +428,32 @@ begin
   end;
 end;
 
+{ TExtChkListColumn }
+
+constructor TExtChkListColumn.Create(Collection: TCollection);
+begin
+  inherited Create(Collection);
+  FShowChecks := False;
+end;
+
+procedure TExtChkListColumn.Assign(Source: TPersistent);
+begin
+  inherited Assign(Source);
+  if Source is TExtChkListColumn then
+    ShowChecks := TExtChkListColumn(Source).ShowChecks;
+end;
+
+procedure TExtChkListColumn.SetShowChecks(Value: Boolean);
+begin
+  if Value <> FShowChecks then begin
+    FShowChecks := Value;
+    with Collection as TdfsExtListColumns do begin
+      if Assigned(ListView) then with ListView as TCustomExtChkListView do
+        UpdateColumn(Index);
+    end;
+  end;
+end;
+
 { TChkListItem }
 
 const
@@ -557,6 +599,21 @@ begin
   Result := not (ViewStyle = vsIcon) and (lvxCheckBoxes in ExtendedStyles);
 end;
 
+function TCustomExtChkListView.ColumnHasSubItemChecks(Index: Integer): Boolean;
+var
+  Column: TdfsExtListColumn;
+begin
+  Result := False;
+  if ViewStyle <> vsReport then
+    Exit;
+  if Index >= ColumnsFormat.Count then
+    Exit;
+  Column := ColumnsFormat[Index];
+  if not (Column is TExtChkListColumn) then
+    Exit;
+  Result := TExtChkListColumn(Column).ShowChecks;
+end;
+
 procedure TCustomExtChkListView.SetHideItemFocusRect(Value: Boolean);
 begin
   if Value <> FHideItemFocusRect then begin
@@ -692,6 +749,20 @@ begin
   StateRect.Right := IconRect.Left;
 end;
 
+procedure TCustomExtChkListView.GetSubItemCheckRect(const BoundsRect: TRect;
+    var CheckRect: TRect);
+var
+  MarginTop: Integer;
+begin
+  CheckRect := BoundsRect;
+  Inc(CheckRect.Left, (RectWidth(BoundsRect) - FCheckWidth) div 2);
+  CheckRect.Right := CheckRect.Left + FCheckWidth;
+  MarginTop := (RectHeight(CheckRect) - FCheckHeight) div 2;
+  MarginTop := Max(MarginTop, 0);
+  Inc(CheckRect.Top, MarginTop);
+  CheckRect.Bottom := CheckRect.Top + FCheckHeight;
+end;
+
 procedure TCustomExtChkListView.DrawCheck(hDC: Integer; const CheckRect: TRect;
     State: TCheckBoxState; CheckState: TCheckState);
 var
@@ -808,6 +879,67 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
         DrawDisabledIcon(hDC, dwItemSpec, IconRect);
     end;
   end;
+  procedure HandleSubItemPostPaint;
+  var
+    // TODO: cleanup
+    {SubItemRect,} CheckRect: TRect;
+    Item: TListItem;
+    IsSelected: Boolean;
+    //hbr: HBRUSH;
+  begin
+    with NMCustomDraw^, PNMLVCustomDraw(NMCustomDraw)^ do begin
+      // Comctl32 can send us 'fake' custom draw notifications
+      // (via CLVDrawItemManager::BeginFakeItemDraw - CIFakeCustomDrawNotify),
+      // such as for computing a column's width, or while hovering the mouse
+      // over an item when the lvxInfoTip or lvxLabelTip extended style is set.
+      // In this case, most fields in NMLVCustomDraw (like uItemState, clrText,
+      // clrTextBk...) will be left uninitialized so if we would use these fields
+      // we would access garbage data. Comctl32 *does* however initialize the rc
+      // field to all zeroes when sending these fake notifications, so we can
+      // check that field to detect this and completely skip the drawing.
+      if IsRectEmpty(rc) then
+        Exit;
+      if ColumnHasSubItemChecks(iSubItem) then begin
+        Item := GetItem;
+        if not Assigned(Item) then
+          Exit;
+        IsSelected := (uItemState and CDIS_SELECTED) <> 0;
+        // TODO: remove
+        // The following code was added to erase the contents of the current
+        // subitem before painting on it, but this appears to be redundant
+        {if nmcd.uItemState and CDIS_SELECTED <> 0 then begin
+          clrText := GetSysColor(COLOR_HIGHLIGHTTEXT);
+          clrTextBk := GetSysColor(COLOR_HIGHLIGHT);
+        end
+        else begin
+          clrText := GetSysColor(COLOR_WINDOWTEXT);
+          clrTextBk := ColorToRGB(Color);
+        end;
+        SetBkColor(hdc, PNMLVCustomDraw(NMCustomDraw)^.clrTextBk);
+        SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));}
+        {if not ListView_GetSubItemRect(Handle, dwItemSpec, iSubItem, LVIR_BOUNDS, @SubItemRect) then
+          Exit;
+        hbr := CreateSolidBrush(clrTextBk);
+        try
+          FillRect(hdc, SubItemRect, hbr);
+        finally
+          DeleteObject(hbr);
+        end;}
+        GetSubItemCheckRect(rc, CheckRect);
+        DrawCheck(hdc, CheckRect, cbUnchecked, csNormal);
+        if Focused then begin
+          if IsSelected and ((FThemeData <> 0) or CheckBoxOptions.HighLight) then
+            AlphaHighLight(hdc, CheckRect, FAlphaBlend);
+          // Can't check uItemState for CDIS_FOCUS here because we may have
+          // removed that state in HandleItemPrePaint
+          if Item = ItemFocused then begin
+            InflateRect(CheckRect, 2, 2);
+            DrawFocusRect(hdc, CheckRect);
+          end;
+        end;
+      end;
+    end;
+  end;
 var
   Item: TChkListItem;
   NewFont: Boolean;
@@ -838,9 +970,14 @@ begin
         Result := Result or CDRF_NOTIFYPOSTPAINT;
         if NewFont then
           Result := Result or CDRF_NEWFONT;
+        Result := Result or CDRF_NOTIFYSUBITEMDRAW;
       end;
       CDDS_ITEMPOSTPAINT:
         HandleItemPostPaint;
+      CDDS_ITEMPREPAINT or CDDS_SUBITEM:
+        Result := Result or CDRF_NOTIFYPOSTPAINT;
+      CDDS_ITEMPOSTPAINT or CDDS_SUBITEM:
+        HandleSubItemPostPaint;
     end;
   end;
 end;
@@ -935,6 +1072,26 @@ begin
   Checked := ListView_GetCheckState(Handle, Index) <> 0;
   ListView_SetCheckState(Handle, Index, not Checked);
   ListView_SetCheckState(Handle, Index, Checked);
+end;
+
+procedure TCustomExtChkListView.UpdateColumn(Index: Integer);
+var
+  OrigWidth: TWidth;
+begin
+  if Index >= Columns.Count then
+    Exit;
+  // For lack of a better way to update a column, we simply do it by changing the
+  // width to 0, and then changing it back
+  BeginUpdate;
+  try
+    with Column[Index] do begin
+      OrigWidth := WidthType;
+      Width := 0;
+      Width := OrigWidth;
+    end;
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TCustomExtChkListView.EndCapture(Cancel: Boolean);
@@ -1130,6 +1287,11 @@ procedure TCustomExtChkListView.WMRButtonDblClk(var Message: TWMRButtonDblClk);
 begin
   if DoMouseDown(mbRight, Message.XPos, Message.YPos) then
     inherited;
+end;
+
+function TCustomExtChkListView.GetExtListColumnClass: TCollectionItemClass;
+begin
+  Result := TExtChkListColumn;
 end;
 
 function TCustomExtChkListView.CreateListItem: TListItem;
