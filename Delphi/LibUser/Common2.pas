@@ -206,11 +206,13 @@ procedure InterfaceDisconnect(const Source: IUnknown; const IID: TIID;
   var Connection: Longint);
 
 // COM
+
 function CoCreateInstanceAsAdmin(Handle: HWND; const ClassID, IID: TGuid;
     out ppv): HResult;
 function GetComObjectInprocServerPath(const CLSID: TGUID): String;
 
 // Menus
+
 function GetMenuItemCaption(Menu: HMENU; Item: Integer;
     ByPosition: Boolean): String;
 function GetMenuItemPositionFromID(hMenu: HMENU; ID: Cardinal): Integer;
@@ -222,6 +224,7 @@ function IsSeparatorItem(hMenu: Integer; uItem: Cardinal;
     ByPosition: Boolean): Boolean;
 
 // Files
+
 function GetExeDisplayName(const Filename: String): String;
 function ExecuteFile(hwnd: HWND; const FileName, Params, DefaultDir: string;
     ShowCmd: Integer): Boolean;
@@ -234,6 +237,7 @@ function NewPathExtractExt(const Filename: String): String;
 function FileSize(const Filename: String; var Size: Int64): Boolean;
 
 // Dirs
+
 const
   CSIDL_LOCAL_APPDATA = $0000001c;
 
@@ -312,6 +316,7 @@ function Utf8Decode(const S: UTF8String): WideString;
 function Utf8Encode(const WS: WideString): UTF8String;
 
 // DLLs
+
 function GetModuleName(Module: HMODULE): String;
 function LockModuleIntoProcess(Module: HMODULE): Boolean;
 function GetModuleFromAddress(Address: Pointer): HMODULE;
@@ -321,6 +326,7 @@ function SafeLoadLibrary(const Filename: String;
 function LoadResourceDll(const Path: String): Integer;
 
 // Resources
+
 function LoadResString(hInstance: Integer; ID: Integer): string;
 function ParseResURL(var URL: String; const FilenameHint: String;
     var ResourceDll: String): Boolean;
@@ -345,7 +351,6 @@ function Card(var tar; size: Integer): Integer;
 function SumWord(const Data: array of Word): Integer;
 function IsSubRangeMember(Info: PTypeInfo; const Value): Boolean;
 procedure IncludeFlag(var Flags: Cardinal; Flag: Cardinal);
-
 
 // Arrays
 
@@ -386,6 +391,34 @@ function NormalizeNTUserRegPath(const RegPath: String;
 
 function CheckCommonControl(CC: Integer): Boolean;
 
+// Graphics
+
+const
+  AC_SRC_OVER = $00;
+
+type
+  TBLENDFUNCTION = record
+    BlendOp: BYTE;
+    BlendFlags: BYTE;
+    SourceConstantAlpha: BYTE;
+    AlphaFormat: BYTE;
+  end;
+  TAlphaBlend = function(
+    hdcDest: HDC;                 // handle to destination DC
+    nXOriginDest,                 // x-coord of upper-left corner
+    nYOriginDest,                 // y-coord of upper-left corner
+    nWidthDest,                   // destination width
+    nHeightDest: Integer;         // destination height
+    hdcSrc:HDC;                   // handle to source DC
+    nXOriginSrc,                  // x-coord of upper-left corner
+    nYOriginSrc,                  // y-coord of upper-left corner
+    nWidthSrc,                    // source width
+    nHeightSrc: Integer;          // source height
+    blendFunction: TBLENDFUNCTION // alpha-blending function
+  ): Boolean; stdcall;
+
+procedure AlphaHighlight(hDC: Integer; R: TRect; AlphaBlend: TAlphaBlend);
+
 // Misc
 
 function IsExtendedKey(VirtualKeyCode: Cardinal): Boolean;
@@ -403,6 +436,9 @@ function MsgWaitForObjectWithTimeout(hHandle: THandle;
     dwTimeout: Cardinal): DWORD;
 
 function IsWin32Success(ErrorCode: DWORD): Boolean;
+
+function RectWidth(const R: TRect): Integer;
+function RectHeight(const R: TRect): Integer;
 
 function ComparePointers(P1, P2: Pointer): Integer;
 function InterlockedExchangePointer(var Target: Pointer;
@@ -2647,6 +2683,44 @@ begin
   end;
 end;
 
+procedure AlphaHighlight(hDC: Integer; R: TRect; AlphaBlend: TAlphaBlend);
+var
+  Bmp: TBitmap;
+  Alpha: TBlendFunction;
+  cx, cy: Integer;
+  Rect: TRect;
+begin
+  if not Assigned(AlphaBlend) then
+    Exit;
+  cx := RectWidth(R);
+  cy := RectHeight(R);
+  with Rect do begin
+    Left := 0;
+    Top := 0;
+    Right := cx;
+    Bottom := cy;
+  end;
+  Bmp := TBitmap.Create;
+  try
+    with Bmp do begin
+      Height := cy;
+      Width := cx;
+      Canvas.Brush.Style := bsSolid;
+      Bmp.Canvas.Brush.Color := clHighlight;
+      Canvas.FillRect(Rect);
+    end;
+    with Alpha do begin
+      BlendOp := AC_SRC_OVER;
+      BlendFlags := 0;
+      SourceConstantAlpha := 127;
+      AlphaFormat := 0;
+    end;
+    AlphaBlend(hDC, R.Left, R.Top, cx, cy, Bmp.Canvas.Handle, 0, 0, cx, cy, Alpha);
+  finally
+    Bmp.Free;
+  end;
+end;
+
 function InitCommonControl(CC: Integer): Boolean;
 var
   ICC: TInitCommonControlsEx;
@@ -2732,6 +2806,22 @@ end;
 function IsWin32Success(ErrorCode: DWORD): Boolean;
 begin
   Result := (ErrorCode = ERROR_SUCCESS);
+end;
+
+function RectWidth(const R: TRect): Integer;
+begin
+  if R.Right > R.Left then
+    Result := R.Right - R.Left
+  else
+    Result := 0;
+end;
+
+function RectHeight(const R: TRect): Integer;
+begin
+  if R.Bottom > R.Top then
+    Result := R.Bottom - R.Top
+  else
+    Result := 0;
 end;
 
 function ComparePointers(P1, P2: Pointer): Integer;

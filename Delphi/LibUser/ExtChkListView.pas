@@ -21,7 +21,8 @@
  ****************************************************************************)
 
 // TODO: add support for hot-tracking checkboxes?
-// (see removed comments in change history involving FHotIndex)
+// (see removed comments in change history involving FHotIndex + removed code
+// involving FLastMouseMoveIndex)
 
 {$I DFS.INC}
 
@@ -32,31 +33,6 @@ interface
 uses ExtListView, EnhListView, Windows, Graphics, StdCtrls, Classes, Controls,
     ComCtrls, NewCommCtrl, Messages, SysUtils, ComStrs, Forms, Math, UxThemeISX,
     Common2;
-
-const
-  AC_SRC_OVER = $00;
-
-type
-  TBLENDFUNCTION = record
-    BlendOp: BYTE;
-    BlendFlags: BYTE;
-    SourceConstantAlpha: BYTE;
-    AlphaFormat: BYTE;
-  end;
-  TAlphaBlend = function(
-    hdcDest: HDC;                 // handle to destination DC
-    nXOriginDest,                 // x-coord of upper-left corner
-    nYOriginDest,                 // y-coord of upper-left corner
-    nWidthDest,                   // destination width
-    nHeightDest: Integer;         // destination height
-    hdcSrc:HDC;                   // handle to source DC
-    nXOriginSrc,                  // x-coord of upper-left corner
-    nYOriginSrc,                  // y-coord of upper-left corner
-    nWidthSrc,                    // source width
-    nHeightSrc: Integer;          // source height
-    blendFunction: TBLENDFUNCTION // alpha-blending function
-  ): Boolean; stdcall;
-
 
 type
   PItemParamInfo = ^TItemParamInfo;
@@ -140,7 +116,6 @@ type
     FCheckWidth, FCheckHeight: Integer;
     FCheckBoxOptions: TCheckBoxOptions;
     FSpaceDown: Boolean;
-    FLastMouseMoveIndex: Integer;
     FCaptureIndex: Integer;
     FDisabledColor: TColor;
     FThemeData: HTHEME;
@@ -151,8 +126,13 @@ type
     FBeforePrimaryColumnIdx: Integer;
     FProcessItemChecked: Boolean;
     function GetItemState(Item: TListItem): TCheckBoxState;
-    procedure DrawCheck(hDC: Integer; Index: Integer; State: TCheckBoxState;
-        IsEnabled: Boolean; DrawIcon: Boolean);
+    procedure GetCheckRect(const IconRect: TRect; var CheckRect: TRect);
+    procedure GetStateRect(Index: Integer; const IconRect: TRect;
+        var StateRect: TRect);
+    procedure DrawCheck(hDC: Integer; const CheckRect: TRect;
+        State: TCheckBoxState; CheckState: TCheckState);
+    procedure DrawDisabledIcon(hDC: Integer; Index: Integer;
+        const IconRect: TRect);
     procedure UpdateItemCheck(Index: Integer);
     procedure EndCapture(Cancel: Boolean);
     function CanFocusItem(Index: Integer): Boolean;
@@ -165,7 +145,6 @@ type
     procedure WMNotify(var Message: TWMNotify); message WM_NOTIFY;
     procedure CNNotify(var Message: TWMNotify); message CN_NOTIFY;
     procedure CMExit(var Message: TCMExit); message CM_EXIT;
-    procedure WMMouseMove(var Message: TWMMouseMove); message WM_MOUSEMOVE;
     procedure WMKeyDown(var Message: TWMKeyDown); message WM_KEYDOWN;
     procedure WMLButtonDown(var Message: TWMLButtonDown); message WM_LBUTTONDOWN;
     procedure WMRButtonDown(var Message: TWMRButtonDown); message WM_RBUTTONDOWN;
@@ -371,44 +350,6 @@ procedure Register;
 implementation
 
 uses TmSchemaISX;
-
-procedure AlphaHighlight(hDC: Integer; R: TRect; AlphaBlend: TAlphaBlend);
-var
-  Bmp: TBitmap;
-  Alpha: TBlendFunction;
-  cx, cy: Integer;
-  Rect: TRect;
-begin
-  if @AlphaBlend = nil then
-    Exit;
-  cx := R.Right - R.Left;
-  cy := R.Bottom - R.Top;
-  with Rect do begin
-    Left := 0;
-    Top := 0;
-    Right := cx;
-    Bottom := cy;
-  end;
-  Bmp := TBitmap.Create;
-  try
-    with Bmp do begin
-      Height := cy;
-      Width := cx;
-      Canvas.Brush.Style := bsSolid;
-      Bmp.Canvas.Brush.Color := clHighlight;
-      Canvas.FillRect(Rect);
-    end;
-    with Alpha do begin
-      BlendOp := AC_SRC_OVER;
-      BlendFlags := 0;
-      SourceConstantAlpha := 127;
-      AlphaFormat := 0;
-    end;
-    AlphaBlend(hDC, R.Left, R.Top, cx, cy, Bmp.Canvas.Handle, 0, 0, cx, cy, Alpha);
-  finally
-    Bmp.Free;
-  end;
-end;
 
 { TCheckBoxOptions }
 
@@ -696,35 +637,32 @@ begin
     inherited;
 end;
 
-// TODO: split up into multiple methods
-procedure TCustomExtChkListView.DrawCheck(hDC: Integer; Index: Integer;
-    State: TCheckBoxState; IsEnabled: Boolean; DrawIcon: Boolean);
+procedure TCustomExtChkListView.GetCheckRect(const IconRect: TRect;
+    var CheckRect: TRect);
 var
-  uState: Integer;
-  StateId: Integer;
-  IconRect, CheckRect, BoundsRect, StateRect: TRect;
-  Selected: Boolean;
   MarginTop: Integer;
-const
-  CheckStateIds: array [TCheckBoxState, TCheckState] of Integer =
-  (
-    (CBS_UNCHECKEDNORMAL, CBS_UNCHECKEDHOT, CBS_UNCHECKEDPRESSED, CBS_UNCHECKEDDISABLED),
-    (CBS_CHECKEDNORMAL, CBS_CHECKEDHOT, CBS_CHECKEDPRESSED, CBS_CHECKEDDISABLED),
-    (CBS_MIXEDNORMAL, CBS_MIXEDHOT, CBS_MIXEDPRESSED, CBS_MIXEDDISABLED)
-  );
 begin
-  if not ListView_GetItemRect(Handle, Index, IconRect, LVIR_ICON) then
-    Exit;
-  // prevent drawing on the column header
-  if (IconRect.Top < 5) and (ViewStyle = vsReport) and ShowColumnHeaders then
-    Exit;
   CheckRect := IconRect;
-  // erase existing state icon (checkmark)
+  Dec(CheckRect.Left, FCheckWidth + 10);
+  Inc(CheckRect.Left, CheckBoxOptions.LeftMargin);
+  CheckRect.Right := CheckRect.Left + FCheckWidth;
+  MarginTop := (RectHeight(CheckRect) - FCheckHeight) div 2;
+  MarginTop := Max(MarginTop, 0);
+  Inc(CheckRect.Top, MarginTop);
+  CheckRect.Bottom := CheckRect.Top + FCheckHeight;
+end;
+
+procedure TCustomExtChkListView.GetStateRect(Index: Integer;
+    const IconRect: TRect; var StateRect: TRect);
+var
+  BoundsRect: TRect;
+begin
+  BoundsRect := Rect(0, 0, 0, 0);
   StateRect.Top := IconRect.Top;
   StateRect.Bottom := IconRect.Bottom;
   StateRect.Left := 0;
   if (ViewStyle <> vsReport) or (FBeforePrimaryColumnIdx = 0) then begin
-    // primary column is the first, so left bound of state icon = left bound
+    // primary column is the first, so left bound of state icon = left bound of
     // whole item
     ListView_GetItemRect(Handle, Index, BoundsRect, LVIR_BOUNDS);
     StateRect.Left := BoundsRect.Left;
@@ -737,14 +675,22 @@ begin
     StateRect.Left := BoundsRect.Right;
   end;
   StateRect.Right := IconRect.Left;
-  FillRect(hDC, StateRect, Brush.Handle);
-  Dec(CheckRect.Left, FCheckWidth + 10);
-  Inc(CheckRect.Left, CheckBoxOptions.LeftMargin);
-  CheckRect.Right := CheckRect.Left + FCheckWidth;
-  MarginTop := (CheckRect.Bottom - CheckRect.Top - FCheckHeight) div 2;
-  MarginTop := Max(MarginTop, 0);
-  Inc(CheckRect.Top, MarginTop);
-  CheckRect.Bottom := CheckRect.Top + FCheckHeight;
+end;
+
+procedure TCustomExtChkListView.DrawCheck(hDC: Integer; const CheckRect: TRect;
+    State: TCheckBoxState; CheckState: TCheckState);
+var
+  uState: Cardinal;
+const
+  FrameControlStates: array[TCheckState] of Cardinal =
+    (0, 0, DFCS_PUSHED, DFCS_INACTIVE);
+  CheckStateIds: array [TCheckBoxState, TCheckState] of Integer =
+  (
+    (CBS_UNCHECKEDNORMAL, CBS_UNCHECKEDHOT, CBS_UNCHECKEDPRESSED, CBS_UNCHECKEDDISABLED),
+    (CBS_CHECKEDNORMAL, CBS_CHECKEDHOT, CBS_CHECKEDPRESSED, CBS_CHECKEDDISABLED),
+    (CBS_MIXEDNORMAL, CBS_MIXEDHOT, CBS_MIXEDPRESSED, CBS_MIXEDDISABLED)
+  );
+begin
   if FThemeData = 0 then begin
     case State of
       cbChecked: uState := DFCS_BUTTONCHECK or DFCS_CHECKED;
@@ -754,48 +700,39 @@ begin
     end;
     if CheckBoxOptions.Flat then
       uState := uState or DFCS_FLAT;
-    if not IsEnabled then
-      uState := uState or DFCS_INACTIVE;
-    if (FCaptureIndex = Index)
-        and (FSpaceDown or (FLastMouseMoveIndex = Index)) then
-      uState := uState or DFCS_PUSHED;
+    uState := uState or FrameControlStates[CheckState];
     DrawFrameControl(hDC, CheckRect, DFC_BUTTON, uState);
   end
   else begin
-    if not IsEnabled then
-      StateId := CheckStateIds[State][csDisabled]
-    else if Index = FCaptureIndex then begin
-      if FSpaceDown or (FLastMouseMoveIndex = Index) then
-        StateId := CheckStateIds[State][csPressed]
-      else
-        StateId := CheckStateIds[State][csHot]
-    end
-    else
-      StateId := CheckStateIds[State][csNormal];
-    DrawThemeBackGround(FThemeData, hDC, BP_CHECKBOX, StateId, CheckRect,
-        @CheckRect);
+    DrawThemeBackGround(FThemeData, hDC, BP_CHECKBOX,
+        CheckStateIds[State][CheckState], CheckRect, @CheckRect);
   end;
-  Selected := (ListView_GetItemState(Handle, Index, LVIS_SELECTED) = LVIS_SELECTED);
-  if Selected and Focused
-      and ((FThemeData <> 0) or CheckBoxOptions.HighLight) then
-    AlphaHighLight(hdc, CheckRect, FAlphaBlend)
-  else if Assigned(SmallImages) and (SmallImages.Handle <> 0) then begin
-    if DrawIcon and CheckBoxOptions.GrayedImages and not IsEnabled then begin
-      FillRect(hDC, IconRect, ColorToRGB(Color));
-      // In Large Fonts mode, the height of the item can be larger than the
-      // small images height. In that case, Windows Vista and higher will draw
-      // the icons centered.
-      // So we need to center as well when drawing the (disabled) icon ourselves.
-      if FIsVistaOrHigher then begin
-        MarginTop := (IconRect.Bottom - IconRect.Top - SmallImages.Height) div 2;
-        MarginTop := Max(MarginTop, 0);
-        Inc(IconRect.Top, MarginTop);
-      end;
-      ImageList_DrawEx(SmallImages.Handle, Items[Index].ImageIndex, hDC,
-          IconRect.Left, IconRect.Top, SmallImages.Width, SmallImages.Height,
-          CLR_DEFAULT, ColorToRGB(clGrayText), ILD_BLEND50);
-    end;
+end;
+
+procedure TCustomExtChkListView.DrawDisabledIcon(hDC: Integer; Index: Integer;
+    const IconRect: TRect);
+var
+  MarginTop: Integer;
+  Rect: TRect;
+begin
+  if not Assigned(SmallImages) or (SmallImages.Handle = 0) then
+    Exit;
+  FillRect(hDC, IconRect, ColorToRGB(Color));
+  Rect := IconRect;
+  // In Large Fonts mode, the height of the item can be larger than the
+  // small images height. In that case, Windows Vista and higher will draw
+  // the icons centered.
+  // So we need to center as well when drawing the (disabled) icon ourselves.
+  if FIsVistaOrHigher then begin
+    MarginTop := (RectHeight(Rect) - SmallImages.Height) div 2;
+    MarginTop := Max(MarginTop, 0);
+    Inc(Rect.Top, MarginTop);
   end;
+  // TODO: use ImageList_DrawIndirect with ILS_SATURATE on comctl32 version 6?
+  // see https://stackoverflow.com/questions/6003018/make-disabled-menu-and-toolbar-images-look-better
+  ImageList_DrawEx(SmallImages.Handle, Items[Index].ImageIndex, hDC,
+      Rect.Left, Rect.Top, SmallImages.Width, SmallImages.Height,
+      CLR_DEFAULT, ColorToRGB(clGrayText), ILD_BLEND50);
 end;
 
 function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Integer;
@@ -807,7 +744,6 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
     else
       Result := nil;
   end;
-
   function IsItemEnabled(Item: TChkListItem): Boolean;
   begin
     if Assigned(Item) then
@@ -815,48 +751,78 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
     else
       Result := True;
   end;
+  procedure HandleItemPostPaint;
+  var
+    DrawIcon: Boolean;
+    Item: TChkListItem;
+    IconRect, CheckRect, StateRect: TRect;
+    CheckState: TCheckState;
+    IsSelected: Boolean;
+  begin
+    DrawIcon := True;
+    LVItemPostPaint(PNMLVCustomDraw(NMCustomDraw)^, DrawIcon);
+    if not GetChecksEnabled then
+      Exit;
+    Item := GetItem;
+    if Assigned(Item) then with NMCustomDraw^ do begin
+      // setting the item state here causes unattractive 'delayed' icons
+      // when painted in LVItemPostPaint
+      if not ListView_GetItemRect(Handle, dwItemSpec, IconRect, LVIR_ICON) then
+        Exit;
+      // prevent drawing on the column header
+      if (IconRect.Top < 5) and (ViewStyle = vsReport) and ShowColumnHeaders then
+        Exit;
+      // erase existing state icon (checkmark)
+      GetStateRect(dwItemSpec, IconRect, StateRect);
+      FillRect(hDC, StateRect, Brush.Handle);
+      GetCheckRect(IconRect, CheckRect);
+      if not IsItemEnabled(Item) then
+        CheckState := csDisabled
+      else if Integer(dwItemSpec) = FCaptureIndex then
+        CheckState := csPressed
+      else
+        CheckState := csNormal;
+      DrawCheck(hDC, CheckRect, GetItemState(Item), CheckState);
+      IsSelected := (ListView_GetItemState(Handle, dwItemSpec, LVIS_SELECTED) =
+          LVIS_SELECTED);
+      if IsSelected and Focused
+          and ((FThemeData <> 0) or CheckBoxOptions.HighLight) then
+        AlphaHighLight(hDC, CheckRect, FAlphaBlend)
+      else if DrawIcon and CheckBoxOptions.GrayedImages
+          and not IsItemEnabled(Item) then
+        DrawDisabledIcon(hDC, dwItemSpec, IconRect);
+    end;
+  end;
 var
   Item: TChkListItem;
   NewFont: Boolean;
-  DrawIcon: Boolean;  
 begin
+  Result := CDRF_DODEFAULT;
   with NMCustomDraw^ do begin
-    Result := CDRF_DODEFAULT;
-    if dwDrawStage = CDDS_PREPAINT then begin
-      Result := Result or CDRF_NOTIFYITEMDRAW;
-      Result := Result or CDRF_NOTIFYPOSTPAINT;
-    end
-    else if dwDrawStage = CDDS_ITEMPREPAINT then begin
-      NewFont := False;
-      Item := GetItem;
-      if not IsItemEnabled(Item) then begin
-        PNMLVCustomDraw(NMCustomDraw).clrText := ColorToRGB(FDisabledColor);
-        NewFont := True;
+    case dwDrawStage of
+      CDDS_PREPAINT: begin
+        Result := Result or CDRF_NOTIFYITEMDRAW;
+        Result := Result or CDRF_NOTIFYPOSTPAINT;
       end;
-      if Assigned(FOnItemPrePaint) then begin
-        if not FOnItemPrePaint(Self, PNMLVCustomDraw(NMCustomDraw)^, NewFont) then
-          Result := Result or CDRF_SKIPDEFAULT;
-      end;
-      // Setting the item state here causes unattractive 'delayed' icons when
-      // painted in LVItemPostPaint.
-      Result := Result or CDRF_NOTIFYPOSTPAINT;
-      if NewFont then
-        Result := Result or CDRF_NEWFONT;
-    end
-    else if dwDrawStage = CDDS_ITEMPOSTPAINT then begin
-      if GetChecksEnabled then begin
+      CDDS_ITEMPREPAINT: begin
+        NewFont := False;
         Item := GetItem;
-        if Assigned(Item) then begin
-          // setting the item state here causes unattractive 'delayed' icons
-          // when painted in LVItemPostPaint
-          DrawIcon := True;
-          LVItemPostPaint(PNMLVCustomDraw(NMCustomDraw)^, DrawIcon);
-          DrawCheck(hDC, dwItemSpec, GetItemState(Item), IsItemEnabled(Item),
-              DrawIcon);
+        if not IsItemEnabled(Item) then begin
+          PNMLVCustomDraw(NMCustomDraw).clrText := ColorToRGB(FDisabledColor);
+          NewFont := True;
         end;
-      end
-      else
-        LVItemPostPaint(PNMLVCustomDraw(NMCustomDraw)^, DrawIcon);
+        if Assigned(FOnItemPrePaint) then begin
+          if not FOnItemPrePaint(Self, PNMLVCustomDraw(NMCustomDraw)^, NewFont) then
+            Result := Result or CDRF_SKIPDEFAULT;
+        end;
+        // Setting the item state here causes unattractive 'delayed' icons when
+        // painted in LVItemPostPaint.
+        Result := Result or CDRF_NOTIFYPOSTPAINT;
+        if NewFont then
+          Result := Result or CDRF_NEWFONT;
+      end;
+      CDDS_ITEMPOSTPAINT:
+        HandleItemPostPaint;
     end;
   end;
 end;
@@ -962,7 +928,6 @@ begin
   if ItemIdx >= 0 then begin
     FSpaceDown := False;
     FCaptureIndex := -1;
-    FLastMouseMoveIndex := -1;
     if not Cancel and ItemEnabled[ItemIdx] then begin
       Checked := (ListView_GetCheckState(Handle, ItemIdx) <> 0);
       // Changing Items[ItemIdx].Checked causes lots of flicker on XP!!! - see
@@ -1041,24 +1006,10 @@ begin
       if not MouseCapture then
         MouseCapture := True;
       FCaptureIndex := Item.Index;
-      FLastMouseMoveIndex := Item.Index;
       UpdateItemCheck(Item.Index);
       MouseUp(Button, [], X, Y);
     end;
   end;
-end;
-
-procedure TCustomExtChkListView.WMMouseMove(var Message: TWMMouseMove);
-var
-  Item: TListItem;
-begin
-  inherited;
-  if not GetChecksEnabled then
-    Exit;
-  Item := GetItemAt(Message.Pos.x, Message.Pos.y);
-  if (FCaptureIndex >= 0) and Assigned(Item)
-      and not FSpaceDown and (Item.Index <> FLastMouseMoveIndex) then
-    FLastMouseMoveIndex := Item.Index;
 end;
 
 procedure TCustomExtChkListView.MouseUp(Button: TMouseButton; Shift: TShiftState;
