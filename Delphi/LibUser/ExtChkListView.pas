@@ -115,9 +115,10 @@ type
     FOnBeforeSelectItem: TLVBeforeSelectItemEvent;
     FCheckWidth, FCheckHeight: Integer;
     FCheckBoxOptions: TCheckBoxOptions;
+    FDisabledColor: TColor;
+    FHideItemFocusRect: Boolean;
     FSpaceDown: Boolean;
     FCaptureIndex: Integer;
-    FDisabledColor: TColor;
     FThemeData: HTHEME;
     FAlphaBlend: TAlphaBlend;
     FMSImgLib: Integer;
@@ -139,6 +140,7 @@ type
     function GetItemEnabled(Index: Integer): Boolean;
     procedure SetItemEnabled(Index: Integer; Value: Boolean);
     function GetChecksEnabled: Boolean;
+    procedure SetHideItemFocusRect(Value: Boolean);
     procedure UpdateBeforePrimaryColumnIdx;
     function NMCustomDraw(NMCustomDraw: PNMCustomDraw): Integer;
     function HDNEndDrag: Integer;
@@ -185,6 +187,8 @@ type
         read GetItemEnabled write SetItemEnabled;
     property DisabledColor: TColor
         read FDisabledColor write FDisabledColor default clGrayText;
+    property HideItemFocusRect: Boolean
+        read FHideItemFocusRect write SetHideItemFocusRect default False;
   public
     function OnStateIcon(X, Y: Integer): Boolean;
   end;
@@ -217,6 +221,7 @@ type
     property OnItemChecking;
     property OnBeforeSelectItem;
     property DisabledColor;
+    property HideItemFocusRect;
 
     // inherited
     property Columns;
@@ -470,6 +475,7 @@ begin
   FCheckBoxOptions := TCheckBoxOptions.Create(Self);
   FCaptureIndex := -1;
   FDisabledColor := clGrayText;
+  FHideItemFocusRect := False;
   FBeforePrimaryColumnIdx := 0; // assume primary column is first
   FProcessItemChecked := True;
   FAlphaBlend := nil;
@@ -549,6 +555,15 @@ end;
 function TCustomExtChkListView.GetChecksEnabled: Boolean;
 begin
   Result := not (ViewStyle = vsIcon) and (lvxCheckBoxes in ExtendedStyles);
+end;
+
+procedure TCustomExtChkListView.SetHideItemFocusRect(Value: Boolean);
+begin
+  if Value <> FHideItemFocusRect then begin
+    FHideItemFocusRect := Value;
+    if Assigned(ItemFocused) then
+      UpdateItems(ItemFocused.Index, ItemFocused.Index);
+  end;
 end;
 
 procedure TCustomExtChkListView.UpdateThemeData(const Close, Open: Boolean);
@@ -805,7 +820,10 @@ begin
         Result := Result or CDRF_NOTIFYPOSTPAINT;
       end;
       CDDS_ITEMPREPAINT: begin
+        // TODO: also move to separate procedure
         NewFont := False;
+        if FHideItemFocusRect then
+          uItemState := uItemState and not CDIS_FOCUS;
         Item := GetItem;
         if not IsItemEnabled(Item) then begin
           PNMLVCustomDraw(NMCustomDraw).clrText := ColorToRGB(FDisabledColor);
