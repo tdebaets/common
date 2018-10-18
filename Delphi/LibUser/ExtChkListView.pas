@@ -837,6 +837,32 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
     else
       Result := True;
   end;
+  procedure HandleItemPrePaint;
+  var
+    Item: TChkListItem;
+    NewFont: Boolean;
+  begin
+    NewFont := False;
+    if FHideItemFocusRect then begin
+      with NMCustomDraw^ do
+        uItemState := uItemState and not CDIS_FOCUS;
+    end;
+    Item := GetItem;
+    if not IsItemEnabled(Item) then begin
+      PNMLVCustomDraw(NMCustomDraw).clrText := ColorToRGB(FDisabledColor);
+      NewFont := True;
+    end;
+    if Assigned(FOnItemPrePaint) then begin
+      if not FOnItemPrePaint(Self, PNMLVCustomDraw(NMCustomDraw)^, NewFont) then
+        Result := Result or CDRF_SKIPDEFAULT;
+    end;
+    // Setting the item state here causes unattractive 'delayed' icons when
+    // painted in LVItemPostPaint.
+    Result := Result or CDRF_NOTIFYPOSTPAINT;
+    if NewFont then
+      Result := Result or CDRF_NEWFONT;
+    Result := Result or CDRF_NOTIFYSUBITEMDRAW;
+  end;
   procedure HandleItemPostPaint;
   var
     DrawIcon: Boolean;
@@ -940,45 +966,21 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
       end;
     end;
   end;
-var
-  Item: TChkListItem;
-  NewFont: Boolean;
 begin
   Result := CDRF_DODEFAULT;
-  with NMCustomDraw^ do begin
-    case dwDrawStage of
-      CDDS_PREPAINT: begin
-        Result := Result or CDRF_NOTIFYITEMDRAW;
-        Result := Result or CDRF_NOTIFYPOSTPAINT;
-      end;
-      CDDS_ITEMPREPAINT: begin
-        // TODO: also move to separate procedure
-        NewFont := False;
-        if FHideItemFocusRect then
-          uItemState := uItemState and not CDIS_FOCUS;
-        Item := GetItem;
-        if not IsItemEnabled(Item) then begin
-          PNMLVCustomDraw(NMCustomDraw).clrText := ColorToRGB(FDisabledColor);
-          NewFont := True;
-        end;
-        if Assigned(FOnItemPrePaint) then begin
-          if not FOnItemPrePaint(Self, PNMLVCustomDraw(NMCustomDraw)^, NewFont) then
-            Result := Result or CDRF_SKIPDEFAULT;
-        end;
-        // Setting the item state here causes unattractive 'delayed' icons when
-        // painted in LVItemPostPaint.
-        Result := Result or CDRF_NOTIFYPOSTPAINT;
-        if NewFont then
-          Result := Result or CDRF_NEWFONT;
-        Result := Result or CDRF_NOTIFYSUBITEMDRAW;
-      end;
-      CDDS_ITEMPOSTPAINT:
-        HandleItemPostPaint;
-      CDDS_ITEMPREPAINT or CDDS_SUBITEM:
-        Result := Result or CDRF_NOTIFYPOSTPAINT;
-      CDDS_ITEMPOSTPAINT or CDDS_SUBITEM:
-        HandleSubItemPostPaint;
+  case NMCustomDraw.dwDrawStage of
+    CDDS_PREPAINT: begin
+      Result := Result or CDRF_NOTIFYITEMDRAW;
+      Result := Result or CDRF_NOTIFYPOSTPAINT;
     end;
+    CDDS_ITEMPREPAINT:
+      HandleItemPrePaint;
+    CDDS_ITEMPOSTPAINT:
+      HandleItemPostPaint;
+    CDDS_ITEMPREPAINT or CDDS_SUBITEM:
+      Result := Result or CDRF_NOTIFYPOSTPAINT;
+    CDDS_ITEMPOSTPAINT or CDDS_SUBITEM:
+      HandleSubItemPostPaint;
   end;
 end;
 
