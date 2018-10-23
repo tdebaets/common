@@ -105,7 +105,7 @@ uses
   //JclSysUtils,          // for BooleanToStr
   //JclWideStrings,       // for StrLenW, MoveWideChar
   TntSysUtils,          // for StrLenW
-  Common2;              // for TDelphiSet
+  Common2;              // for TByteSet
 
 type
   TDelphiSet = TByteSet;

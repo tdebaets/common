@@ -71,14 +71,20 @@ type
 
   TChkListItem = class(TListItem)
   private
+    FListView: TCustomExtChkListView;
     FEnabled: Boolean;
     FGrayed: Boolean;
+    FCheckedSubItems: TByteSet;
     procedure SetEnabled(Value: Boolean);
     procedure SetGrayed(Value: Boolean);
+    function GetSubItemChecked(SubItem: Integer): Boolean;
+    procedure SetSubItemChecked(SubItem: Integer; Checked: Boolean);
   public
     constructor Create(Owner: TListItems);
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
+    property SubItem_Checked[SubItem: Integer]: Boolean // TODO: make persistent?
+        read GetSubItemChecked write SetSubItemChecked;
   published
     property Enabled: Boolean
         read FEnabled write SetEnabled;
@@ -131,6 +137,7 @@ type
     FHideItemFocusRect: Boolean;
     FSpaceDown: Boolean;
     FCaptureIndex: Integer;
+    FCaptureSubItemIndex: Integer;
     FThemeData: HTHEME;
     FAlphaBlend: TAlphaBlend;
     FMSImgLib: Integer;
@@ -148,6 +155,7 @@ type
     procedure DrawDisabledIcon(hDC: Integer; Index: Integer;
         const IconRect: TRect);
     procedure UpdateItemCheck(Index: Integer);
+    procedure UpdateSubItem(ItemIndex, SubItemIndex: Integer);
     procedure UpdateColumn(Index: Integer);
     procedure EndCapture(Cancel: Boolean);
     function CanFocusItem(Index: Integer): Boolean;
@@ -155,6 +163,8 @@ type
     procedure SetItemEnabled(Index: Integer; Value: Boolean);
     function GetChecksEnabled: Boolean;
     function ColumnHasSubItemChecks(Index: Integer): Boolean;
+    procedure DoSubItemCheckClick(Item: TListItem; SubItem: Integer);
+    function OnSubItemCheckRect(X, Y: Integer; var SubItem: Integer): Boolean;
     procedure SetHideItemFocusRect(Value: Boolean);
     procedure UpdateBeforePrimaryColumnIdx;
     function NMCustomDraw(NMCustomDraw: PNMCustomDraw): Integer;
@@ -463,8 +473,10 @@ const
 constructor TChkListItem.Create(Owner: TListItems);
 begin
   inherited Create(Owner);
+  FListView := Owner.Owner as TCustomExtChkListView;
   FEnabled := True;
   FGrayed := False;
+  FCheckedSubItems := [];
 end;
 
 procedure TChkListItem.SetEnabled(Value: Boolean);
@@ -502,6 +514,25 @@ begin
   end;
 end;
 
+function TChkListItem.GetSubItemChecked(SubItem: Integer): Boolean;
+begin
+  if SubItem <= High(Byte) then
+    Result := (Byte(SubItem) in FCheckedSubItems)
+  else
+    Result := False;
+end;
+
+procedure TChkListItem.SetSubItemChecked(SubItem: Integer; Checked: Boolean);
+begin
+  if SubItem <= High(Byte) then begin
+    if Checked then
+      Include(FCheckedSubItems, Byte(SubItem))
+    else
+      Exclude(FCheckedSubItems, Byte(SubItem));
+    FListView.UpdateSubItem(Self.Index, SubItem);
+  end;
+end;
+
 { TCustomExtChkListView }
 
 constructor TCustomExtChkListView.Create(Owner: TComponent);
@@ -516,6 +547,7 @@ begin
   end;
   FCheckBoxOptions := TCheckBoxOptions.Create(Self);
   FCaptureIndex := -1;
+  FCaptureSubItemIndex := -1;
   FDisabledColor := clGrayText;
   FHideItemFocusRect := False;
   FBeforePrimaryColumnIdx := 0; // assume primary column is first
@@ -612,6 +644,15 @@ begin
   if not (Column is TExtChkListColumn) then
     Exit;
   Result := TExtChkListColumn(Column).ShowChecks;
+end;
+
+procedure TCustomExtChkListView.DoSubItemCheckClick(Item: TListItem;
+    SubItem: Integer);
+begin
+  if not ColumnHasSubItemChecks(SubItem) then
+    Exit;
+  with Item as TChkListItem do
+    SubItem_Checked[SubItem] := not SubItem_Checked[SubItem]
 end;
 
 procedure TCustomExtChkListView.SetHideItemFocusRect(Value: Boolean);
@@ -890,7 +931,8 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
       GetCheckRect(IconRect, CheckRect);
       if not IsItemEnabled(Item) then
         CheckState := csDisabled
-      else if Integer(dwItemSpec) = FCaptureIndex then
+      else if (Integer(dwItemSpec) = FCaptureIndex)
+          and (FCaptureSubItemIndex = 0) then
         CheckState := csPressed
       else
         CheckState := csNormal;
@@ -907,11 +949,11 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
   end;
   procedure HandleSubItemPostPaint;
   var
-    // TODO: cleanup
-    {SubItemRect,} CheckRect: TRect;
-    Item: TListItem;
+    CheckRect: TRect;
+    Item: TChkListItem;
     IsSelected: Boolean;
-    //hbr: HBRUSH;
+    State: TCheckBoxState;
+    CheckState: TCheckState;
   begin
     with NMCustomDraw^, PNMLVCustomDraw(NMCustomDraw)^ do begin
       // Comctl32 can send us 'fake' custom draw notifications
@@ -930,29 +972,17 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
         if not Assigned(Item) then
           Exit;
         IsSelected := (uItemState and CDIS_SELECTED) <> 0;
-        // TODO: remove
-        // The following code was added to erase the contents of the current
-        // subitem before painting on it, but this appears to be redundant
-        {if nmcd.uItemState and CDIS_SELECTED <> 0 then begin
-          clrText := GetSysColor(COLOR_HIGHLIGHTTEXT);
-          clrTextBk := GetSysColor(COLOR_HIGHLIGHT);
-        end
-        else begin
-          clrText := GetSysColor(COLOR_WINDOWTEXT);
-          clrTextBk := ColorToRGB(Color);
-        end;
-        SetBkColor(hdc, PNMLVCustomDraw(NMCustomDraw)^.clrTextBk);
-        SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));}
-        {if not ListView_GetSubItemRect(Handle, dwItemSpec, iSubItem, LVIR_BOUNDS, @SubItemRect) then
-          Exit;
-        hbr := CreateSolidBrush(clrTextBk);
-        try
-          FillRect(hdc, SubItemRect, hbr);
-        finally
-          DeleteObject(hbr);
-        end;}
         GetSubItemCheckRect(rc, CheckRect);
-        DrawCheck(hdc, CheckRect, cbUnchecked, csNormal);
+        if Item.SubItem_Checked[iSubItem] then
+          State := cbChecked
+        else
+          State := cbUnchecked;
+        if (Integer(dwItemSpec) = FCaptureIndex)
+            and (iSubItem = FCaptureSubItemIndex) then
+          CheckState := csPressed
+        else
+          CheckState := csNormal;
+        DrawCheck(hdc, CheckRect, State, CheckState);
         if Focused then begin
           if IsSelected and ((FThemeData <> 0) or CheckBoxOptions.HighLight) then
             AlphaHighLight(hdc, CheckRect, FAlphaBlend);
@@ -1076,6 +1106,11 @@ begin
   ListView_SetCheckState(Handle, Index, Checked);
 end;
 
+procedure TCustomExtChkListView.UpdateSubItem(ItemIndex, SubItemIndex: Integer);
+begin
+  UpdateItems(ItemIndex, ItemIndex); // TODO: improve
+end;
+
 procedure TCustomExtChkListView.UpdateColumn(Index: Integer);
 var
   OrigWidth: TWidth;
@@ -1098,22 +1133,35 @@ end;
 
 procedure TCustomExtChkListView.EndCapture(Cancel: Boolean);
 var
-  ItemIdx: Integer;
+  ItemIdx, SubItemIdx: Integer;
   Checked: Boolean;
+  Item: TListItem;
 begin
   ItemIdx := FCaptureIndex;
+  SubItemIdx := FCaptureSubItemIndex;
   if ItemIdx >= 0 then begin
     FSpaceDown := False;
     FCaptureIndex := -1;
-    if not Cancel and ItemEnabled[ItemIdx] then begin
-      Checked := (ListView_GetCheckState(Handle, ItemIdx) <> 0);
-      // Changing Items[ItemIdx].Checked causes lots of flicker on XP!!! - see
-      // LVMSetExtendedListViewStyle
-      ListView_SetCheckState(Handle, ItemIdx, not Checked);
-      ItemCheckedManually;
+    FCaptureSubItemIndex := -1;
+    if SubItemIdx = 0 then begin
+      // main item checkbox was clicked
+      if not Cancel and ItemEnabled[ItemIdx] then begin
+        Checked := (ListView_GetCheckState(Handle, ItemIdx) <> 0);
+        // Changing Items[ItemIdx].Checked causes lots of flicker on XP!!! - see
+        // LVMSetExtendedListViewStyle
+        ListView_SetCheckState(Handle, ItemIdx, not Checked);
+        ItemCheckedManually;
+      end
+      else
+        UpdateItemCheck(ItemIdx);
     end
-    else
-      UpdateItemCheck(ItemIdx);
+    else if ItemIdx < Items.Count then begin
+      // subitem checkbox was clicked
+      Item := Items[ItemIdx];
+      if not Cancel then
+        DoSubItemCheckClick(Item, SubItemIdx);
+      UpdateSubItem(Item.Index, SubItemIdx);
+    end;
   end;
   if MouseCapture then
     MouseCapture := False;
@@ -1129,6 +1177,7 @@ var
   HTI: TLVHitTestInfo;
 begin
   Result := True;
+  FillChar(HTI, SizeOf(HTI), 0);
   // TODO: move this check
   if CheckBoxOptions.CheckOnItemClick then
     Exit;
@@ -1136,6 +1185,32 @@ begin
   HTI.pt.y := Y;
   ListView_HitTest(Handle, HTI);
   Result := (HTI.flags = LVHT_ONITEMSTATEICON);
+end;
+
+function TCustomExtChkListView.OnSubItemCheckRect(X, Y: Integer;
+    var SubItem: Integer): Boolean;
+var
+  HTI: TLVHitTestInfo;
+  SubItemRect, CheckRect: TRect;
+begin
+  Result := False;
+  FillChar(HTI, SizeOf(HTI), 0);
+  HTI.pt.x := X;
+  HTI.pt.y := Y;
+  ListView_SubItemHitTest(Handle, @HTI);
+  if (HTI.iItem < 0) or (HTI.iSubItem <= 0) then
+    Exit;
+  if (HTI.flags and LVHT_ONITEMLABEL) = 0 then
+    Exit;
+  if not ListView_GetSubItemRect(Handle, HTI.iItem, HTI.iSubItem, LVIR_BOUNDS,
+      @SubItemRect) then
+    Exit;
+  GetSubItemCheckRect(SubItemRect, CheckRect);
+  InflateRect(CheckRect, 2, 2);
+  if not PtInRect(CheckRect, Point(X, Y)) then
+    Exit;
+  SubItem := HTI.iSubItem;
+  Result := True;
 end;
 
 procedure TCustomExtChkListView.KeyDown(var Key: Word; Shift: TShiftState);
@@ -1148,6 +1223,7 @@ begin
       if not ItemChecking(Selected) then
         Exit;  
       FCaptureIndex := Selected.Index;
+      FCaptureSubItemIndex := 0;
       FSpaceDown := True;
       KeyUp(Key, Shift);
     end;
@@ -1167,14 +1243,16 @@ function TCustomExtChkListView.DoMouseDown(Button: TMouseButton;
     X, Y: Integer): Boolean;
 var
   Item: TListItem;
+  SubItem: Integer;
 begin
   Result := True;
   if not GetChecksEnabled then
     Exit;
   Item := GetItemAt(X, Y);
   if (Button in [mbLeft, mbRight]) and Assigned(Item)
-      and OnStateIcon(X, Y) then begin
-    if not FSpaceDown then begin
+      and not FSpaceDown then begin
+    if OnStateIcon(X, Y) then begin
+      // main item checkbox was clicked
       Result := False;
       if not CanFocusItem(Item.Index) then
         Exit;
@@ -1183,8 +1261,19 @@ begin
       if not MouseCapture then
         MouseCapture := True;
       FCaptureIndex := Item.Index;
+      FCaptureSubItemIndex := 0;
       UpdateItemCheck(Item.Index);
       MouseUp(Button, [], X, Y);
+    end
+    else if OnSubItemCheckRect(X, Y, SubItem)
+        and ColumnHasSubItemChecks(SubItem) then begin
+      // subitem checkbox was clicked
+      if not MouseCapture then
+        MouseCapture := True;
+      FCaptureIndex := Item.Index;
+      FCaptureSubItemIndex := SubItem;
+      UpdateSubItem(Item.Index, SubItem);
+      Result := False; // prevent default listview handling from selecting the item
     end;
   end;
 end;
@@ -1200,16 +1289,26 @@ const
 var
   SwapButtons, CancelCapture: Boolean;
   Item: TListItem;
+  SubItem: Integer;
 begin
   SwapButtons := LongBool(GetSystemMetrics(SM_SWAPBUTTON));
   if GetKeyState(VirtKeys[SwapButtons, Button]) < 0 then
     Exit;
-  if GetChecksEnabled and (Button in [mbLeft, mbRight]) and not FSpaceDown
+  if (Button in [mbLeft, mbRight]) and not FSpaceDown
       and (FCaptureIndex >= 0) then begin
     Item := GetItemAt(X, Y);
-    CancelCapture := (not Assigned(Item) or (Item.Index <> FCaptureIndex)
-        or not OnStateIcon(X, Y));
-    EndCapture(CancelCapture);
+    CancelCapture := not Assigned(Item) or (Item.Index <> FCaptureIndex);
+    if FCaptureSubItemIndex > 0 then begin
+      // subitem checkboxes
+      CancelCapture := CancelCapture or not OnSubItemCheckRect(X, Y, SubItem)
+          or (SubItem <> FCaptureSubItemIndex);
+      EndCapture(CancelCapture);
+    end
+    else if GetChecksEnabled then begin
+      // main item checkboxes
+      CancelCapture := CancelCapture or not OnStateIcon(X, Y);
+      EndCapture(CancelCapture);
+    end;
   end;
   inherited;
 end;
