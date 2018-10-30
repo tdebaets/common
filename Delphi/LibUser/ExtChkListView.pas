@@ -75,16 +75,21 @@ type
     FEnabled: Boolean;
     FGrayed: Boolean;
     FCheckedSubItems: TByteSet;
+    FDisabledSubItems: TByteSet;
     procedure SetEnabled(Value: Boolean);
     procedure SetGrayed(Value: Boolean);
     function GetSubItemChecked(SubItem: Integer): Boolean;
     procedure SetSubItemChecked(SubItem: Integer; Checked: Boolean);
+    function GetSubItemEnabled(SubItem: Integer): Boolean;
+    procedure SetSubItemEnabled(SubItem: Integer; Enabled: Boolean);
   public
     constructor Create(Owner: TListItems);
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     property SubItem_Checked[SubItem: Integer]: Boolean // TODO: make persistent?
         read GetSubItemChecked write SetSubItemChecked;
+    property SubItem_Enabled[SubItem: Integer]: Boolean
+        read GetSubItemEnabled write SetSubItemEnabled;
   published
     property Enabled: Boolean
         read FEnabled write SetEnabled;
@@ -136,8 +141,8 @@ type
     FDisabledColor: TColor;
     FHideItemFocusRect: Boolean;
     FSpaceDown: Boolean;
-    FCaptureIndex: Integer;
-    FCaptureSubItemIndex: Integer;
+    FCaptureIndex: Integer; // -1 while not capturing the mouse for an item
+    FCaptureSubItemIndex: Integer; // -1 while not capturing the mouse for an item
     FThemeData: HTHEME;
     FAlphaBlend: TAlphaBlend;
     FMSImgLib: Integer;
@@ -159,9 +164,10 @@ type
     procedure UpdateColumn(Index: Integer);
     procedure EndCapture(Cancel: Boolean);
     function CanFocusItem(Index: Integer): Boolean;
+    function CanFocusSubItem(Item: TListItem; SubItem: Integer): Boolean;
     function GetItemEnabled(Index: Integer): Boolean;
     procedure SetItemEnabled(Index: Integer; Value: Boolean);
-    function GetChecksEnabled: Boolean;
+    function GetChecksEnabled: Boolean; // TODO: check callers for subitem checks
     function ColumnHasSubItemChecks(Index: Integer): Boolean;
     procedure DoSubItemCheckClick(Item: TListItem; SubItem: Integer);
     function OnSubItemCheckRect(X, Y: Integer; var SubItem: Integer): Boolean;
@@ -458,8 +464,13 @@ begin
   if Value <> FShowChecks then begin
     FShowChecks := Value;
     with Collection as TdfsExtListColumns do begin
-      if Assigned(ListView) then with ListView as TCustomExtChkListView do
+      if Assigned(ListView) then with ListView as TCustomExtChkListView do begin
+        if Index = FCaptureSubItemIndex then begin
+          FCaptureIndex := -1;
+          FCaptureSubItemIndex := -1;
+        end;
         UpdateColumn(Index);
+      end;
     end;
   end;
 end;
@@ -477,6 +488,7 @@ begin
   FEnabled := True;
   FGrayed := False;
   FCheckedSubItems := [];
+  FDisabledSubItems := [];
 end;
 
 procedure TChkListItem.SetEnabled(Value: Boolean);
@@ -529,6 +541,25 @@ begin
       Include(FCheckedSubItems, Byte(SubItem))
     else
       Exclude(FCheckedSubItems, Byte(SubItem));
+    FListView.UpdateSubItem(Self.Index, SubItem);
+  end;
+end;
+
+function TChkListItem.GetSubItemEnabled(SubItem: Integer): Boolean;
+begin
+  if SubItem <= High(Byte) then
+    Result := not (Byte(SubItem) in FDisabledSubItems)
+  else
+    Result := True;
+end;
+
+procedure TChkListItem.SetSubItemEnabled(SubItem: Integer; Enabled: Boolean);
+begin
+  if SubItem <= High(Byte) then begin
+    if Enabled then
+      Exclude(FDisabledSubItems, Byte(SubItem))
+    else
+      Include(FDisabledSubItems, Byte(SubItem));
     FListView.UpdateSubItem(Self.Index, SubItem);
   end;
 end;
@@ -651,8 +682,11 @@ procedure TCustomExtChkListView.DoSubItemCheckClick(Item: TListItem;
 begin
   if not ColumnHasSubItemChecks(SubItem) then
     Exit;
-  with Item as TChkListItem do
+  with Item as TChkListItem do begin
+    if not SubItem_Enabled[SubItem] then
+      Exit;
     SubItem_Checked[SubItem] := not SubItem_Checked[SubItem]
+  end;
 end;
 
 procedure TCustomExtChkListView.SetHideItemFocusRect(Value: Boolean);
@@ -977,7 +1011,9 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
           State := cbChecked
         else
           State := cbUnchecked;
-        if (Integer(dwItemSpec) = FCaptureIndex)
+        if not Item.SubItem_Enabled[iSubItem] then
+          CheckState := csDisabled
+        else if (Integer(dwItemSpec) = FCaptureIndex)
             and (iSubItem = FCaptureSubItemIndex) then
           CheckState := csPressed
         else
@@ -1158,6 +1194,7 @@ begin
     else if ItemIdx < Items.Count then begin
       // subitem checkbox was clicked
       Item := Items[ItemIdx];
+      // subitem enabled/disabled state gets checked in DoSubItemCheckClick
       if not Cancel then
         DoSubItemCheckClick(Item, SubItemIdx);
       UpdateSubItem(Item.Index, SubItemIdx);
@@ -1170,6 +1207,17 @@ end;
 function TCustomExtChkListView.CanFocusItem(Index: Integer): Boolean;
 begin
   Result := Self.Enabled and ItemEnabled[Index];
+end;
+
+function TCustomExtChkListView.CanFocusSubItem(Item: TListItem;
+    SubItem: Integer): Boolean;
+begin
+  Result := False;
+  if not Self.Enabled then
+    Exit;
+  if not (Item is TChkListItem) then
+    Exit;
+  Result := TChkListItem(Item).SubItem_Enabled[SubItem];
 end;
 
 function TCustomExtChkListView.OnStateIcon(X, Y: Integer): Boolean;
@@ -1246,14 +1294,12 @@ var
   SubItem: Integer;
 begin
   Result := True;
-  if not GetChecksEnabled then
-    Exit;
   Item := GetItemAt(X, Y);
   if (Button in [mbLeft, mbRight]) and Assigned(Item)
       and not FSpaceDown then begin
-    if OnStateIcon(X, Y) then begin
+    if GetChecksEnabled and OnStateIcon(X, Y) then begin
       // main item checkbox was clicked
-      Result := False;
+      Result := False; // prevent default listview handling from changing the item
       if not CanFocusItem(Item.Index) then
         Exit;
       if not ItemChecking(Item) then
@@ -1268,12 +1314,14 @@ begin
     else if OnSubItemCheckRect(X, Y, SubItem)
         and ColumnHasSubItemChecks(SubItem) then begin
       // subitem checkbox was clicked
+      Result := False; // prevent default listview handling from selecting the item
+      if not CanFocusSubItem(Item, SubItem) then
+        Exit;
       if not MouseCapture then
         MouseCapture := True;
       FCaptureIndex := Item.Index;
       FCaptureSubItemIndex := SubItem;
       UpdateSubItem(Item.Index, SubItem);
-      Result := False; // prevent default listview handling from selecting the item
     end;
   end;
 end;
