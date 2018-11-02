@@ -86,7 +86,7 @@ type
     constructor Create(Owner: TListItems);
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    property SubItem_Checked[SubItem: Integer]: Boolean // TODO: make persistent?
+    property SubItem_Checked[SubItem: Integer]: Boolean
         read GetSubItemChecked write SetSubItemChecked;
     property SubItem_Enabled[SubItem: Integer]: Boolean
         read GetSubItemEnabled write SetSubItemEnabled;
@@ -601,7 +601,8 @@ procedure TCustomExtChkListView.CreateWnd;
 var
   i: Integer;
   Count: Integer;
-  Value: Boolean;
+  BoolVal: Boolean;
+  ByteSet: TByteSet;
 begin
   inherited CreateWnd;
   if Assigned(FMemStream) then begin
@@ -617,9 +618,17 @@ begin
       raise EComponentError.CreateFmt('%s: cannot restore item states while ' +
           'component is still loading', [Name]);
     end;
-    for i := 0 to Count - 1 do begin
-      FMemStream.Read(Value, SizeOf(Value));
-      TChkListItem(Items[i]).Enabled := Value;
+    for i := 0 to Count - 1 do
+        with TChkListItem(Items[i]) do begin
+      // restore item enabled state
+      FMemStream.Read(BoolVal, SizeOf(BoolVal));
+      Enabled := BoolVal;
+      // restore subitem checked states
+      FMemStream.Read(ByteSet, SizeOf(ByteSet));
+      FCheckedSubItems := ByteSet;
+      // restore subitem enabled states
+      FMemStream.Read(ByteSet, SizeOf(ByteSet));
+      FDisabledSubItems := ByteSet;
     end;
     FreeAndNil(FMemStream);
   end;
@@ -629,7 +638,6 @@ procedure TCustomExtChkListView.DestroyWnd;
 var
   i: Integer;
   Count: Integer;
-  Value: Boolean;
 begin
   if Assigned(FMemStream) then
     FMemStream.Size := 0
@@ -637,9 +645,14 @@ begin
     FMemStream := TMemoryStream.Create;
   Count := Items.Count;
   FMemStream.Write(Count, SizeOf(Count));
-  for i := 0 to Items.Count - 1 do begin
-    Value := TChkListItem(Items[i]).Enabled;
-    FMemStream.Write(Value, SizeOf(Value));
+  for i := 0 to Items.Count - 1 do
+      with TChkListItem(Items[i]) do begin
+    // save item enabled state
+    FMemStream.Write(Enabled, SizeOf(Enabled));
+    // save subitem checked states
+    FMemStream.Write(FCheckedSubItems, SizeOf(FCheckedSubItems));
+    // save subitem enabled states
+    FMemStream.Write(FDisabledSubItems, SizeOf(FDisabledSubItems));
   end;
   FMemStream.Position := 0;
   inherited DestroyWnd;
