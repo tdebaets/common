@@ -20,6 +20,9 @@
  *
  ****************************************************************************)
 
+// TODO: handle space-bar triggered checking similar to mouse-triggered checking
+//    item should only be checked on spacebar button up, a la windows update list
+//    do this for main item as well as subitem checkboxes
 // TODO: add support for hot-tracking checkboxes?
 // (see removed comments in change history involving FHotIndex + removed code
 // involving FLastMouseMoveIndex)
@@ -143,6 +146,7 @@ type
     FSpaceDown: Boolean;
     FCaptureIndex: Integer; // -1 while not capturing the mouse for an item
     FCaptureSubItemIndex: Integer; // -1 while not capturing the mouse for an item
+    FFocusedSubItemIndex: Integer; // -1 while there's no subitem having focus
     FThemeData: HTHEME;
     FAlphaBlend: TAlphaBlend;
     FMSImgLib: Integer;
@@ -167,7 +171,7 @@ type
     function CanFocusSubItem(Item: TListItem; SubItem: Integer): Boolean;
     function GetItemEnabled(Index: Integer): Boolean;
     procedure SetItemEnabled(Index: Integer; Value: Boolean);
-    function GetChecksEnabled: Boolean; // TODO: check callers for subitem checks
+    function GetChecksEnabled: Boolean;
     function ColumnHasSubItemChecks(Index: Integer): Boolean;
     procedure DoSubItemCheckClick(Item: TListItem; SubItem: Integer);
     function OnSubItemCheckRect(X, Y: Integer; var SubItem: Integer): Boolean;
@@ -558,8 +562,13 @@ begin
   if SubItem <= High(Byte) then begin
     if Enabled then
       Exclude(FDisabledSubItems, Byte(SubItem))
-    else
+    else begin
+      // if we're disabling the currently focused subitem, remove focus
+      if (FListView.ItemFocused = Self)
+          and (FListView.FFocusedSubItemIndex = SubItem) then
+        FListView.FFocusedSubItemIndex := -1;
       Include(FDisabledSubItems, Byte(SubItem));
+    end;
     FListView.UpdateSubItem(Self.Index, SubItem);
   end;
 end;
@@ -579,6 +588,7 @@ begin
   FCheckBoxOptions := TCheckBoxOptions.Create(Self);
   FCaptureIndex := -1;
   FCaptureSubItemIndex := -1;
+  FFocusedSubItemIndex := -1;
   FDisabledColor := clGrayText;
   FHideItemFocusRect := False;
   FBeforePrimaryColumnIdx := 0; // assume primary column is first
@@ -682,7 +692,7 @@ begin
   Result := False;
   if ViewStyle <> vsReport then
     Exit;
-  if Index >= ColumnsFormat.Count then
+  if (Index < 0) or (Index >= ColumnsFormat.Count) then
     Exit;
   Column := ColumnsFormat[Index];
   if not (Column is TExtChkListColumn) then
@@ -1037,7 +1047,8 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
             AlphaHighLight(hdc, CheckRect, FAlphaBlend);
           // Can't check uItemState for CDIS_FOCUS here because we may have
           // removed that state in HandleItemPrePaint
-          if Item = ItemFocused then begin
+          if Item.SubItem_Enabled[iSubItem] and (Item = ItemFocused)
+              and (iSubItem = FFocusedSubItemIndex) then begin
             InflateRect(CheckRect, 2, 2);
             DrawFocusRect(hdc, CheckRect);
           end;
@@ -1192,7 +1203,7 @@ begin
     FSpaceDown := False;
     FCaptureIndex := -1;
     FCaptureSubItemIndex := -1;
-    if SubItemIdx = 0 then begin
+    if GetChecksEnabled and (SubItemIdx = 0) then begin
       // main item checkbox was clicked
       if not Cancel and ItemEnabled[ItemIdx] then begin
         Checked := (ListView_GetCheckState(Handle, ItemIdx) <> 0);
@@ -1275,12 +1286,24 @@ begin
 end;
 
 procedure TCustomExtChkListView.KeyDown(var Key: Word; Shift: TShiftState);
+var
+  FocusItem: TListItem;
 begin
-  if GetChecksEnabled and (Key = VK_SPACE)
-      and not IsEditing and not (ssAlt in Shift)
-      and Assigned(Selected) and (FCaptureIndex < 0)
-      and CanFocusItem(Selected.Index) then begin
-    if not FSpaceDown then begin
+  if (Key = VK_SPACE) and not IsEditing and not (ssAlt in Shift)
+      and (FCaptureIndex < 0) and not FSpaceDown then begin
+    FocusItem := ItemFocused;
+    if Assigned(FocusItem) and (FFocusedSubItemIndex >= 0)
+        and ColumnHasSubItemChecks(FFocusedSubItemIndex)
+        and CanFocusSubItem(FocusItem, FFocusedSubItemIndex) then begin
+      // subitem checkbox has focus
+      FCaptureIndex := FocusItem.Index;
+      FCaptureSubItemIndex := FFocusedSubItemIndex;
+      FSpaceDown := True;
+      KeyUp(Key, Shift);
+    end
+    else if GetChecksEnabled and Assigned(Selected)
+        and CanFocusItem(Selected.Index) then begin
+      // main item checkbox has focus
       if not ItemChecking(Selected) then
         Exit;  
       FCaptureIndex := Selected.Index;
@@ -1294,10 +1317,9 @@ end;
 
 procedure TCustomExtChkListView.KeyUp(var Key: Word; Shift: TShiftState);
 begin
-  if GetChecksEnabled and (Key = VK_SPACE) and not IsEditing
-      and FSpaceDown and (FCaptureIndex >= 0) then
-    EndCapture(False);
-  inherited;
+  if (Key = VK_SPACE) and not IsEditing and FSpaceDown
+      and (FCaptureIndex >= 0) then
+    EndCapture(False)
 end;
 
 function TCustomExtChkListView.DoMouseDown(Button: TMouseButton;
@@ -1317,6 +1339,7 @@ begin
         Exit;
       if not ItemChecking(Item) then
         Exit;
+      SetFocus;
       if not MouseCapture then
         MouseCapture := True;
       FCaptureIndex := Item.Index;
@@ -1330,10 +1353,13 @@ begin
       Result := False; // prevent default listview handling from selecting the item
       if not CanFocusSubItem(Item, SubItem) then
         Exit;
+      SetFocus;
       if not MouseCapture then
         MouseCapture := True;
       FCaptureIndex := Item.Index;
       FCaptureSubItemIndex := SubItem;
+      ItemFocused := Item;
+      FFocusedSubItemIndex := SubItem;
       UpdateSubItem(Item.Index, SubItem);
     end;
   end;
@@ -1388,7 +1414,7 @@ var
   ShiftState: TShiftState;
   CancelCapture: Boolean;
 begin
-  if not GetChecksEnabled or IsEditing then begin
+  if IsEditing then begin
     inherited;
     Exit;
   end;
