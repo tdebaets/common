@@ -169,6 +169,8 @@ type
     procedure EndCapture(Cancel: Boolean);
     function CanFocusItem(Index: Integer): Boolean;
     function CanFocusSubItem(Item: TListItem; SubItem: Integer): Boolean;
+    function GetPrevFocusableSubItem: Integer;
+    function GetNextFocusableSubItem: Integer;
     function GetItemEnabled(Index: Integer): Boolean;
     procedure SetItemEnabled(Index: Integer; Value: Boolean);
     function GetChecksEnabled: Boolean;
@@ -178,9 +180,12 @@ type
     procedure SetHideItemFocusRect(Value: Boolean);
     procedure UpdateBeforePrimaryColumnIdx;
     function NMCustomDraw(NMCustomDraw: PNMCustomDraw): Integer;
+    function LVNItemChanging(NMListView: PNMListView): Boolean;
+    procedure LVNItemChanged(NMListView: PNMListView);
     function HDNEndDrag: Integer;
     procedure WMNotify(var Message: TWMNotify); message WM_NOTIFY;
     procedure CNNotify(var Message: TWMNotify); message CN_NOTIFY;
+    procedure CMEnter(var Message: TCMEnter); message CM_ENTER;
     procedure CMExit(var Message: TCMExit); message CM_EXIT;
     procedure WMKeyDown(var Message: TWMKeyDown); message WM_KEYDOWN;
     procedure WMLButtonDown(var Message: TWMLButtonDown); message WM_LBUTTONDOWN;
@@ -193,6 +198,8 @@ type
         message LVM_SETEXTENDEDLISTVIEWSTYLE;
     procedure UpdateThemeData(const Close, Open: Boolean);
     procedure WMThemeChanged(var Message: TMessage); message WM_THEMECHANGED;
+    procedure CMWantSpecialKey(var Message: TCMWantSpecialKey);
+        message CM_WANTSPECIALKEY;
   protected
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
@@ -1074,6 +1081,42 @@ begin
   end;
 end;
 
+function TCustomExtChkListView.LVNItemChanging(NMListView: PNMListView): Boolean;
+begin
+  Result := True; // default: allow the change
+  with NMListView^ do begin
+    if Assigned(FOnBeforeSelectItem) and (uChanged = LVIF_STATE) then begin
+      if (uOldState and LVIS_SELECTED <> 0) and
+        (uNewState and LVIS_SELECTED = 0) then
+        FOnBeforeSelectItem(Self, Items[iItem], False, Result)
+      else if (uOldState and LVIS_SELECTED = 0) and
+        (uNewState and LVIS_SELECTED <> 0) then
+        FOnBeforeSelectItem(Self, Items[iItem], True, Result);
+    end;
+  end;
+end;
+
+procedure TCustomExtChkListView.LVNItemChanged(NMListView: PNMListView);
+var
+  Item: TListItem;
+begin
+  with NMListView^ do begin
+    if (iItem < 0) or (iItem >= Items.Count) then
+      Exit;
+    Item := Items[iItem];
+    if (uChanged and LVIF_STATE <> 0) then begin
+      if (uOldState and LVIS_FOCUSED = 0)
+          and (uNewState and LVIS_FOCUSED <> 0) then begin
+        // focused item changed, check if we can still focus the subitem
+        if FFocusedSubItemIndex >= 0 then begin
+          if not CanFocusSubItem(Item, FFocusedSubItemIndex) then
+            FFocusedSubItemIndex := -1;
+        end;
+      end;
+    end;
+  end;
+end;
+
 function TCustomExtChkListView.HDNEndDrag: Integer;
 begin
   // post a bogus LVM_SETCOLUMNORDERARRAY to trigger the update of the index of
@@ -1096,8 +1139,6 @@ begin
 end;
 
 procedure TCustomExtChkListView.CNNotify(var Message: TWMNotify);
-var
-  AllowSelect: Boolean;
 begin
   inherited;
   with Message do begin
@@ -1105,20 +1146,11 @@ begin
       NM_CUSTOMDRAW:
         Result := NMCustomDraw(PNMCustomDraw(NMHdr));
       LVN_ITEMCHANGING: begin
-        with PNMListView(NMHdr)^ do begin
-          if Assigned(FOnBeforeSelectItem) and (uChanged = LVIF_STATE) then begin
-            AllowSelect := True;
-            if (uOldState and LVIS_SELECTED <> 0) and
-              (uNewState and LVIS_SELECTED = 0) then
-              FOnBeforeSelectItem(Self, Items[iItem], False, AllowSelect)
-            else if (uOldState and LVIS_SELECTED = 0) and
-              (uNewState and LVIS_SELECTED <> 0) then
-              FOnBeforeSelectItem(Self, Items[iItem], True, AllowSelect);
-            if not AllowSelect then
-              Result := 1;
-          end;
-        end;
+        if not LVNItemChanging(PNMListView(NMHdr)) then
+          Result := Integer(True); // prevent the change
       end;
+      LVN_ITEMCHANGED:
+        LVNItemChanged(PNMListView(NMHdr));
     end;
   end;
 end;
@@ -1242,6 +1274,40 @@ begin
   if not (Item is TChkListItem) then
     Exit;
   Result := TChkListItem(Item).SubItem_Enabled[SubItem];
+end;
+
+function TCustomExtChkListView.GetPrevFocusableSubItem: Integer;
+var
+  FocusItem: TListItem;
+  i: Integer;
+begin
+  Result := -1;
+  FocusItem := ItemFocused;
+  if not Assigned(FocusItem) then
+    Exit;
+  for i := FFocusedSubItemIndex - 1 downto 0 do begin
+    if ColumnHasSubItemChecks(i) and CanFocusSubItem(FocusItem, i) then begin
+      Result := i;
+      Break;
+    end;
+  end;
+end;
+
+function TCustomExtChkListView.GetNextFocusableSubItem: Integer;
+var
+  FocusItem: TListItem;
+  i: Integer;
+begin
+  Result := -1;
+  FocusItem := ItemFocused;
+  if not Assigned(FocusItem) then
+    Exit;
+  for i := FFocusedSubItemIndex + 1 to ColumnsFormat.Count - 1 do begin
+    if ColumnHasSubItemChecks(i) and CanFocusSubItem(FocusItem, i) then begin
+      Result := i;
+      Break;
+    end;
+  end;
 end;
 
 function TCustomExtChkListView.OnStateIcon(X, Y: Integer): Boolean;
@@ -1400,12 +1466,25 @@ begin
   inherited;
 end;
 
+procedure TCustomExtChkListView.CMEnter(var Message: TCMEnter);
+var
+  FocusItem: TListItem;
+begin
+  FocusItem := ItemFocused;
+  if Assigned(FocusItem) then begin
+    FFocusedSubItemIndex := GetNextFocusableSubItem;
+    if FFocusedSubItemIndex >= 0 then
+      UpdateSubItem(FocusItem.Index, FFocusedSubItemIndex);
+  end;
+end;
+
 procedure TCustomExtChkListView.CMExit(var Message: TCMExit);
 var
   CancelCapture: Boolean;
 begin
   CancelCapture := (not FSpaceDown or (GetKeyState(VK_MENU) >= 0));
   EndCapture(CancelCapture);
+  FFocusedSubItemIndex := -1;
   inherited;
 end;
 
@@ -1413,6 +1492,7 @@ procedure TCustomExtChkListView.WMKeyDown(var Message: TWMKeyDown);
 var
   ShiftState: TShiftState;
   CancelCapture: Boolean;
+  FocusItem: TListItem;
 begin
   if IsEditing then begin
     inherited;
@@ -1422,8 +1502,20 @@ begin
     ShiftState := KeyDataToShiftState(KeyData);
     KeyDown(CharCode, ShiftState);
     Exit;
-  end;
-  if not Message.CharCode in [VK_TAB, VK_DOWN, VK_RIGHT, VK_UP, VK_LEFT] then begin
+  end
+  else if Message.CharCode = VK_TAB then begin
+    FocusItem := ItemFocused;
+    if Assigned(FocusItem) then begin
+      if GetKeyState(VK_SHIFT) < 0 then
+        FFocusedSubItemIndex := GetPrevFocusableSubItem
+      else
+        FFocusedSubItemIndex := GetNextFocusableSubItem;
+      if FFocusedSubItemIndex >= 0 then
+        UpdateSubItem(FocusItem.Index, FFocusedSubItemIndex);
+    end;
+    Exit;
+  end
+  else if not Message.CharCode in [VK_DOWN, VK_RIGHT, VK_UP, VK_LEFT] then begin
     if FSpaceDown then
       EndCapture(True);
     inherited;
@@ -1507,6 +1599,27 @@ begin
   // don't Run to Cursor into this function, it will interrupt the theme change
   UpdateThemeData(True, True);
   inherited;
+end;
+
+procedure TCustomExtChkListView.CMWantSpecialKey(var Message: TCMWantSpecialKey);
+var
+  SubItem: Integer;
+begin
+  inherited;
+  // ignore when Ctrl is pressed, eg. Ctrl+Tab is used for tab controls
+  if GetKeyState(VK_CONTROL) < 0 then
+    Exit; 
+  if Message.CharCode = VK_TAB then begin
+    // Return a nonzero value if this key should be handled by us. This will
+    // cause the handler in the VCL to indicate that the app hasn't processed
+    // the message yet.
+    if GetKeyState(VK_SHIFT) < 0 then
+      SubItem := GetPrevFocusableSubItem
+    else
+      SubItem := GetNextFocusableSubItem;
+    if SubItem >= 0 then
+      Message.Result := 1;
+  end;
 end;
 
 procedure Register;

@@ -162,7 +162,7 @@ begin
     // Unexpectedly, the WM_GETDLGCODE handler in SysLinkWindowProc doesn't look
     // at the virtual key code in wParam but instead expects a pointer to a
     // WM_KEYDOWN MSG structure in lParam, see
-    // https://code.reactos.org/browse/~raw,r=10902/reactos/trunk/reactos/lib/comctl32/syslink.c
+    // https://doxygen.reactos.org/da/d78/dll_2win32_2comctl32_2syslink_8c_source.html
     // So we need to generate a 'fake' WM_KEYDOWN MSG to receive the correct
     // result from WM_GETDLGCODE.
     Mask := GetDlgCodeMaskFromKey(CharCode);
