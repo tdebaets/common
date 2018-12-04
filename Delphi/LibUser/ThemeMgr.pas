@@ -2686,7 +2686,10 @@ var
       Control := Parent.Controls[I];
       // Allow all window controls to use themed background if they are placed on a tab sheet. This works only for controls
       // whose background is drawn by Windows and which can be transparent. There aren't many which qualify, though.
-      if (Control is TWinControl) and ThemeServices.ThemesEnabled then
+      // Check for TCustomListView added by Tim De Baets on December 4, 2018: skip listview controls, these should probably
+      // never be transparent and recreating their window handle during form creation (via the Handle property) is asking
+      // for problems.
+      if (Control is TWinControl) and not (Control is TCustomListView) and ThemeServices.ThemesEnabled then
         EnableThemeDialogTexture(TWinControl(Control).Handle, ETDT_ENABLETAB);
 
       if Control is TToolBar then
@@ -2785,8 +2788,14 @@ begin
           // We have to force the listview to recreate its window handle (to reapply all the control settings).
           // However if it is already in our list then don't touch the window anymore.
           WinControl := Control as TWinControl;
-          if Inserting and not List.Find(Control, Index) and WinControl.HandleAllocated then
-            PostMessage(WinControl.Handle, CM_RECREATEWND, 0, 0);
+          if Inserting and not List.Find(Control, Index) and WinControl.HandleAllocated then begin
+            // PostMessage call replaced by SendMessage and AddRecreationCandidate call added by Tim De Baets
+            // (December 4, 2018)
+            SendMessage(WinControl.Handle, CM_RECREATEWND, 0, 0);
+            // Ensure the handle is really recreated and not only destroyed. This usually gets done in
+            // DispatchMessage on CM_RECREATEWND, but here, the listview isn't in our list yet.
+            AddRecreationCandidate(WinControl);
+          end;
         end;
       end;
     end
@@ -2838,8 +2847,14 @@ begin
                       // We have to force the listview to recreate its window handle (to reapply all the control settings).
                       // However if it is already in our list then don't touch the window anymore.
                       WinControl := Control as TWinControl;
-                      if Inserting and not List.Find(Control, Index) and WinControl.HandleAllocated then
-                        PostMessage(WinControl.Handle, CM_RECREATEWND, 0, 0);
+                      if Inserting and not List.Find(Control, Index) and WinControl.HandleAllocated then begin
+                        // PostMessage call replaced by SendMessage and AddRecreationCandidate call added by Tim De Baets
+                        // (December 4, 2018)
+                        SendMessage(WinControl.Handle, CM_RECREATEWND, 0, 0);
+                        // Ensure the handle is really recreated and not only destroyed. This usually gets done in
+                        // DispatchMessage on CM_RECREATEWND, but here, the listview isn't in our list yet.
+                        AddRecreationCandidate(WinControl);
+                      end;
                     end;
                   end
                   else
