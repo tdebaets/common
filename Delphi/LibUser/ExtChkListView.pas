@@ -20,6 +20,8 @@
  *
  ****************************************************************************)
 
+// TODO: subitem checks not appearing on XP
+// TODO: test subitem checks on Win10
 // TODO: handle space-bar triggered checking similar to mouse-triggered checking
 //    item should only be checked on spacebar button up, a la windows update list
 //    do this for main item as well as subitem checkboxes
@@ -173,6 +175,10 @@ type
     function GetNextFocusableSubItem: Integer;
     function GetItemEnabled(Index: Integer): Boolean;
     procedure SetItemEnabled(Index: Integer; Value: Boolean);
+    function GetSubItemChecked(Index, SubItemIndex: Integer): Boolean;
+    procedure SetSubItemChecked(Index, SubItemIndex: Integer; Checked: Boolean);
+    function GetSubItemEnabled(Index, SubItemIndex: Integer): Boolean;
+    procedure SetSubItemEnabled(Index, SubItemIndex: Integer; Enabled: Boolean);
     function GetChecksEnabled: Boolean;
     function ColumnHasSubItemChecks(Index: Integer): Boolean;
     procedure DoSubItemCheckClick(Item: TListItem; SubItem: Integer);
@@ -228,6 +234,10 @@ type
         read FCheckBoxOptions write SetCheckBoxOptions;
     property ItemEnabled[Index: Integer]: Boolean
         read GetItemEnabled write SetItemEnabled;
+    property SubItem_Checked[Index, SubItemIndex: Integer]: Boolean
+        read GetSubItemChecked write SetSubItemChecked;
+    property SubItem_Enabled[Index, SubItemIndex: Integer]: Boolean
+        read GetSubItemEnabled write SetSubItemEnabled;
     property DisabledColor: TColor
         read FDisabledColor write FDisabledColor default clGrayText;
     property HideItemFocusRect: Boolean
@@ -240,6 +250,8 @@ type
   public
     // new
     property ItemEnabled;
+    property SubItem_Checked;
+    property SubItem_Enabled;
 
     // inherited
     property LastColumnClicked;
@@ -636,7 +648,7 @@ begin
           'component is still loading', [Name]);
     end;
     for i := 0 to Count - 1 do
-        with TChkListItem(Items[i]) do begin
+        with Items[i] as TChkListItem do begin
       // restore item enabled state
       FMemStream.Read(BoolVal, SizeOf(BoolVal));
       Enabled := BoolVal;
@@ -663,7 +675,7 @@ begin
   Count := Items.Count;
   FMemStream.Write(Count, SizeOf(Count));
   for i := 0 to Items.Count - 1 do
-      with TChkListItem(Items[i]) do begin
+      with Items[i] as TChkListItem do begin
     // save item enabled state
     FMemStream.Write(Enabled, SizeOf(Enabled));
     // save subitem checked states
@@ -1181,11 +1193,61 @@ procedure TCustomExtChkListView.SetItemEnabled(Index: Integer; Value: Boolean);
 var
   Item: TListItem;
 begin
-  if (Index < 0) or (Index > Items.Count - 1) then
+  if (Index < 0) or (Index >= Items.Count) then
     Exit;
   Item := Items[Index];
   if Item is TChkListItem then
     TChkListItem(Item).Enabled := Value;
+end;
+
+function TCustomExtChkListView.GetSubItemChecked(Index: Integer;
+    SubItemIndex: Integer): Boolean;
+var
+  Item: TListItem;
+begin
+  Result := False;
+  if (Index < 0) or (Index >= Items.Count) then
+    Exit;
+  Item := Items[Index];
+  if Item is TChkListItem then
+    Result := TChkListItem(Item).SubItem_Checked[SubItemIndex];
+end;
+
+procedure TCustomExtChkListView.SetSubItemChecked(Index, SubItemIndex: Integer;
+    Checked: Boolean);
+var
+  Item: TListItem;
+begin
+  if (Index < 0) or (Index >= Items.Count) then
+    Exit;
+  Item := Items[Index];
+  if Item is TChkListItem then
+    TChkListItem(Item).SubItem_Checked[SubItemIndex] := Checked;
+end;
+
+function TCustomExtChkListView.GetSubItemEnabled(Index: Integer;
+    SubItemIndex: Integer): Boolean;
+var
+  Item: TListItem;
+begin
+  Result := True;
+  if (Index < 0) or (Index >= Items.Count) then
+    Exit;
+  Item := Items[Index];
+  if Item is TChkListItem then
+    Result := TChkListItem(Item).SubItem_Enabled[SubItemIndex];
+end;
+
+procedure TCustomExtChkListView.SetSubItemEnabled(Index, SubItemIndex: Integer;
+    Enabled: Boolean);
+var
+  Item: TListItem;
+begin
+  if (Index < 0) or (Index >= Items.Count) then
+    Exit;
+  Item := Items[Index];
+  if Item is TChkListItem then
+    TChkListItem(Item).SubItem_Enabled[SubItemIndex] := Enabled;
 end;
 
 // workaround to redraw only the checkmark of an item, and not the whole item
