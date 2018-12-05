@@ -20,8 +20,6 @@
  *
  ****************************************************************************)
 
-// TODO: subitem checks not appearing on XP
-// TODO: test subitem checks on Win10
 // TODO: handle space-bar triggered checking similar to mouse-triggered checking
 //    item should only be checked on spacebar button up, a la windows update list
 //    do this for main item as well as subitem checkboxes
@@ -1025,7 +1023,7 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
   end;
   procedure HandleSubItemPostPaint;
   var
-    CheckRect: TRect;
+    SubItemRect, CheckRect: TRect;
     Item: TChkListItem;
     IsSelected: Boolean;
     State: TCheckBoxState;
@@ -1034,21 +1032,31 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
     with NMCustomDraw^, PNMLVCustomDraw(NMCustomDraw)^ do begin
       // Comctl32 can send us 'fake' custom draw notifications
       // (via CLVDrawItemManager::BeginFakeItemDraw - CIFakeCustomDrawNotify),
-      // such as for computing a column's width, or while hovering the mouse
-      // over an item when the lvxInfoTip or lvxLabelTip extended style is set.
+      // such as for computing a column's width, or while pausing the mouse
+      // cursor over a subitem when the lvxInfoTip or lvxLabelTip extended style
+      // is set.
       // In this case, most fields in NMLVCustomDraw (like uItemState, clrText,
       // clrTextBk...) will be left uninitialized so if we would use these fields
       // we would access garbage data. Comctl32 *does* however initialize the rc
       // field to all zeroes when sending these fake notifications, so we can
       // check that field to detect this and completely skip the drawing.
-      if IsRectEmpty(rc) then
+      // This can be easily reproduced by pausing the cursor over a selected
+      // subitem because then the CDIS_SELECTED flag in uItemState suddenly won't
+      // be set anymore.
+      // IsRectEmpty(rc) always returns TRUE on XP because the rect height is
+      // always 0 there. So check just the width instead.
+      if RectWidth(rc) = 0 then
         Exit;
       if ColumnHasSubItemChecks(iSubItem) then begin
         Item := GetItem;
         if not Assigned(Item) then
           Exit;
         IsSelected := (uItemState and CDIS_SELECTED) <> 0;
-        GetSubItemCheckRect(rc, CheckRect);
+        // Can't use rc here for XP compatibility (see above)
+        if not ListView_GetSubItemRect(hdr.hwndFrom, dwItemSpec, iSubItem,
+            LVIR_BOUNDS, @SubItemRect) then
+          Exit;
+        GetSubItemCheckRect(SubItemRect, CheckRect);
         if Item.SubItem_Checked[iSubItem] then
           State := cbChecked
         else
@@ -1069,6 +1077,8 @@ function TCustomExtChkListView.NMCustomDraw(NMCustomDraw: PNMCustomDraw): Intege
           if Item.SubItem_Enabled[iSubItem] and (Item = ItemFocused)
               and (iSubItem = FFocusedSubItemIndex) then begin
             InflateRect(CheckRect, 2, 2);
+            // Prevent the focus rect from crossing the subitem's bounding rect
+            IntersectRect(CheckRect, CheckRect, SubItemRect);
             DrawFocusRect(hdc, CheckRect);
           end;
         end;
@@ -1478,6 +1488,7 @@ begin
     else if OnSubItemCheckRect(X, Y, SubItem)
         and ColumnHasSubItemChecks(SubItem) then begin
       // subitem checkbox was clicked
+      // TODO: make optional
       Result := False; // prevent default listview handling from selecting the item
       if not CanFocusSubItem(Item, SubItem) then
         Exit;
