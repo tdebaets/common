@@ -53,6 +53,8 @@ type
       var NMLVCD: TNMLVCustomDraw; var FontChanged: Boolean): Boolean of object;
   TLVCheckingEvent = function(Sender: TObject;
       ItemIndex: Integer): Boolean of object;
+  TLVSubItemCheckingEvent = function(Sender: TObject;
+      ItemIndex, SubItemIndex: Integer): Boolean of object;
   TLVBeforeSelectItemEvent = procedure(Sender: TObject; Item: TListItem;
       Selected: Boolean; var AllowSelect: Boolean) of object;
 
@@ -138,6 +140,7 @@ type
   private
     FOnItemPrePaint: TLVItemPrePaintEvent;
     FOnItemChecking: TLVCheckingEvent;
+    FOnSubItemChecking: TLVSubItemCheckingEvent;
     FOnBeforeSelectItem: TLVBeforeSelectItemEvent;
     FCheckWidth, FCheckHeight: Integer;
     FCheckBoxOptions: TCheckBoxOptions;
@@ -221,11 +224,14 @@ type
     procedure LVItemPostPaint(const NMLVCD: TNMLVCustomDraw;
         var DrawIcon: Boolean); virtual;
     function ItemChecking(Item: TListItem): Boolean; virtual;
+    function SubItemChecking(Item: TListItem; SubItem: Integer): Boolean; virtual;
     procedure ItemCheckedManually; virtual;
     property OnItemPrePaint: TLVItemPrePaintEvent
         read FOnItemPrePaint write FOnItemPrePaint;
     property OnItemChecking: TLVCheckingEvent
         read FOnItemChecking write FOnItemChecking;
+    property OnSubItemChecking: TLVSubItemCheckingEvent
+        read FOnSubItemChecking write FOnSubItemChecking;
     property OnBeforeSelectItem: TLVBeforeSelectItemEvent
         read FOnBeforeSelectItem write FOnBeforeSelectItem;
     property CheckBoxOptions: TCheckBoxOptions
@@ -272,6 +278,7 @@ type
     property CheckBoxOptions;
     property OnItemPrePaint;
     property OnItemChecking;
+    property OnSubItemChecking;
     property OnBeforeSelectItem;
     property DisabledColor;
     property HideItemFocusRect;
@@ -1434,6 +1441,8 @@ begin
         and ColumnHasSubItemChecks(FFocusedSubItemIndex)
         and CanFocusSubItem(FocusItem, FFocusedSubItemIndex) then begin
       // subitem checkbox has focus
+      if not SubItemChecking(FocusItem, FFocusedSubItemIndex) then
+        Exit;
       FCaptureIndex := FocusItem.Index;
       FCaptureSubItemIndex := FFocusedSubItemIndex;
       FSpaceDown := True;
@@ -1491,6 +1500,8 @@ begin
       // TODO: make optional
       Result := False; // prevent default listview handling from selecting the item
       if not CanFocusSubItem(Item, SubItem) then
+        Exit;
+      if not SubItemChecking(Item, SubItem) then
         Exit;
       SetFocus;
       if not MouseCapture then
@@ -1611,6 +1622,14 @@ begin
   Result := True;
   if Assigned(FOnItemChecking) then
     Result := FOnItemChecking(Self, Item.Index);
+end;
+
+function TCustomExtChkListView.SubItemChecking(Item: TListItem;
+    SubItem: Integer): Boolean;
+begin
+  Result := True;
+  if Assigned(FOnSubItemChecking) then
+    Result := FOnSubItemChecking(Self, Item.Index, SubItem);
 end;
 
 procedure TCustomExtChkListView.ItemCheckedManually;
