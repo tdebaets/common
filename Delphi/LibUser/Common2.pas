@@ -25,9 +25,9 @@ unit Common2;
 interface
 
 // TODO: remove Classes? (initialization/finalization)
-uses Windows, Messages, CommCtrl, SysUtils, ShellApi, ActiveX, Classes, Math,
-    ComObj, ShFolder, PathFunc, Graphics, WinCrypt, WinSvc, TypInfo, MyRegistry,
-    EZDSLHsh;
+uses Windows, Messages, CommCtrl, SysUtils, ShlObj, ShellApi, ActiveX, Classes,
+    Math, ComObj, ShFolder, PathFunc, Graphics, WinCrypt, WinSvc, TypInfo,
+    MyRegistry, EZDSLHsh;
 
 type
   PPointer = ^Pointer;
@@ -444,6 +444,8 @@ function ComparePointers(P1, P2: Pointer): Integer;
 function InterlockedExchangePointer(var Target: Pointer;
     Value: Pointer): Pointer;
 
+procedure FreeAndNilPIDL(var PIDL: PItemIDList);
+
 procedure GetFormatSettings2;
 
 type
@@ -493,7 +495,7 @@ type
 
 implementation
 
-uses DzURL, ShLwApi, NativeApi, CmnFunc2;
+uses DzURL, ShLwApi, ShlObj2, NativeApi, CmnFunc2;
 
 procedure FreeAndNil(var Obj);
 var
@@ -2838,6 +2840,15 @@ function InterlockedExchangePointer(var Target: Pointer;
     Value: Pointer): Pointer;
 begin
   Result := Pointer(InterlockedExchange(Integer(Target), Integer(Value)));
+end;
+
+procedure FreeAndNilPIDL(var PIDL: PItemIDList);
+var
+  OldPIDL: PItemIDList;
+begin
+  OldPIDL := PIDL;
+  PIDL := nil;
+  ILFree(OldPIDL)
 end;
 
 procedure GetFormatSettings2;
