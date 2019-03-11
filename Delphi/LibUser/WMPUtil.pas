@@ -61,6 +61,7 @@ const
   WMPPropertiesID = 7261;
   WMPPlayItemID = 7230;
   WMPNormalPlaybackSpeedID = 18835;
+  WMPShowMenuBarID = 20432;
 
 const
   WMPFindInLibraryID = 7668;
