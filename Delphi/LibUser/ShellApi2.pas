@@ -6,6 +6,9 @@
 //
 // Author : K. Giddings
 //
+// Originally retrieved from :
+// http://www.whirlingdervishes.com/nselib/delphi/samples/source.php
+//
 //
 // This file is part of the NSELib library for Delphi.
 // NSELib can be found on the web on this URL:
@@ -41,45 +44,45 @@ function ExtractAssociatedIconExW(inst : HINST; IconPath : PWideChar;  var IconI
 
 const
   { AppBar stuff }
-  {EXTERNALSYM ABM_SETSTATE}
+  {$EXTERNALSYM ABM_SETSTATE}
   ABM_SETSTATE         = $0000000a;
 
 { Shell File Operations }
 
 const
-  {EXTERNALSYM FOF_NOCOPYSECURITYATTRIBS}
+  {$EXTERNALSYM FOF_NOCOPYSECURITYATTRIBS}
   FOF_NOCOPYSECURITYATTRIBS  = $0800;  // dont copy NT file Security Attributes
-  {EXTERNALSYM FOF_NORECURSION}
+  {$EXTERNALSYM FOF_NORECURSION}
   FOF_NORECURSION            = $1000;  // don't recurse into directories.
-  {EXTERNALSYM FOF_NO_CONNECTED_ELEMENTS}
+  {$EXTERNALSYM FOF_NO_CONNECTED_ELEMENTS}
   FOF_NO_CONNECTED_ELEMENTS  = $2000;  // don't operate on connected elements.
-  {EXTERNALSYM FOF_WANTNUKEWARNING}
+  {$EXTERNALSYM FOF_WANTNUKEWARNING}
   FOF_WANTNUKEWARNING        = $4000;  // during delete operation, warn if nuking instead of recycling (partially overrides FOF_NOCONFIRMATION)
-  {EXTERNALSYM FOF_NORECURSEREPARSE}
+  {$EXTERNALSYM FOF_NORECURSEREPARSE}
   FOF_NORECURSEREPARSE       = $8000;  // treat reparse points as objects, not containers
 
 { ShellExecute() and ShellExecuteEx() error codes }
 const
-  {EXTERNALSYM SEE_MASK_HMONITOR}
+  {$EXTERNALSYM SEE_MASK_HMONITOR}
   SEE_MASK_HMONITOR       = $00200000;
-  {EXTERNALSYM SEE_MASK_NOZONECHECKS}
+  {$EXTERNALSYM SEE_MASK_NOZONECHECKS}
   SEE_MASK_NOZONECHECKS   = $00800000;
-  {EXTERNALSYM SEE_MASK_NOQUERYCLASSSTORE}
+  {$EXTERNALSYM SEE_MASK_NOQUERYCLASSSTORE}
   SEE_MASK_NOQUERYCLASSSTORE = $01000000;
-  {EXTERNALSYM SEE_MASK_WAITFORINPUTIDLE}
+  {$EXTERNALSYM SEE_MASK_WAITFORINPUTIDLE}
   SEE_MASK_WAITFORINPUTIDLE  = $02000000;
-  {EXTERNALSYM SEE_MASK_FLAG_LOG_USAGE}
+  {$EXTERNALSYM SEE_MASK_FLAG_LOG_USAGE}
   SEE_MASK_FLAG_LOG_USAGE    = $04000000;
 
-{EXTERNALSYM WinExecError}
+{$EXTERNALSYM WinExecError}
 procedure WinExecError(wnd : HWND; error : integer; lpstrFileName, lpstrTitle : LPCSTR); stdcall;
-{EXTERNALSYM WinExecErrorA}
+{$EXTERNALSYM WinExecErrorA}
 procedure WinExecErrorA(wnd : HWND; error : integer; lpstrFileName, lpstrTitle : LPCSTR); stdcall;
-{EXTERNALSYM WinExecErrorW}
+{$EXTERNALSYM WinExecErrorW}
 procedure WinExecErrorW(wnd : HWND; error : integer; lpstrFileName, lpstrTitle : LPCWSTR); stdcall;
 
 type
-  {EXTERNALSYM SHCREATEPROCESSINFOW}
+  {$EXTERNALSYM SHCREATEPROCESSINFOW}
   SHCREATEPROCESSINFOW = packed record
     cbSize : DWORD;
     fMask : ULONG;
@@ -95,53 +98,53 @@ type
     lpStartupInfo : PSTARTUPINFO;
     lpProcessInformation : PPROCESSINFORMATION;
   end;
-  {EXTERNALSYM PSHCREATEPROCESSINFOW}
+  {$EXTERNALSYM PSHCREATEPROCESSINFOW}
   PSHCREATEPROCESSINFOW = ^SHCREATEPROCESSINFOW;
 
-{EXTERNALSYM SHCreateProcessAsUserW}
+{$EXTERNALSYM SHCreateProcessAsUserW}
 function SHCreateProcessAsUserW(pscpi : PSHCREATEPROCESSINFOW) : bool; stdcall;
 
 // struct for query recycle bin info
-//type
-  {EXTERNALSYM SHQUERYRBINFO}
-  {SHQUERYRBINFO = packed record
+type
+  {$EXTERNALSYM SHQUERYRBINFO}
+  SHQUERYRBINFO = packed record
     cbSize : DWORD;
     i64Size : int64;
     i64NumItems : int64;
-  end;}
-  {EXTERNALSYM LPSHQUERYRBINFO}
-  {LPSHQUERYRBINFO = ^SHQUERYRBINFO;}
+  end;
+  {$EXTERNALSYM LPSHQUERYRBINFO}
+  LPSHQUERYRBINFO = ^SHQUERYRBINFO;
 
 
 // flags for SHEmptyRecycleBin
 //
 const
-  {EXTERNALSYM SHERB_NOCONFIRMATION}
+  {$EXTERNALSYM SHERB_NOCONFIRMATION}
   SHERB_NOCONFIRMATION   = $00000001;
-  {EXTERNALSYM SHERB_NOPROGRESSUI}
+  {$EXTERNALSYM SHERB_NOPROGRESSUI}
   SHERB_NOPROGRESSUI     = $00000002;
-  {EXTERNALSYM SHERB_NOSOUND}
+  {$EXTERNALSYM SHERB_NOSOUND}
   SHERB_NOSOUND          = $00000004;
 
 
-{EXTERNALSYM SHQueryRecycleBin}
-//function SHQueryRecycleBin(pszRootPath : LPCSTR; pSHQueryRBInfo : LPSHQUERYRBINFO) : HResult; stdcall;
-{EXTERNALSYM SHQueryRecycleBinA}
-//function SHQueryRecycleBinA(pszRootPath : LPCSTR; pSHQueryRBInfo : LPSHQUERYRBINFO) : HResult; stdcall;
-{EXTERNALSYM SHQueryRecycleBinW}
-//function SHQueryRecycleBinW(pszRootPath : LPCWSTR; pSHQueryRBInfo : LPSHQUERYRBINFO) : HResult; stdcall;
-{EXTERNALSYM SHEmptyRecycleBin}
+{$EXTERNALSYM SHQueryRecycleBin}
+function SHQueryRecycleBin(pszRootPath : LPCSTR; pSHQueryRBInfo : LPSHQUERYRBINFO) : HResult; stdcall;
+{$EXTERNALSYM SHQueryRecycleBinA}
+function SHQueryRecycleBinA(pszRootPath : LPCSTR; pSHQueryRBInfo : LPSHQUERYRBINFO) : HResult; stdcall;
+{$EXTERNALSYM SHQueryRecycleBinW}
+function SHQueryRecycleBinW(pszRootPath : LPCWSTR; pSHQueryRBInfo : LPSHQUERYRBINFO) : HResult; stdcall;
+{$EXTERNALSYM SHEmptyRecycleBin}
 function SHEmptyRecycleBin(wnd : HWND; pszRootPath : LPCSTR; dwFlags : DWORD) : HResult; stdcall;
-{EXTERNALSYM SHEmptyRecycleBinA}
+{$EXTERNALSYM SHEmptyRecycleBinA}
 function SHEmptyRecycleBinA(wnd : HWND; pszRootPath : LPCSTR; dwFlags : DWORD) : HResult; stdcall;
-{EXTERNALSYM SHEmptyRecycleBinW}
+{$EXTERNALSYM SHEmptyRecycleBinW}
 function SHEmptyRecycleBinW(wnd : HWND; pszRootPath : LPCWSTR; dwFlags : DWORD) : HResult; stdcall;
 
 type
   PNotifyIconDataA = ^TNotifyIconDataA;
   PNotifyIconDataW = ^TNotifyIconDataW;
   PNotifyIconData = PNotifyIconDataA;
-  {EXTERNALSYM _NOTIFYICONDATAA}
+  {$EXTERNALSYM _NOTIFYICONDATAA}
   _NOTIFYICONDATAA = record
     cbSize: DWORD;
     Wnd: HWND;
@@ -159,7 +162,7 @@ type
     guidItem : TGUID;
   end;
 
-  {EXTERNALSYM _NOTIFYICONDATAW}
+  {$EXTERNALSYM _NOTIFYICONDATAW}
   _NOTIFYICONDATAW = record
     cbSize: DWORD;
     Wnd: HWND;
@@ -176,122 +179,122 @@ type
     dwInfoFlags : DWORD;
     guidItem : TGUID;
   end;
-  {EXTERNALSYM _NOTIFYICONDATA}
+  {$EXTERNALSYM _NOTIFYICONDATA}
   _NOTIFYICONDATA = _NOTIFYICONDATAA;
   TNotifyIconDataA = _NOTIFYICONDATAA;
   TNotifyIconDataW = _NOTIFYICONDATAW;
   TNotifyIconData = TNotifyIconDataA;
-  {EXTERNALSYM NOTIFYICONDATAA}
+  {$EXTERNALSYM NOTIFYICONDATAA}
   NOTIFYICONDATAA = _NOTIFYICONDATAA;
-  {EXTERNALSYM NOTIFYICONDATAW}
+  {$EXTERNALSYM NOTIFYICONDATAW}
   NOTIFYICONDATAW = _NOTIFYICONDATAW;
-  {EXTERNALSYM NOTIFYICONDATA}
+  {$EXTERNALSYM NOTIFYICONDATA}
   NOTIFYICONDATA = NOTIFYICONDATAA;
 
 const
-  {EXTERNALSYM NIN_SELECT}
+  {$EXTERNALSYM NIN_SELECT}
   NIN_SELECT          = (WM_USER + 0);
-  {EXTERNALSYM NINF_KEY}
+  {$EXTERNALSYM NINF_KEY}
   NINF_KEY            = 1;
-  {EXTERNALSYM NIN_KEYSELECT}
+  {$EXTERNALSYM NIN_KEYSELECT}
   NIN_KEYSELECT       = (NIN_SELECT or NINF_KEY);
 
-  {EXTERNALSYM NIN_BALLOONSHOW}
+  {$EXTERNALSYM NIN_BALLOONSHOW}
   NIN_BALLOONSHOW     = (WM_USER + 2);
-  {EXTERNALSYM NIN_BALLOONHIDE}
+  {$EXTERNALSYM NIN_BALLOONHIDE}
   NIN_BALLOONHIDE     = (WM_USER + 3);
-  {EXTERNALSYM NIN_BALLOONTIMEOUT}
+  {$EXTERNALSYM NIN_BALLOONTIMEOUT}
   NIN_BALLOONTIMEOUT  = (WM_USER + 4);
-  {EXTERNALSYM NIN_BALLOONUSERCLICK}
+  {$EXTERNALSYM NIN_BALLOONUSERCLICK}
   NIN_BALLOONUSERCLICK = (WM_USER + 5);
 
-  {EXTERNALSYM NIM_SETFOCUS}
+  {$EXTERNALSYM NIM_SETFOCUS}
   NIM_SETFOCUS    = $00000003;
-  {EXTERNALSYM NIM_SETVERSION}
+  {$EXTERNALSYM NIM_SETVERSION}
   NIM_SETVERSION  = $00000004;
-  {EXTERNALSYM NOTIFYICON_VERSION}
+  {$EXTERNALSYM NOTIFYICON_VERSION}
   NOTIFYICON_VERSION = 3;
 
-  {EXTERNALSYM NIF_STATE}
+  {$EXTERNALSYM NIF_STATE}
   NIF_STATE       = $00000008;
-  {EXTERNALSYM NIF_INFO}
+  {$EXTERNALSYM NIF_INFO}
   NIF_INFO        = $00000010;
-  {EXTERNALSYM NIF_GUID}
+  {$EXTERNALSYM NIF_GUID}
   NIF_GUID        = $00000020;
 
-  {EXTERNALSYM NIS_HIDDEN}
+  {$EXTERNALSYM NIS_HIDDEN}
   NIS_HIDDEN      = $00000001;
-  {EXTERNALSYM NIS_SHAREDICON}
+  {$EXTERNALSYM NIS_SHAREDICON}
   NIS_SHAREDICON  = $00000002;
 
-  {EXTERNALSYM NIIF_NONE}
+  {$EXTERNALSYM NIIF_NONE}
   NIIF_NONE       = $00000000;
   // icon flags are mutually exclusive
   // and take only the lowest 2 bits
-  {EXTERNALSYM NIIF_INFO}
+  {$EXTERNALSYM NIIF_INFO}
   NIIF_INFO       = $00000001;
-  {EXTERNALSYM NIIF_WARNING}
+  {$EXTERNALSYM NIIF_WARNING}
   NIIF_WARNING    = $00000002;
-  {EXTERNALSYM NIIF_ERROR}
+  {$EXTERNALSYM NIIF_ERROR}
   NIIF_ERROR      = $00000003;
-  {EXTERNALSYM NIIF_ICON_MASK}
+  {$EXTERNALSYM NIIF_ICON_MASK}
   NIIF_ICON_MASK  = $0000000F;
-  {EXTERNALSYM NIIF_NOSOUND}
+  {$EXTERNALSYM NIIF_NOSOUND}
   NIIF_NOSOUND    = $00000010;
 
 
 const
-  {EXTERNALSYM SHGFI_ATTR_SPECIFIED}
+  {$EXTERNALSYM SHGFI_ATTR_SPECIFIED}
   SHGFI_ATTR_SPECIFIED    = $000020000;     // get only specified attributes
-  {EXTERNALSYM SHGFI_ADDOVERLAYS}
+  {$EXTERNALSYM SHGFI_ADDOVERLAYS}
   SHGFI_ADDOVERLAYS       = $000000020;     // apply the appropriate overlays
-  {EXTERNALSYM SHGFI_OVERLAYINDEX}
+  {$EXTERNALSYM SHGFI_OVERLAYINDEX}
   SHGFI_OVERLAYINDEX      = $000000040;     // Get the index of the overlay
 
-{EXTERNALSYM SHGetDiskFreeSpace}
-//function SHGetDiskFreeSpace(pszDirectoryName : LPCSTR; var pulFreeBytesAvailableToCaller,pulTotalNumberOfBytes,pulTotalNumberOfFreeBytes : int64) : bool; stdcall;
-{EXTERNALSYM SHGetDiskFreeSpaceEx}
-//function SHGetDiskFreeSpaceEx(pszDirectoryName : LPCSTR; var pulFreeBytesAvailableToCaller,pulTotalNumberOfBytes,pulTotalNumberOfFreeBytes : int64) : bool; stdcall;
-{EXTERNALSYM SHGetDiskFreeSpaceExA}
-//function SHGetDiskFreeSpaceExA(pszDirectoryName : LPCSTR; var pulFreeBytesAvailableToCaller,pulTotalNumberOfBytes,pulTotalNumberOfFreeBytes : int64) : bool; stdcall;
-{EXTERNALSYM SHGetDiskFreeSpaceExW}
-//function SHGetDiskFreeSpaceExW(pszDirectoryName : LPCWSTR; var pulFreeBytesAvailableToCaller,pulTotalNumberOfBytes,pulTotalNumberOfFreeBytes : int64) : bool; stdcall;
+{$EXTERNALSYM SHGetDiskFreeSpace}
+function SHGetDiskFreeSpace(pszDirectoryName : LPCSTR; var pulFreeBytesAvailableToCaller,pulTotalNumberOfBytes,pulTotalNumberOfFreeBytes : int64) : bool; stdcall;
+{$EXTERNALSYM SHGetDiskFreeSpaceEx}
+function SHGetDiskFreeSpaceEx(pszDirectoryName : LPCSTR; var pulFreeBytesAvailableToCaller,pulTotalNumberOfBytes,pulTotalNumberOfFreeBytes : int64) : bool; stdcall;
+{$EXTERNALSYM SHGetDiskFreeSpaceExA}
+function SHGetDiskFreeSpaceExA(pszDirectoryName : LPCSTR; var pulFreeBytesAvailableToCaller,pulTotalNumberOfBytes,pulTotalNumberOfFreeBytes : int64) : bool; stdcall;
+{$EXTERNALSYM SHGetDiskFreeSpaceExW}
+function SHGetDiskFreeSpaceExW(pszDirectoryName : LPCWSTR; var pulFreeBytesAvailableToCaller,pulTotalNumberOfBytes,pulTotalNumberOfFreeBytes : int64) : bool; stdcall;
 
-{EXTERNALSYM SHGetNewLinkInfo}
+{$EXTERNALSYM SHGetNewLinkInfo}
 function SHGetNewLinkInfo(pszLinkTo, pszDir : LPCSTR; pszName : LPSTR; var pfMustCopy : bool; uFlags : uint) : bool; stdcall;
-{EXTERNALSYM SHGetNewLinkInfoA}
+{$EXTERNALSYM SHGetNewLinkInfoA}
 function SHGetNewLinkInfoA(pszLinkTo, pszDir : LPCSTR; pszName : LPSTR; var pfMustCopy : bool; uFlags : uint) : bool; stdcall;
-{EXTERNALSYM SHGetNewLinkInfoW}
+{$EXTERNALSYM SHGetNewLinkInfoW}
 function SHGetNewLinkInfoW(pszLinkTo, pszDir : LPCWSTR; pszName : LPWSTR; var pfMustCopy : bool; uFlags : uint) : bool; stdcall;
 
 const
-  {EXTERNALSYM SHGNLI_NOLNK}
+  {$EXTERNALSYM SHGNLI_NOLNK}
   SHGNLI_NOLNK            = $000000008;     // don't add ".lnk" extension
 
 // Printer stuff
 const
-  {EXTERNALSYM PRINTACTION_OPEN}
+  {$EXTERNALSYM PRINTACTION_OPEN}
   PRINTACTION_OPEN           = 0;
-  {EXTERNALSYM PRINTACTION_PROPERTIES}
+  {$EXTERNALSYM PRINTACTION_PROPERTIES}
   PRINTACTION_PROPERTIES     = 1;
-  {EXTERNALSYM PRINTACTION_NETINSTALL}
+  {$EXTERNALSYM PRINTACTION_NETINSTALL}
   PRINTACTION_NETINSTALL     = 2;
-  {EXTERNALSYM PRINTACTION_NETINSTALLLINK}
+  {$EXTERNALSYM PRINTACTION_NETINSTALLLINK}
   PRINTACTION_NETINSTALLLINK = 3;
-  {EXTERNALSYM PRINTACTION_TESTPAGE}
+  {$EXTERNALSYM PRINTACTION_TESTPAGE}
   PRINTACTION_TESTPAGE       = 4;
-  {EXTERNALSYM PRINTACTION_OPENNETPRN}
+  {$EXTERNALSYM PRINTACTION_OPENNETPRN}
   PRINTACTION_OPENNETPRN     = 5;
-  {EXTERNALSYM PRINTACTION_DOCUMENTDEFAULTS}
+  {$EXTERNALSYM PRINTACTION_DOCUMENTDEFAULTS}
   PRINTACTION_DOCUMENTDEFAULTS = 6;
-  {EXTERNALSYM PRINTACTION_SERVERPROPERTIES}
+  {$EXTERNALSYM PRINTACTION_SERVERPROPERTIES}
   PRINTACTION_SERVERPROPERTIES = 7;
 
-{EXTERNALSYM SHInvokePrinterCommand}
+{$EXTERNALSYM SHInvokePrinterCommand}
 function SHInvokePrinterCommand(wnd : HWND; uAction : UINT; lpBuf1, lpBuf2 : LPCSTR; fModal : BOOL) : bool; stdcall;
-{EXTERNALSYM SHInvokePrinterCommandA}
+{$EXTERNALSYM SHInvokePrinterCommandA}
 function SHInvokePrinterCommandA(wnd : HWND; uAction : UINT; lpBuf1, lpBuf2 : LPCSTR; fModal : BOOL) : bool; stdcall;
-{EXTERNALSYM SHInvokePrinterCommandW}
+{$EXTERNALSYM SHInvokePrinterCommandW}
 function SHInvokePrinterCommandW(wnd : HWND; uAction : UINT; lpBuf1, lpBuf2 : LPCSTR; fModal : BOOL) : bool; stdcall;
 
 //
@@ -306,7 +309,7 @@ function SHInvokePrinterCommandW(wnd : HWND; uAction : UINT; lpBuf1, lpBuf2 : LP
 // Returns:
 //      S_OK
 //
-{EXTERNALSYM SHLoadNonloadedIconOverlayIdentifiers}
+{$EXTERNALSYM SHLoadNonloadedIconOverlayIdentifiers}
 function SHLoadNonloadedIconOverlayIdentifiers : hresult; stdcall;
 
 //
@@ -328,22 +331,22 @@ function SHLoadNonloadedIconOverlayIdentifiers : hresult; stdcall;
 //     Both OFFLINE_STATUS_LOCAL and OFFLINE_STATUS_REMOTE may be returned,
 //     indicating "open in both places." This is common when the server is online.
 //
-{EXTERNALSYM SHIsFileAvailableOffline}
+{$EXTERNALSYM SHIsFileAvailableOffline}
 function SHIsFileAvailableOffline(pwszPath : LPCWSTR; pdwStatus : LPDWORD) : hresult; stdcall;
 
 const
-  {EXTERNALSYM OFFLINE_STATUS_LOCAL}
+  {$EXTERNALSYM OFFLINE_STATUS_LOCAL}
   OFFLINE_STATUS_LOCAL        = $0001;  // If open, it's open locally
-  {EXTERNALSYM OFFLINE_STATUS_REMOTE}
+  {$EXTERNALSYM OFFLINE_STATUS_REMOTE}
   OFFLINE_STATUS_REMOTE       = $0002;  // If open, it's open remotely
-  {EXTERNALSYM OFFLINE_STATUS_INCOMPLETE}
+  {$EXTERNALSYM OFFLINE_STATUS_INCOMPLETE}
   OFFLINE_STATUS_INCOMPLETE   = $0004;  // The local copy is currently imcomplete.
                                             // The file will not be available offline
                                             // until it has been synchronized.
 
 //  sets the specified path to use the string resource
 //  as the UI instead of the file system name
-{EXTERNALSYM SHSetLocalizedName}
+{$EXTERNALSYM SHSetLocalizedName}
 function SHSetLocalizedName(pszPath : LPWSTR; pszResModule : LPCWSTR; idsRes : integer) : HResult; stdcall;
 
 //====== ShellMessageBox ================================================
@@ -363,71 +366,71 @@ function SHSetLocalizedName(pszPath : LPWSTR; pszResModule : LPCWSTR; idsRes : i
 //     note that lengths are allowed on the %s, %ld, and %lx, just
 //                         like wsprintf
 //
-{EXTERNALSYM ShellMessageBox}
+{$EXTERNALSYM ShellMessageBox}
 function ShellMessageBox(Instance : THandle; wnd : HWnd; Msg : PChar;
                           Title : PChar; uStyle : cardinal;
                           Format : PChar) : integer; cdecl;
-{EXTERNALSYM ShellMessageBoxA}
+{$EXTERNALSYM ShellMessageBoxA}
 function ShellMessageBoxA(Instance : THandle; wnd : HWnd; Msg : PChar;
                           Title : PChar; uStyle : cardinal;
                           Format : PChar) : integer; cdecl;
-{EXTERNALSYM ShellMessageBoxW}
+{$EXTERNALSYM ShellMessageBoxW}
 function ShellMessageBoxW(Instance : THandle; wnd : HWnd; Msg : PWideChar;
                           Title : PWideChar; uStyle : cardinal;
                           Format : PWideChar) : integer; cdecl;
 
-{EXTERNALSYM IsLFNDrive}
+{$EXTERNALSYM IsLFNDrive}
 function IsLFNDrive(pszPath : LPCSTR) : bool; stdcall;
-{EXTERNALSYM IsLFNDriveA}
+{$EXTERNALSYM IsLFNDriveA}
 function IsLFNDriveA(pszPath : LPCSTR) : bool; stdcall;
-{EXTERNALSYM IsLFNDriveW}
+{$EXTERNALSYM IsLFNDriveW}
 function IsLFNDriveW(pszPath : LPCSTR) : bool; stdcall;
 
-{EXTERNALSYM SHEnumerateUnreadMailAccounts}
+{$EXTERNALSYM SHEnumerateUnreadMailAccounts}
 function SHEnumerateUnreadMailAccounts(hKeyUser : HKEY; dwIndex : DWORD; pszMailAddress : LPSTR; cchMailAddress : integer) : hresult; stdcall;
-{EXTERNALSYM SHEnumerateUnreadMailAccountsA}
+{$EXTERNALSYM SHEnumerateUnreadMailAccountsA}
 function SHEnumerateUnreadMailAccountsA(hKeyUser : HKEY; dwIndex : DWORD; pszMailAddress : LPSTR; cchMailAddress : integer) : hresult; stdcall;
-{EXTERNALSYM SHEnumerateUnreadMailAccountsW}
+{$EXTERNALSYM SHEnumerateUnreadMailAccountsW}
 function SHEnumerateUnreadMailAccountsW(hKeyUser : HKEY; dwIndex : DWORD; pszMailAddress : LPWSTR; cchMailAddress : integer) : hresult; stdcall;
 
-{EXTERNALSYM SHGetUnreadMailCount}
+{$EXTERNALSYM SHGetUnreadMailCount}
 function SHGetUnreadMailCount(hKeyUser : HKEY; pszMailAddress : LPCSTR; var pdwCount : DWORD; var pFileTime : TFILETIME; pszShellExecuteCommand : LPSTR; cchShellExecuteCommand : integer) : hresult; stdcall;
-{EXTERNALSYM SHGetUnreadMailCountA}
+{$EXTERNALSYM SHGetUnreadMailCountA}
 function SHGetUnreadMailCountA(hKeyUser : HKEY; pszMailAddress : LPCSTR; var pdwCount : DWORD; var pFileTime : TFILETIME; pszShellExecuteCommand : LPSTR; cchShellExecuteCommand : integer) : hresult; stdcall;
-{EXTERNALSYM SHGetUnreadMailCountW}
+{$EXTERNALSYM SHGetUnreadMailCountW}
 function SHGetUnreadMailCountW(hKeyUser : HKEY; pszMailAddress : LPCWSTR; var pdwCount : DWORD; var pFileTime : TFILETIME; pszShellExecuteCommand : LPWSTR; cchShellExecuteCommand : integer) : hresult; stdcall;
 
 
-{EXTERNALSYM SHSetUnreadMailCount}
+{$EXTERNALSYM SHSetUnreadMailCount}
 function SHSetUnreadMailCount(pszMailAddress : LPCSTR; dwCount : DWORD; pszShellExecuteCommand : LPCSTR) : hresult; stdcall;
-{EXTERNALSYM SHSetUnreadMailCountA}
+{$EXTERNALSYM SHSetUnreadMailCountA}
 function SHSetUnreadMailCountA(pszMailAddress : LPCSTR; dwCount : DWORD; pszShellExecuteCommand : LPCSTR) : hresult; stdcall;
-{EXTERNALSYM SHSetUnreadMailCountW}
+{$EXTERNALSYM SHSetUnreadMailCountW}
 function SHSetUnreadMailCountW(pszMailAddress : LPCWSTR; dwCount : DWORD; pszShellExecuteCommand : LPCWSTR) : hresult; stdcall;
 
-{EXTERNALSYM SHTestTokenMembership}
+{$EXTERNALSYM SHTestTokenMembership}
 function SHTestTokenMembership(hToken : THandle; ulRID : cardinal) : bool; stdcall;
 
-{EXTERNALSYM SHGetImageList}
+{$EXTERNALSYM SHGetImageList}
 function SHGetImageList(iImageList : integer; riid : TIID; var ppvObj : Pointer) : hresult; stdcall;
 
 const
-  {EXTERNALSYM SHIL_LARGE}
+  {$EXTERNALSYM SHIL_LARGE}
   SHIL_LARGE         = 0;   // normally 32x32
-  {EXTERNALSYM SHIL_SMALL}
+  {$EXTERNALSYM SHIL_SMALL}
   SHIL_SMALL         = 1;   // normally 16x16
-  {EXTERNALSYM SHIL_EXTRALARGE}
+  {$EXTERNALSYM SHIL_EXTRALARGE}
   SHIL_EXTRALARGE    = 2;
-  {EXTERNALSYM SHIL_SYSSMALL}
+  {$EXTERNALSYM SHIL_SYSSMALL}
   SHIL_SYSSMALL      = 3;   // like SHIL_SMALL, but tracks system small icon metric correctly
 
-  {EXTERNALSYM SHIL_LAST}
+  {$EXTERNALSYM SHIL_LAST}
   SHIL_LAST          = SHIL_SYSSMALL;
 
 type
-  {EXTERNALSYM PFNCANSHAREFOLDERW}
+  {$EXTERNALSYM PFNCANSHAREFOLDERW}
   PFNCANSHAREFOLDERW = function (pszPath : LPCWSTR): hresult; stdcall;
-  {EXTERNALSYM PFNSHOWSHAREFOLDERUIW}
+  {$EXTERNALSYM PFNSHOWSHAREFOLDERUIW}
   PFNSHOWSHAREFOLDERUIW = function(hwndParent : hwnd; pszPath : LPCWSTR) : hresult; stdcall;
 
 const
@@ -442,16 +445,16 @@ procedure WinExecError; external shell32 name 'WinExecErrorA';
 procedure WinExecErrorA; external shell32 name 'WinExecErrorA';
 procedure WinExecErrorW; external shell32 name 'WinExecErrorW';
 function SHCreateProcessAsUserW; external shell32 name 'SHCreateProcessAsUserW';
-{function SHQueryRecycleBin; external shell32 name 'SHQueryRecycleBinA';
+function SHQueryRecycleBin; external shell32 name 'SHQueryRecycleBinA';
 function SHQueryRecycleBinA; external shell32 name 'SHQueryRecycleBinA';
-function SHQueryRecycleBinW; external shell32 name 'SHQueryRecycleBinW';}
+function SHQueryRecycleBinW; external shell32 name 'SHQueryRecycleBinW';
 function SHEmptyRecycleBin; external shell32 name 'SHEmptyRecycleBinA';
 function SHEmptyRecycleBinA; external shell32 name 'SHEmptyRecycleBinA';
 function SHEmptyRecycleBinW; external shell32 name 'SHEmptyRecycleBinW';
-{function SHGetDiskFreeSpace; external shell32 name 'SHGetDiskFreeSpaceExA';
+function SHGetDiskFreeSpace; external shell32 name 'SHGetDiskFreeSpaceExA';
 function SHGetDiskFreeSpaceEx; external shell32 name 'SHGetDiskFreeSpaceExA';
 function SHGetDiskFreeSpaceExA; external shell32 name 'SHGetDiskFreeSpaceExA';
-function SHGetDiskFreeSpaceExW; external shell32 name 'SHGetDiskFreeSpaceExW';}
+function SHGetDiskFreeSpaceExW; external shell32 name 'SHGetDiskFreeSpaceExW';
 function SHGetNewLinkInfo; external shell32 name 'SHGetNewLinkInfoA';
 function SHGetNewLinkInfoA; external shell32 name 'SHGetNewLinkInfoA';
 function SHGetNewLinkInfoW; external shell32 name 'SHGetNewLinkInfoW';
@@ -479,4 +482,3 @@ function SHSetUnreadMailCountW; external shell32 name 'SHSetUnreadMailCountW';
 function SHTestTokenMembership; external shell32 name 'SHTestTokenMembership';
 function SHGetImageList; external shell32 name 'SHGetImageList';
 end.
-

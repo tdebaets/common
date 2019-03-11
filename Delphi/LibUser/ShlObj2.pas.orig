@@ -6,6 +6,9 @@
 //
 // Author : K. Giddings
 //
+// Originally retrieved from :
+// http://www.whirlingdervishes.com/nselib/delphi/samples/source.php
+//
 //
 // This file is part of the NSELib library for Delphi.
 // NSELib can be found on the web on this URL:
@@ -480,7 +483,7 @@ const
   SID_ICurrentWorkingDirectory = '{91956D21-9276-11D1-921A-006097DF5BD4}';
   SID_IProgressDialog    = '{EBBC7C04-315E-11D2-B62F-006097DF5BD4}';
   SID_SProgressUI        = '{F8383852-FCD3-11D1-A6B9-006097DF5BD4}';
-  SID_STopLevelBrowser: TGUID   = '{4C96BE40-915C-11CF-99D3-00AA004AE837}';
+  SID_STopLevelBrowser   = '{4C96BE40-915C-11CF-99D3-00AA004AE837}';
   SID_IActiveDesktopP    = '{52502EE0-EC80-11D0-89AB-00C04FC2972D}';
   SID_IADesktopP2        = '{B22754E2-4574-11D1-9888-006097DEACF9}';
   SID_ISynchronizedCallBack = '{74C26041-70D1-11D1-B75A-00A0C90564FE}';
@@ -864,15 +867,15 @@ type
 
 type
   // Different from Shlobj
-  {EXTERNALSYM PExtraSearch}
+  {$EXTERNALSYM PExtraSearch}
   PExtraSearch = ^TExtraSearch;
-  {EXTERNALSYM tagExtraSearch}
+  {$EXTERNALSYM tagExtraSearch}
   tagExtraSearch = record
     guidSearch: TGUID;
     wszFriendlyName : array [0..79] of WideChar;
     wszUrl : array[0..2047] of WideChar;
   end;
-  {EXTERNALSYM TExtraSearch}
+  {$EXTERNALSYM TExtraSearch}
   TExtraSearch = tagExtraSearch;
 
 {$IFDEF VER130}
@@ -893,8 +896,8 @@ const
 type
   SHCOLSTATEF = DWORD;
 
-{$IFDEF VER130}
 type
+{$IFDEF VER130}
   PShColumnID = ^TShColumnID;
   SHCOLUMNID = record
     fmtid: TGUID;
@@ -903,14 +906,14 @@ type
   TShColumnID = SHCOLUMNID;
 
   PShellDetails = ^TShellDetails;
-  {EXTERNALSYM _SHELLDETAILS}
+  {$EXTERNALSYM _SHELLDETAILS}
   _SHELLDETAILS = record
     fmt,
     cxChar: Integer;
     str: STRRET;
   end;
   TShellDetails = _SHELLDETAILS;
-  {EXTERNALSYM SHELLDETAILS}
+  {$EXTERNALSYM SHELLDETAILS}
   SHELLDETAILS = _SHELLDETAILS;
 
   IShellDetails = interface(IUnknown)
@@ -922,7 +925,7 @@ type
 {$ENDIF}
 
   // different to ShlObj!
-  {IShellFolder2 = interface(IShellFolder)
+  IShellFolder2 = interface(IShellFolder)
     [SID_IShellFolder2]
     // Returns the guid of the search that is to be invoked when user clicks
     // on the search toolbar button
@@ -938,7 +941,7 @@ type
     function GetDetailsOf(pidl: PItemIDList; iColumn: UINT;
       var psd: TShellDetails): HResult; stdcall;
     function MapColumnToSCID(iColumn: uint; var pscid: TShColumnID): HResult; stdcall;
-  end;}
+  end;
 
 
 const
@@ -955,7 +958,7 @@ const
   fvmFirst = fvmIcon;
   fvmLast = fvmThumbStrip;
 {$ELSE}
-{type
+type
   TFolderViewMode = (fvmFirst = 1,
                      fvmIcon = 1,
                      fvmSmallIcon = 2,
@@ -964,7 +967,7 @@ const
 	                   fvmThumbNail	= 5,
                      fvmTile = 6,
                      fvmThumbStrip = 7,
-                     fvmLast = 7);}
+                     fvmLast = 7);
 {$ENDIF}
 const
   // shellview select item flags
@@ -1075,7 +1078,7 @@ const
 
   SID_IPropertyUI = '{757a7d9f-919a-4118-99d7-dbb208c8cc66}';
 
-{type
+type
   IPropertyUI = interface(IUnknown)
     [SID_IPropertyUI]
     function ParsePropertyName(pszName : LPCWSTR; var pfmtid : FMTID; var ppid : PROPID; var chEaten : ulong) : hresult; stdcall;
@@ -1086,12 +1089,12 @@ const
     function GetFlags(fmtid : TGUID; pid : PROPID; var pFlags : integer) : hresult; stdcall;
     function FormatForDisplay(fmtid : TGUID; pid : PROPID; const pvar : PROPVARIANT; flags : integer; pwszText : LPWSTR; cchText : dword) : hresult; stdcall;
     function GetHelpInfo(fmtid : TGUID; pid : PROPID; pwszHelpFile : LPWSTR; cch : DWORD; var puHelpID : uint) : hresult; stdcall;
-  end;}
+  end;
 
 const
   SID_ICategoryProvider = '{9af64809-5864-4c26-a720-c1f78c086ee3}';
 
-{type
+type
   ICategoryProvider = interface(IUnknown)
     [SID_ICategoryProvider]
     // Returns S_OK if the view should display this column in category selection UI, or S_FALSE to remove it.
@@ -1110,7 +1113,7 @@ const
     function GetCategoryName(const pguid : TGUID; pszName : LPWSTR; cch : LongWord) : HResult; stdcall;
     // Creates the category.
     function CreateCategory(const pguid : TGUID; const riid : TIID; out ppv) : HResult; stdcall;
-  end;}
+  end;
 
 const
   CATINFO_NORMAL      = $00000000;   // Apply default properties to this category
@@ -1134,21 +1137,21 @@ type
   TCategoryInfo = CATEGORY_INFO;
   PCategoryInfo = ^TCategoryInfo;
 
-//  ICategorizer = interface(IUnknown)
-//    ['{A3B14589-9174-49A8-89A3-06A1AE2B9BA7}']
-//    // Returns the description of this category that will be displayed in the UI
-//    function GetDescription(pszDesc: PWideChar; cch: LongWord): HResult; stdcall;
-//    // Returns a list of categories associated with a list of ID Lists. NOTE:
-//    // -1 is an invalid Category ID, and they cannot be persisted
-//    function GetCategory(cidl: LongWord; var apidl: PItemIdList; rgCategoryIds: PLongWord): HResult; stdcall;
-//    // Returns information about the category, such as default display and the
-//    // text to display in the UI
-//    function GetCategoryInfo(dwCategoryId: LongWord; pci: PCategoryInfo): HResult; stdcall;
-//    // Returns HRESULTFromShort. -1, 0, 1 indicate the comparison of the IDs.
-//    // Used for sorting categories in the UI
-//    function CompareCategory(csfFlags: CATSORT_FLAGS; dwCategoryId1: LongWord;
-//                             dwCategoryId2: LongWord): HResult; stdcall;
-//  end;
+  ICategorizer = interface(IUnknown)
+    ['{A3B14589-9174-49A8-89A3-06A1AE2B9BA7}']
+    // Returns the description of this category that will be displayed in the UI
+    function GetDescription(pszDesc: PWideChar; cch: LongWord): HResult; stdcall;
+    // Returns a list of categories associated with a list of ID Lists. NOTE:
+    // -1 is an invalid Category ID, and they cannot be persisted
+    function GetCategory(cidl: LongWord; var apidl: PItemIdList; rgCategoryIds: PLongWord): HResult; stdcall;
+    // Returns information about the category, such as default display and the
+    // text to display in the UI
+    function GetCategoryInfo(dwCategoryId: LongWord; pci: PCategoryInfo): HResult; stdcall;
+    // Returns HRESULTFromShort. -1, 0, 1 indicate the comparison of the IDs.
+    // Used for sorting categories in the UI
+    function CompareCategory(csfFlags: CATSORT_FLAGS; dwCategoryId1: LongWord;
+                             dwCategoryId2: LongWord): HResult; stdcall;
+  end;
 
 const
   SLR_NOSEARCH            = $0010;   // don't execute the search heuristics
@@ -1233,15 +1236,15 @@ const
 type
   SPTEXT = DWord;
 
-//  IActionProgress = interface(IUnknown)
-//    ['{49ff1173-eadc-446d-9285-156453a6431c}']
-//    function bbegin(action : SPACTION; flags : SPBEGINF) : HResult; stdcall;
-//    function UpdateProgress(ulCompleted : int64; ulTotal : int64) : HResult; stdcall;
-//    function UpdateText(asptext : SPTEXT;pszText : LPCWSTR; fMayCompact : bool) : HResult; stdcall;
-//    function QueryCancel(var pfCancelled : bool) : HResult; stdcall;
-//    function ResetCancel : HResult; stdcall;
-//    function bEnd : HResult; stdcall;
-//  end;
+  IActionProgress = interface(IUnknown)
+    ['{49ff1173-eadc-446d-9285-156453a6431c}']
+    function bbegin(action : SPACTION; flags : SPBEGINF) : HResult; stdcall;
+    function UpdateProgress(ulCompleted : int64; ulTotal : int64) : HResult; stdcall;
+    function UpdateText(asptext : SPTEXT;pszText : LPCWSTR; fMayCompact : bool) : HResult; stdcall;
+    function QueryCancel(var pfCancelled : bool) : HResult; stdcall;
+    function ResetCancel : HResult; stdcall;
+    function bEnd : HResult; stdcall;
+  end;
 
 const
   EXPPS_FILETYPES     = $00000001;
@@ -1526,11 +1529,11 @@ const
   MBHANDCID_PIDLSELECT	= 0;
 
 type
-//  IMenuBand = interface
-//    ['{568804CD-CBD7-11d0-9816-00C04FD91972}']
-//    function IsMenuMessage(const pmsg : MSG) : HResult; stdcall;
-//    function TranslateMenuMessage(var pmsg : MSG; plRet : LRESULT) : HResult; stdcall;
-//  end;
+  IMenuBand = interface
+    ['{568804CD-CBD7-11d0-9816-00C04FD91972}']
+    function IsMenuMessage(const pmsg : MSG) : HResult; stdcall;
+    function TranslateMenuMessage(var pmsg : MSG; plRet : LRESULT) : HResult; stdcall;
+  end;
 
   IFolderBandPriv = interface
     ['{47c01f95-e185-412c-b5c5-4f27df965aea}']
@@ -1606,19 +1609,19 @@ const
   BSIS_LOCKED            = $00000100;
 
 type
-//  IBandSite = interface
-//    ['{4CF504B0-DE96-11D0-8B3F-00A0C911E8E5}']
-//    function AddBand(pUnk : IUnknown) : HResult; stdcall;
-//    function EnumBands(Band : UINT; var pdwBandID : DWord) : HResult; stdcall;
-//    function QueryBand(BandID : dword; var ppstb : IDeskBand;
-//                       var pdwState : DWORD; pszName : LPWSTR;
-//                       cchName : integer) : HResult; stdcall;
-//    function SetBandState(dwBandID : DWORD; dwMask : DWORD; dwState : DWORD) : HResult; stdcall;
-//    function RemoveBand(dwBandID : DWORD) : HResult; stdcall;
-//    function GetBandObject(dwBandID : DWORD; const riid : TIID; out ppv : Pointer) : HResult; stdcall;
-//    function SetBandSiteInfo(const pbsinfo : BANDSITEINFO) : HResult; stdcall;
-//    function GetBandSiteInfo(var pbsInfo : BANDSITEINFO) : HResult; stdcall;
-//  end;
+  IBandSite = interface
+    ['{4CF504B0-DE96-11D0-8B3F-00A0C911E8E5}']
+    function AddBand(pUnk : IUnknown) : HResult; stdcall;
+    function EnumBands(Band : UINT; var pdwBandID : DWord) : HResult; stdcall;
+    function QueryBand(BandID : dword; var ppstb : IDeskBand;
+                       var pdwState : DWORD; pszName : LPWSTR;
+                       cchName : integer) : HResult; stdcall;
+    function SetBandState(dwBandID : DWORD; dwMask : DWORD; dwState : DWORD) : HResult; stdcall;
+    function RemoveBand(dwBandID : DWORD) : HResult; stdcall;
+    function GetBandObject(dwBandID : DWORD; const riid : TIID; out ppv : Pointer) : HResult; stdcall;
+    function SetBandSiteInfo(const pbsinfo : BANDSITEINFO) : HResult; stdcall;
+    function GetBandSiteInfo(var pbsInfo : BANDSITEINFO) : HResult; stdcall;
+  end;
 
   INamespaceWalkCB = interface
     ['{d92995f8-cf5e-4a76-bf59-ead39ea2b97e}']
@@ -1702,13 +1705,13 @@ const
 	MPPF_BOTTOM	= $80000000;
 	MPPF_POS_MASK	= $e0000000;
 
-//type
-//  IMenuPopup = interface(IDeskBar)
-//    ['{D1E7AFEB-6A2E-11d0-8C78-00C04FD918B4}']
-//    function Popup(const ppt : TPointL; const prcExclude : TRect; dwFlags : dword) : HResult; stdcall;
-//    function OnSelect(dwSelectType : DWord) : HResult; stdcall;
-//    function SetSubMenu(pmp : IMenuPopup; fSet : BOOL) : HResult; stdcall;
-//  end;
+type
+  IMenuPopup = interface(IDeskBar)
+    ['{D1E7AFEB-6A2E-11d0-8C78-00C04FD918B4}']
+    function Popup(const ppt : TPointL; const prcExclude : TRect; dwFlags : dword) : HResult; stdcall;
+    function OnSelect(dwSelectType : DWord) : HResult; stdcall;
+    function SetSubMenu(pmp : IMenuPopup; fSet : BOOL) : HResult; stdcall;
+  end;
 
 const
   SIGDN_NORMALDISPLAY               = $00000000;
@@ -1762,15 +1765,15 @@ type
 
 type
   QueryCancelAutoPlay = IQueryCancelAutoPlay;
-//  DriveSizeCategorizer = ICategorizer;
-//  DriveTypeCategorizer = ICategorizer;
-//  FreeSpaceCategorizer = ICategorizer;
-//  TimeCategorizer = ICategorizer;
-//  SizeCategorizer = ICategorizer;
-//  AlphabeticalCategorizer = ICategorizer;
-//  MergedCategorizer = ICategorizer;
+  DriveSizeCategorizer = ICategorizer;
+  DriveTypeCategorizer = ICategorizer;
+  FreeSpaceCategorizer = ICategorizer;
+  TimeCategorizer = ICategorizer;
+  SizeCategorizer = ICategorizer;
+  AlphabeticalCategorizer = ICategorizer;
+  MergedCategorizer = ICategorizer;
   ImageProperties = IPersistFile;
-  //PropertiesUI = IPropertyUI;
+  PropertiesUI = IPropertyUI;
   UserNotification = IUserNotification;
   UserEventTimerCallback = IUserEventTimerCallback;
   UserEventTimer = IUserEventTimer;
@@ -1785,7 +1788,7 @@ type
   FolderViewHost = IFolderViewHost;
   NamespaceWalker = INamespaceWalk;
   ImageRecompress = IImageRecompress;
-  //TrayBandSiteService = IBandSite;
+  TrayBandSiteService = IBandSite;
   PassportWizard = IPassportWizard;
 
 function SHAlloc(cb : cardinal) : pointer; stdcall;
@@ -1947,11 +1950,11 @@ type
   TPersistFolderTargetInfo = PERSIST_FOLDER_TARGET_INFO;
   PPersistFolderTargetInfo = ^PERSIST_FOLDER_TARGET_INFO;
 
-//  IPersistFolder3 = interface(IPersistFolder2)
-//    [SID_IPersistFolder3]
-//    function InitializeEx(pbc : IBindCtx; pidlRoot : PItemIdList; const ppfti : TPersistFolderTargetInfo) : HResult; stdcall;
-//    function GetFolderTargetInfo(var ppfti : TPersistFolderTargetInfo) : HResult; stdcall;
-//  end;
+  IPersistFolder3 = interface(IPersistFolder2)
+    [SID_IPersistFolder3]
+    function InitializeEx(pbc : IBindCtx; pidlRoot : PItemIdList; const ppfti : TPersistFolderTargetInfo) : HResult; stdcall;
+    function GetFolderTargetInfo(var ppfti : TPersistFolderTargetInfo) : HResult; stdcall;
+  end;
 
 //===========================================================================
 //
@@ -2172,7 +2175,7 @@ type
   PDataBlockHeader = LPDATABLOCK_HEADER;
   PDBList = LPDBLIST;
 
-  {NT_CONSOLE_PROPS = record
+  NT_CONSOLE_PROPS = record
     dbh : DATABLOCK_HEADER;
     wFillAttribute : word;         // fill attribute for console
     wPopupFillAttribute : word;    // fill attribute for console popups
@@ -2197,7 +2200,7 @@ type
   end;
   LPNT_CONSOLE_PROPS = ^NT_CONSOLE_PROPS;
   TNTConsoleProps = NT_CONSOLE_PROPS;
-  PNTConsoleProps = LPNT_CONSOLE_PROPS;}
+  PNTConsoleProps = LPNT_CONSOLE_PROPS;
 
 const
   NT_CONSOLE_PROPS_SIG = $A0000002;
@@ -2278,10 +2281,10 @@ type
     function GetSearchStyle(var pdwSearchStyle : DWORD) : HResult; stdcall;
   end;
 
-//  IURLSearchHook2 = interface(IURLSearchHook)
-//    [SID_IURLSearchHook2]
-//    function TranslateWithSearchContext(lpwszSearchURL : LPWSTR; cchBufferSize : DWORD; pSearchContext : ISearchContext) : HResult; stdcall;
-//  end;
+  IURLSearchHook2 = interface(IURLSearchHook)
+    [SID_IURLSearchHook2]
+    function TranslateWithSearchContext(lpwszSearchURL : LPWSTR; cchBufferSize : DWORD; pSearchContext : ISearchContext) : HResult; stdcall;
+  end;
 
 //==========================================================================
 //
@@ -2580,12 +2583,12 @@ const
 const
   STR_FILE_SYS_BIND_DATA      = 'File System Bind Data';
 
-//type
-//  IFileSystemBindData = interface
-//    [SID_IFileSystemBindData]
-//    function SetFindData(const pfd : WIN32_FIND_DATAW) : HResult; stdcall;
-//    function GetFindData(var pfd : WIN32_FIND_DATAW) : HResult; stdcall;
-//  end;
+type
+  IFileSystemBindData = interface
+    [SID_IFileSystemBindData]
+    function SetFindData(const pfd : WIN32_FIND_DATAW) : HResult; stdcall;
+    function GetFindData(var pfd : WIN32_FIND_DATAW) : HResult; stdcall;
+  end;
 
 //-------------------------------------------------------------------------
 //
@@ -2713,7 +2716,7 @@ type
     {
         DWORD dwComplete, dwTotal;
         IProgressDialog * ppd;
-        CoCreateInstance(CLSID_ProgressDialog, NULL, CLSCTX_INPROC_SERVER, IID_IProgressDialog, (void ** )&ppd);
+        CoCreateInstance(CLSID_ProgressDialog, NULL, CLSCTX_INPROC_SERVER, IID_IProgressDialog, (void ** )&ppd;);
         ppd->SetTitle(L"My Slow Operation");                                // Set the title of the dialog.
         ppd->SetAnimation(hInstApp, IDA_OPERATION_ANIMATION);               // Set the animation to play.
         ppd->StartProgressDialog(hwndParent, punk, PROGDLG_AUTOTIME, NULL); // Display and enable automatic estimated time remaining.
@@ -2754,20 +2757,20 @@ const
   // Time Actions (dwTimerAction)
   PDTIMER_RESET     = $00000001;       // Reset the timer so the progress will be calculated from now until the first ::SetProgress() is called so
 
-//type                                       // those this time will correspond to the values passed to ::SetProgress().  Only do this before ::SetProgress() is called.
-//  IProgressDialog = interface
-//    [SID_IProgressDialog]
-//    function StartProgressDialog(hwndParent : HWND; punkEnableModless : IUnknown; dwFlags : DWORD; pvResevered : Pointer) : HResult; stdcall;
-//    function StopProgressDialog : HResult; stdcall;
-//    function SetTitle(pwzTitle : LPCWSTR) : HResult; stdcall;
-//    function SetAnimation(hInstAnimation : THandle; idAnimation : UINT) : HResult; stdcall;
-//    function HasUserCancelled : BOOL; stdcall;
-//    function SetProgress(dwCompleted : DWORD; dwTotal : DWORD) : HResult; stdcall;
-//    function SetProgress64(ullCompleted : int64; ullTotal : int64) : HResult; stdcall;
-//    function SetLine(dwLineNum : DWORD; pwzString : LPCWSTR; fCompactPath : BOOL; pvResevered : Pointer) : HResult; stdcall;
-//    function SetCancelMsg(pwzCancelMsg : LPCWSTR; pvResevered : Pointer) : HResult; stdcall;
-//    function Timer(dwTimerAction : DWORD; pvResevered : Pointer) : HResult; stdcall;
-//  end;
+type                                       // those this time will correspond to the values passed to ::SetProgress().  Only do this before ::SetProgress() is called.
+  IProgressDialog = interface
+    [SID_IProgressDialog]
+    function StartProgressDialog(hwndParent : HWND; punkEnableModless : IUnknown; dwFlags : DWORD; pvResevered : Pointer) : HResult; stdcall;
+    function StopProgressDialog : HResult; stdcall;
+    function SetTitle(pwzTitle : LPCWSTR) : HResult; stdcall;
+    function SetAnimation(hInstAnimation : THandle; idAnimation : UINT) : HResult; stdcall;
+    function HasUserCancelled : BOOL; stdcall;
+    function SetProgress(dwCompleted : DWORD; dwTotal : DWORD) : HResult; stdcall;
+    function SetProgress64(ullCompleted : int64; ullTotal : int64) : HResult; stdcall;
+    function SetLine(dwLineNum : DWORD; pwzString : LPCWSTR; fCompactPath : BOOL; pvResevered : Pointer) : HResult; stdcall;
+    function SetCancelMsg(pwzCancelMsg : LPCWSTR; pvResevered : Pointer) : HResult; stdcall;
+    function Timer(dwTimerAction : DWORD; pvResevered : Pointer) : HResult; stdcall;
+  end;
 
 //-------------------------------------------------------------------------
 //
@@ -2897,11 +2900,11 @@ type
 //* ***************** IThumbnailCapture
 //* CaptureThumbnail : takes an IHTMLDocument2 and returns a thumbnail of specified
 //*                    size as an hbitmap
-//type
-//  IThumbnailCapture = interface
-//    [SID_IThumbnailCapture]
-//    function CaptureThumbnail(const pMaxSize : SIZE; pHTMLDoc2 : IUnknown; var phbmThumbnail : HBitmap) : HResult; stdcall;
-//  end;
+type
+  IThumbnailCapture = interface
+    [SID_IThumbnailCapture]
+    function CaptureThumbnail(const pMaxSize : SIZE; pHTMLDoc2 : IUnknown; var phbmThumbnail : HBitmap) : HResult; stdcall;
+  end;
 
 type
   ENUMSHELLIMAGESTOREDATA = record
@@ -3043,14 +3046,14 @@ const
   COMP_ELEM_RESTORED_CSI  = $00002000;
   COMP_ELEM_CURITEMSTATE  = $00004000;
 
-//  COMP_ELEM_ALL           = COMP_ELEM_TYPE or COMP_ELEM_CHECKED or
-//                            COMP_ELEM_DIRTY or COMP_ELEM_NOSCROLL or
-//                            COMP_ELEM_POS_LEFT or COMP_ELEM_SIZE_WIDTH  or
-//                            COMP_ELEM_SIZE_HEIGHT or COMP_ELEM_POS_ZINDEX or
-//                            COMP_ELEM_SOURCE or COMP_ELEM_FRIENDLYNAME or
-//                            COMP_ELEM_POS_TOP or COMP_ELEM_SUBSCRIBEDURL or
-//                            COMP_ELEM_ORIGINAL_CSI or COMP_ELEM_RESTORED_CSI or
-//                            COMP_ELEM_CURITEMSTATE;
+  COMP_ELEM_ALL           = COMP_ELEM_TYPE or COMP_ELEM_CHECKED or
+                            COMP_ELEM_DIRTY or COMP_ELEM_NOSCROLL or
+                            COMP_ELEM_POS_LEFT or COMP_ELEM_SIZE_WIDTH  or
+                            COMP_ELEM_SIZE_HEIGHT or COMP_ELEM_POS_ZINDEX or
+                            COMP_ELEM_SOURCE or COMP_ELEM_FRIENDLYNAME or
+                            COMP_ELEM_POS_TOP or COMP_ELEM_SUBSCRIBEDURL or
+                            COMP_ELEM_ORIGINAL_CSI or COMP_ELEM_RESTORED_CSI or
+                            COMP_ELEM_CURITEMSTATE;
 
 
 type
@@ -3104,7 +3107,7 @@ const
   MAX_COLUMN_DESC_LEN = 128;
 
 type
-  {SHCOLUMNINFO = packed record
+  SHCOLUMNINFO = packed record
     scid : SHCOLUMNID;                          // OUT the unique identifier of this column
     vt : integer;                               // OUT the native type of the data returned
     fmt : DWORD;                                // OUT this listview format (LVCFMT_LEFT, usually)
@@ -3115,7 +3118,7 @@ type
   end;
   LPSHCOLUMNINFO = ^SHCOLUMNINFO;
   TShColumnInfo = SHCOLUMNINFO;
-  PShColumnInfo = LPSHCOLUMNINFO;}
+  PShColumnInfo = LPSHCOLUMNINFO;
 
   SHCOLUMNINIT = packed record
     dwFlags : ulong;              // initialization flags
@@ -3143,7 +3146,12 @@ type
 
   // Note: these objects must be threadsafe!  GetItemData _will_ be called
   // simultaneously from multiple threads.
-
+  IColumnProvider = interface
+    [SID_IColumnProvider]
+    function Initialize(psci : PSHCOLUMNINIT): HResult; stdcall;
+    function GetColumnInfo(dwIndex : DWORD; psci : PSHCOLUMNINFO): HResult; stdcall;
+    function GetItemData(pscid : PSHCOLUMNID; pscd : PSHCOLUMNDATA; pvarData : Variant): HResult; stdcall;
+  end;
 
 ///////////////////////////////////////////////////////
 //
@@ -3175,7 +3183,7 @@ type
 //          // Process your DragEnter
 //          // Call IDragImages::DragEnter last.
 //          _pDropTargetHelper->DragEnter(_hwndDragOver, pDataObject,
-//                                        (POINT*)&pt, *pdwEffect);
+//                                        (POINT*)&pt;, *pdwEffect);
 //          return hres;
 //    }
 //
@@ -3202,7 +3210,7 @@ type
 //     indicating a selection) you need to hide the drag image by calling this
 //     method passing FALSE. After the window is done painting, Show the image
 //     again by passing TRUE.
-{type
+type
   SHDRAGIMAGE = record
     sizeDragImage : SIZE;      // OUT - The length and Width of the
                                //        rendered image
@@ -3215,7 +3223,7 @@ type
   end;
   LPSHDRAGIMAGE = ^SHDRAGIMAGE;
   TShDragImage = SHDRAGIMAGE;
-  PShDragImage = LPSHDRAGIMAGE;}
+  PShDragImage = LPSHDRAGIMAGE;
 
 const
   DI_GETDRAGIMAGE = 'ShellGetDragImage';
@@ -3231,16 +3239,16 @@ type
     function Show(fShow : bool): HResult; stdcall;
   end;
 
-  {IDragSourceHelper = interface
+  IDragSourceHelper = interface
     [SID_IDragSourceHelper]
     function InitializeFromBitmap(pshdi : PShDragImage; pDataObject : IDataObject): HResult; stdcall;
     function InitializeFromWindow(wnd : HWND; var ppt : TPoint; pDataObject : IDataObject): HResult; stdcall;
-  end;}
+  end;
 
 { Clipboard format which may be supported by IDataObject from system
   defined shell folders (such as directories, network, ...). }
 const
-  //CFSTR_INETURLA              =  CFSTR_SHELLURL;
+  CFSTR_INETURLA              =  CFSTR_SHELLURL;
   CFSTR_INETURLW              = 'UniformResourceLocatorW';
   CFSTR_DRAGCONTEXT           = 'DragContext';
   CFSTR_MOUNTEDVOLUME         = 'MountedVolume';
@@ -3249,7 +3257,7 @@ const
   CFSTR_LOGICALPERFORMEDDROPEFFECT = 'Logical Performed DropEffect';
   CFSTR_AUTOPLAY_SHELLIDLISTS = 'Autoplay Enumerated IDList Array';    //  (HGLOBAL with LPIDA)
 
-  //CFSTR_INETURL               = CFSTR_INETURLA;
+  CFSTR_INETURL               = CFSTR_INETURLA;
 
   DVASPECT_COPY          = 3; // use to indicate format is a "Copy" of the data (FILECONTENTS, FILEDESCRIPTOR, etc)
   DVASPECT_LINK          = 4; // use to indicate format is a "Shortcut" to the data (FILECONTENTS, FILEDESCRIPTOR, etc)
@@ -3320,7 +3328,7 @@ const
   SHCNRF_NewDelivery        = $8000;
 
 function SHChangeNotifyRegister(wnd : HWND; fSources : integer; fEvents : LongInt; wMsg : UINT; cEntries : Integer; var pshcne : SHChangeNotifyEntry) : ulong; stdcall;
-//function SHChangeNotifyDeregister(uIID : LongWord): bool; stdcall;
+function SHChangeNotifyDeregister(uIID : LongWord): bool; stdcall;
 function SHChangeNotification_Lock(hChangeNotification : THandle; dwProcessId : DWORD; var ppidl : PItemIdList; var plEvent : LongInt) : THandle; stdcall;
 function SHChangeNotification_Unlock(hLock : THandle): bool; stdcall;
 function SHGetRealIDL(psf : IShellFolder; pidlSimple : PItemIdList; ppidlReal : PItemIdlist) : HResult; stdcall;
@@ -3539,11 +3547,11 @@ const
   SHFMT_CANCEL   = $FFFFFFFE;     // Last format was canceled
   SHFMT_NOFORMAT = $FFFFFFFD;     // Drive is not formatable
 
-{function SHCreatePropSheetExtArray(Key : HKEY; pszSubKey : LPCWSTR; max_iface : UINT) : THandle; stdcall;
-procedure SHDestroyPropSheetExtArray(hpsxa : THandle); stdcall;}
-{function SHAddFromPropSheetExtArray(sxa : THandle; lpfnAddPage : LPFNADDPROPSHEETPAGE; lparm : LPARAM) : cardinal; stdcall;
+function SHCreatePropSheetExtArray(Key : HKEY; pszSubKey : LPCWSTR; max_iface : UINT) : THandle; stdcall;
+procedure SHDestroyPropSheetExtArray(hpsxa : THandle); stdcall;
+function SHAddFromPropSheetExtArray(sxa : THandle; lpfnAddPage : LPFNADDPROPSHEETPAGE; lparm : LPARAM) : cardinal; stdcall;
 function SHReplaceFromPropSheetExtArray(sxa : THandle; PageID : cardinal; lpfnReplaceWith : LPFNADDPROPSHEETPAGE;
-                                    lparm : LPARAM) : cardinal; stdcall;}
+                                    lparm : LPARAM) : cardinal; stdcall;
 function ILClone(pidl : PItemIdList) : PItemIdList; stdcall;
 function ILGetSize(pidl : PItemIdList): cardinal; stdcall;
 function ILFindLastID(pidl : PItemIdList) : PItemIdList; stdcall;
@@ -3917,13 +3925,13 @@ type
   TDetailsInfo = DETAILSINFO;
   PDetailsInfo = ^DETAILSINFO;
 
-  {SFVM_PROPPAGE_DATA = record
+  SFVM_PROPPAGE_DATA = record
     dwReserved : DWORD;
     pfn : LPFNADDPROPSHEETPAGE;
     lParm : LPARAM;
   end;
   TSFVMPropPageData = SFVM_PROPPAGE_DATA;
-  PSFVMPropPageData = ^SFVM_PROPPAGE_DATA;}
+  PSFVMPropPageData = ^SFVM_PROPPAGE_DATA;
 
   SFVM_HELPTOPIC_DATA = record
     wszHelpFile : array [0..MAX_PATH-1] of WideChar;
@@ -4017,7 +4025,7 @@ type
                               lParm : LParam) : HResult; stdcall;
 
 // SHCreateShellFolderViewEx struct
-  {CSFV = record
+  CSFV = record
     Size : DWORD;
     ShellFolder : IShellFolder;
     psvUser : integer; // psvOuter : IShellView;
@@ -4027,7 +4035,7 @@ type
     fvm : TFolderViewMode;
   end;
   TCSFV = CSFV;
-  PCSFV = ^CSFV;}
+  PCSFV = ^CSFV;
 
 const
   // Tell the FolderView to rearrange.  The lParam will be passed to
@@ -4083,7 +4091,7 @@ procedure ShellFolderView_SetClipboard(wnd : hwnd; dwEffect : DWORD);
 procedure ShellFolderView_SetPoints(wnd : hwnd; pdtobj : IDataObject);
 
 function SHFind_InitMenuPopup(menu : HMENU; wnd : HWND; CmdFirst,CmdLast : cardinal) : IContextMenu; stdcall;
-//function SHCreateShellFolderViewEx(var csfv : TCSFV; var ppsv : IShellView) : HResult; stdcall;
+function SHCreateShellFolderViewEx(var csfv : TCSFV; var ppsv : IShellView) : HResult; stdcall;
 
 const
 // PROPIDs for Internet Sites (FMTID_InternetSite) to be used with
@@ -4156,10 +4164,7 @@ procedure SHGetSetSettings(var lpss : ShellState; dwMask : DWORD; bSet : bool); 
 // Given a pidl, you can get an interface pointer (as specified by riid) of the pidl's parent folder (in ppv)
 // If ppidlLast is non-NULL, you can also get the pidl of the last item.
 //
-type
-  PPItemIdList = ^PItemIdList;
-  
-function SHBindToParent(pidl : PItemIdList; const riid : TIID; out ppv; ppidlLast : PPItemIdList) : Hresult; stdcall;
+function SHBindToParent(pidl : PItemIdList; const riid : TIID; out ppv; const ppidlLast : PItemIdList) : Hresult; stdcall;
 
 // SHSTDAPI SHParseDisplayName(PCWSTR pszName, IBindCtx *pbc, LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
 //
@@ -4211,13 +4216,13 @@ function SHPathPrepareForWriteW(wnd : HWND; punkEnableModless : IUnknown;
 //
 //
 //--------------------------------------------------------------------------
-{type
+type
   INamedPropertyBag = interface
     [SID_INamedPropertyBag]
     function ReadPropertyNPB(pszBagname : POLESTR; pszPropName : POLESTR; var pVar : PROPVARIANT) : hresult; stdcall;
     function WritePropertyNPB(pszBagname : POLESTR; pszPropName : POLESTR; var pVar : PROPVARIANT) : hresult; stdcall;
     function RemovePropertyNPB(pszBagname : POLESTR; pszPropName : POLESTR) : hresult; stdcall;
-  end;}
+  end;
 
 //  SHPropStgCreate()
 //  Wrap of IPropertySetStorage::Open/Create
@@ -4235,11 +4240,11 @@ function SHPathPrepareForWriteW(wnd : HWND; punkEnableModless : IUnknown;
 //  IPropertyStorage** ppstg,  // Address to receive requested vtable
 //  puCodePage      //  Optional address to receive the code page ID for the set.
 //
-{function SHPropStgCreate(psstg : IPropertySetStorage; fmtid : TIID;
+function SHPropStgCreate(psstg : IPropertySetStorage; fmtid : TIID;
                          var pclsid : TClsId;grfFlags : DWORD;
                          grfMode : DWORD; dwDisposition : DWORD;
                          out ppstg : IPropertyStorage;
-                         out puCodePage : uint) : HResult; stdcall;}
+                         out puCodePage : uint) : HResult; stdcall;
 
 //  SHPropStgReadMultiple()
 //  IPropertyStorage::ReadMultiple wrap
@@ -4253,9 +4258,9 @@ function SHPathPrepareForWriteW(wnd : HWND; punkEnableModless : IUnknown;
 //  rgpspec,   //Array of the properties to be read
 //  rgvar      //Array of PROPVARIANTs containing the property values on return
 //
-{function SHPropStgReadMultiple(pps : IPropertyStorage; uCodePage : UINT;
+function SHPropStgReadMultiple(pps : IPropertyStorage; uCodePage : UINT;
                                cpspec : ULONG; rgpspec : PPROPSPEC;
-                               rgvar : PPROPVARIANT) : hresult; stdcall;}
+                               rgvar : PPROPVARIANT) : hresult; stdcall;
 
 //  SHPropStgWriteMultiple()
 //  IPropertyStorage::WriteMultiple wrap
@@ -4270,9 +4275,9 @@ function SHPathPrepareForWriteW(wnd : HWND; punkEnableModless : IUnknown;
 //  rgvar,     // Array of PROPVARIANT values
 //  propidNameFirst // Minimum value for property identifiers. This value should be >= PID_FIRST_USABLE
 //
-{function SHPropStgWriteMultiple(pps : IPropertyStorage; uCodePage : UINT;
+function SHPropStgWriteMultiple(pps : IPropertyStorage; uCodePage : UINT;
                                 cpspec : ULONG; rgpspec : PPROPSPEC;
-                                rgvar : PPROPVARIANT; propidNameFirst : PROPID) : HResult; stdcall;}
+                                rgvar : PPROPVARIANT; propidNameFirst : PROPID) : HResult; stdcall;
 
 function SHCreateFileExtractIcon(pszFile : LPCSTR; dwFileAttributes : DWORD; const riid : TIID; out ppv) : hresult; stdcall;
 function SHCreateFileExtractIconA(pszFile : LPCSTR; dwFileAttributes : DWORD; const riid : TIID; out ppv) : hresult; stdcall;
@@ -4438,7 +4443,7 @@ const
 function SHChangeNotifyRegister; external shell32 index 2;
 function SHDefExtractIcon; external shell32 index 3;
 function SHDefExtractIconA; external shell32 index 3;
-//function SHChangeNotifyDeregister; external shell32 index 4;
+function SHChangeNotifyDeregister; external shell32 index 4;
 function SHDefExtractIconW; external shell32 index 6;
 procedure PerUserInit; external shell32 index 7;
 function PifMgr_OpenProperties; external shell32 index 9;
@@ -4507,13 +4512,13 @@ function SHSimpleIDListFromPath; external shell32 index 162;
 function Win32DeleteFile; external shell32 index 164;
 function SHCreateDirectory; external shell32 index 165;
 function CallCPLEntry16; external shell32 index 166;
-{function SHAddFromPropSheetExtArray; external shell32 index 167;
+function SHAddFromPropSheetExtArray; external shell32 index 167;
 function SHCreatePropSheetExtArray; external shell32 index 168;
 procedure SHDestroyPropSheetExtArray; external shell32 index 169;
-function SHReplaceFromPropSheetExtArray; external shell32 index 170;}
+function SHReplaceFromPropSheetExtArray; external shell32 index 170;
 function PathCleanupSpec; external shell32 index 171;
 function SHValidateUNC; external shell32 index 173;
-//function SHCreateShellFolderViewEx; external shell32 index 174;
+function SHCreateShellFolderViewEx; external shell32 index 174;
 procedure SHSetInstanceExplorer; external shell32 index 176;
 function SHObjectProperties; external shell32 index 178;
 function ILCreateFromPath; external shell32 index 189;
@@ -4548,9 +4553,9 @@ function WriteCabinetState; external shell32 index 652;
 function PathProcessCommand; external shell32 index 653;
 function ReadCabinetState; external shell32 index 654;
 function IsUserAnAdmin; external shell32 index 680;
-{function SHPropStgCreate; external shell32 index 685;
+function SHPropStgCreate; external shell32 index 685;
 function SHPropStgReadMultiple; external shell32 index 688;
-function SHPropStgWriteMultiple; external shell32 index 689;}
+function SHPropStgWriteMultiple; external shell32 index 689;
 // function CDefFolderMenu_Create2; external shell32 index 701;
 function SHOpenPropSheet; external shell32 index 707;
 function SHOpenPropSheetA; external shell32 index 707;
@@ -4579,7 +4584,7 @@ function SHFormatDrive; external shell32 name 'SHFormatDrive';
 function SHCreateDirectoryEx; external shell32 name 'SHCreateDirectoryExA';
 function SHCreateDirectoryExA; external shell32 name 'SHCreateDirectoryExA';
 function SHCreateDirectoryExW; external shell32 name 'SHCreateDirectoryExW';
-function SHBindToParent; external shell32 name 'SHBindToParent';
+function SHBindToParent; external shell32 name 'ShBindToParent';
 
 function SHCreateFileExtractIcon; external shell32 name 'SHCreateFileExtractIconA';
 function SHCreateFileExtractIconA; external shell32 name 'SHCreateFileExtractIconA';
@@ -4594,11 +4599,11 @@ type
     dwBuildNumber : dword;
     dwPlatformID : dword;
   end;
-  {TDllVersionInfo2 = record
+  TDllVersionInfo2 = record
     info1 : TDLLVersionInfo;
     dwFlags : dword;
     ullVersion : Int64;
-  end;}
+  end;
 
   TDllGetVersion = function(var pdvi : TDLLVersionInfo) : hresult; stdcall;
 
@@ -4631,9 +4636,6 @@ begin
   end;
 end;
 
-//initialization
-//  GetDllVersion;
+initialization
+  GetDllVersion;
 end.
-
-
- 
