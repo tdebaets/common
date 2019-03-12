@@ -184,7 +184,8 @@ end;
 
 procedure TProgressDialog.Stop;
 var
-  ThreadId: Integer;
+  ThreadID: Integer;
+  TimerID: Integer;
 begin
   if Assigned(fProgressDialog) then begin
     if fModal and (fhWndParent <> 0) {and not fWasDisabled} then
@@ -198,18 +199,28 @@ begin
         if IsWin2000OrLower then begin
           // on XP, the dialog sometimes doesn't disappear when clicking Cancel
           // don't use this on Vista or higher, as it causes too many other issues there
-          ThreadId := GetWindowThreadProcessId(fProghWnd, nil);
-          if ThreadId <> 0 then
-            PostThreadMessage(ThreadId, WM_QUIT, 0, 0);
+          ThreadID := GetWindowThreadProcessId(fProghWnd, nil);
+          if ThreadID <> 0 then
+            PostThreadMessage(ThreadID, WM_QUIT, 0, 0);
         end;
         // stop here if ProcessAppMessages encountered a WM_QUIT message
         if Application.Terminated then
           Exit;
         // prevent delay when interrupting the progress (especially on Vista)
         SendMessage(fProghWnd, WM_COMMAND, IDCANCEL, 0);
-        while IsWindow(fProghWnd) do begin
-          if not HandleAppMessage then
-            Break;
+        // Hack: HandleAppMessage can wait indefinitely when there are no messages
+        // being posted to the application message queue. So make sure that there
+        // are at least some periodic messages to wake us up, by creating a
+        // dummy timer.
+        TimerID := SetTimer(0, 0, 100, nil);
+        try
+          while IsWindow(fProghWnd) do begin
+            if not HandleAppMessage then
+              Break;
+          end;
+        finally
+          if TimerID <> 0 then
+            KillTimer(0, TimerID);
         end;
       end;
     end;
