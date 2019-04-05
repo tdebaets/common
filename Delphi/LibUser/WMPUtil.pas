@@ -643,6 +643,9 @@ function GetWMPRemoteApps(Core: IWMPCoreSafe; var Count: Integer;
 
 function IsWMPBurning(Core: IWMPCoreSafe): Boolean;
 function IsWMPRipping(Core: IWMPCoreSafe): Boolean;
+
+function WMPNavigateToSingleMedia(WMPAppDispatch: IDispatch; WMPVersion: Byte;
+    Media: IWMPMedia3Safe): Boolean;
   
 implementation
 
@@ -1002,6 +1005,19 @@ begin
         [WMPLibraryWordWheelGUID, WordWheelText]);
   end;
   Result := WMPNavigateToAddress(WMPAppDispatch, Address);
+end;
+
+function WMPNavigateToSingleMedia(WMPAppDispatch: IDispatch; WMPVersion: Byte;
+    Media: IWMPMedia3Safe): Boolean;
+var
+  TrackingID: WideString;
+begin
+  Result := False;
+  if not Succeeded(Media.getItemInfo(WMPAttributes[wmpaTrackingID].Name,
+      TrackingID)) then
+    Exit;
+  Result := WMPNavigateToLibraryCategory(WMPAppDispatch, WMPVersion,
+      GetWMPMediaType(Media), wmplcAllTracks, '', 'trackingid:' + TrackingID);
 end;
 
 function WMPGetItemInfo(Media: IWMPMedia;
