@@ -2377,7 +2377,10 @@ function SHCreateDirectoryEx(wnd : HWND; pszPath : LPCSTR; psa : PSECURITYATTRIB
 function SHCreateDirectoryExA(wnd : HWND; pszPath : LPCSTR; psa : PSECURITYATTRIBUTES) : integer; stdcall;
 function SHCreateDirectoryExW(wnd : HWND; pszPath : LPCWSTR; psa : PSECURITYATTRIBUTES) : integer; stdcall;
 
-function SHOpenFolderAndSelectItems(pidlFolder : PItemIdList; cidl : uint; var apidl : PItemIdList; dwFlags : DWORD) : HResult; stdcall;
+type
+  PPItemIdList = ^PItemIdList; // added
+
+function SHOpenFolderAndSelectItems(pidlFolder : PItemIdList; cidl : uint; apidl : PPItemIdList; dwFlags : DWORD) : HResult; stdcall;
 function SHCreateShellItem(pidlParent : PItemIdList; psfParent : IShellFolder; pidl : PItemIdList; var ppsi : IShellItem) : HResult; stdcall;
 
 //-------------------------------------------------------------------------
@@ -4166,9 +4169,6 @@ procedure SHGetSetSettings(var lpss : ShellState; dwMask : DWORD; bSet : bool); 
 // Given a pidl, you can get an interface pointer (as specified by riid) of the pidl's parent folder (in ppv)
 // If ppidlLast is non-NULL, you can also get the pidl of the last item.
 //
-type
-  PPItemIdList = ^PItemIdList; // added
-
 function SHBindToParent(pidl : PItemIdList; const riid : TIID; out ppv; ppidlLast : PPItemIdList) : Hresult; stdcall;
 
 // SHSTDAPI SHParseDisplayName(PCWSTR pszName, IBindCtx *pbc, LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
@@ -4544,7 +4544,7 @@ function SHEnableServiceObject; external shell32 index 285;
 function SHGetFolderPathAndSubDir; external shell32 index 304;
 function SHGetFolderPathAndSubDirA; external shell32 index 304;
 function SHGetFolderPathAndSubDirW; external shell32 index 305;
-function SHOpenFolderAndSelectItems; external shell32 index 328;
+function SHOpenFolderAndSelectItems; external shell32 name 'SHOpenFolderAndSelectItems';
 function SHParseDisplayName; external shell32 index 329;
 function _SHAllocShared; external shell32 index 520;
 function _SHLockShared; external shell32 index 521;
