@@ -1066,6 +1066,246 @@ function SHSetValue(hKey: HKEY; pszSubKey, pszValue: PChar; dwType: DWORD;
   pvData: Pointer; cbData: DWORD): DWORD; stdcall;
 {EXTERNALSYM SHSetValue}
 
+//
+// SRRF - Shell Registry Routine Flags (for SHRegGetValue)
+//
+
+type
+  {$EXTERNALSYM SRRF}
+  SRRF = DWORD;
+  TSRRF = DWORD;
+
+const
+  {$EXTERNALSYM SRRF_RT_REG_NONE}
+  SRRF_RT_REG_NONE        = $00000001;  // restrict type to REG_NONE      (other data types will not return ERROR_SUCCESS)
+  {$EXTERNALSYM SRRF_RT_REG_SZ}
+  SRRF_RT_REG_SZ          = $00000002;  // restrict type to REG_SZ        (other data types will not return ERROR_SUCCESS)
+  {$EXTERNALSYM SRRF_RT_REG_EXPAND_SZ}
+  SRRF_RT_REG_EXPAND_SZ   = $00000004;  // restrict type to REG_EXPAND_SZ (other data types will not return ERROR_SUCCESS)
+  {$EXTERNALSYM SRRF_RT_REG_BINARY}
+  SRRF_RT_REG_BINARY      = $00000008;  // restrict type to REG_BINARY    (other data types will not return ERROR_SUCCESS)
+  {$EXTERNALSYM SRRF_RT_REG_DWORD}
+  SRRF_RT_REG_DWORD       = $00000010;  // restrict type to REG_DWORD     (other data types will not return ERROR_SUCCESS)
+  {$EXTERNALSYM SRRF_RT_REG_MULTI_SZ}
+  SRRF_RT_REG_MULTI_SZ    = $00000020;  // restrict type to REG_MULTI_SZ  (other data types will not return ERROR_SUCCESS)
+  {$EXTERNALSYM SRRF_RT_REG_QWORD}
+  SRRF_RT_REG_QWORD       = $00000040;  // restrict type to REG_QWORD     (other data types will not return ERROR_SUCCESS)
+
+  {$EXTERNALSYM SRRF_RT_DWORD}
+  SRRF_RT_DWORD           = SRRF_RT_REG_BINARY or SRRF_RT_REG_DWORD; // restrict type to *32-bit* SRRF_RT_REG_BINARY or SRRF_RT_REG_DWORD (other data types will not return ERROR_SUCCESS)
+  {$EXTERNALSYM SRRF_RT_QWORD}
+  SRRF_RT_QWORD           = SRRF_RT_REG_BINARY or SRRF_RT_REG_QWORD; // restrict type to *64-bit* SRRF_RT_REG_BINARY or SRRF_RT_REG_DWORD (other data types will not return ERROR_SUCCESS)
+  {$EXTERNALSYM SRRF_RT_ANY}
+  SRRF_RT_ANY             = $0000FFFF;                               // no type restriction
+
+  {$EXTERNALSYM SRRF_RM_ANY}
+  SRRF_RM_ANY             = $00000000;  // no mode restriction (default is to allow any mode)
+  {$EXTERNALSYM SRRF_RM_NORMAL}
+  SRRF_RM_NORMAL          = $00010000;  // restrict system startup mode to "normal boot"               (other startup modes will not return ERROR_SUCCESS)
+  {$EXTERNALSYM SRRF_RM_SAFE}
+  SRRF_RM_SAFE            = $00020000;  // restrict system startup mode to "safe mode"                 (other startup modes will not return ERROR_SUCCESS)
+  {$EXTERNALSYM SRRF_RM_SAFENETWORK}
+  SRRF_RM_SAFENETWORK     = $00040000;  // restrict system startup mode to "safe mode with networking" (other startup modes will not return ERROR_SUCCESS)
+
+  {$EXTERNALSYM SRRF_NOEXPAND}
+  SRRF_NOEXPAND           = $10000000;  // do not automatically expand environment strings if value is of type REG_EXPAND_SZ
+  {$EXTERNALSYM SRRF_ZEROONFAILURE}
+  SRRF_ZEROONFAILURE      = $20000000;  // if pvData is not NULL, set content to all zeros on failure
+  
+// Function:
+//
+//  SHRegGetValue()
+//
+// Purpose:
+//
+//  Gets a registry value.  SHRegGetValue() provides the following benefits:
+//
+//  - data type checking
+//  - boot mode checking
+//  - auto-expansion of REG_EXPAND_SZ data
+//  - guaranteed NULL termination of REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ data
+//
+// Parameters:
+//
+//  hkey        - handle to a currently open key.
+//
+//  pszSubKey   - pointer to a null-terminated string specifying the relative
+//                path from hkey to one of its subkeys from which the data is
+//                to be retrieved.  this will be opened with KEY_READ sam.
+//
+//                Note1: pszSubKey can be NULL or "".  In either of these two
+//                       cases, the data is retrieved from the hkey itself.
+//                Note2: *** PERF ***
+//                       If pszSubKey is not NULL or "", the subkey will be
+//                       automatically be opened and closed by this routine
+//                       in order to obtain the data.  If you are retrieving
+//                       multiple values from the same subkey, it is better
+//                       for perf to open the subkey via RegOpenKeyEx() prior
+//                       to calling this method, and using this opened key as
+//                       hkey with pszSubKey set to NULL.
+//
+//  pszValue    - pointer to a null-terminated string specifying the name of
+//                the value to query for data
+//
+//                Note1: pszValue can be NULL or "".  In either of these two
+//                       cases, the data is retrieved from the unnamed or
+//                       default value.
+//
+//  dwFlags     - bitwise or of SRRF_ flags, which cannot be 0:  at least one
+//                type restriction must be specified (SRRF_RT_...), or if any
+//                type is desired then SRRF_RT_ANY can be specified
+//
+//                Note1: SRRF_RT_ANY will allow any data type to be returned.
+//                Note2: The following two type restrictions have special
+//                       handling semantics:
+//
+//                         SRRF_RT_DWORD == SRRF_RT_REG_BINARY | SRRF_RT_REG_DWORD
+//                         SRRF_RT_QWORD == SRRF_RT_REG_BINARY | SRRF_RT_REG_QWORD
+//
+//                       If either of these are specified, with no other type
+//                       restrictions, then in the prior case the restriction
+//                       will limit "valid" returned data to either REG_DWORD
+//                       or 32-bit REG_BINARY data, and in the latter case
+//                       the restriction will limit "valid" returned data to
+//                       either REG_QWORD or 64-bit REG_BINARY.
+//
+//  pdwType     - pointer to a dword which receives a code indicating the
+//                type of data stored in the specified value
+//
+//                Note1: pdwType can be NULL if no type information is wanted
+//                Note2: If pdwType is not NULL, and the SRRF_NOEXPAND flag
+//                       has not been set, data types of REG_EXPAND_SZ will
+//                       be returned as REG_SZ since they are automatically
+//                       expanded in this method.
+//
+//  pvData      - pointer to a buffer that receives the value's data
+//
+//                Note1: pvData can be NULL if the data is not required.
+//                       pvData is usually NULL if doing either a simple
+//                       existence test, or if interested in the size only.
+//                Note2: *** PERF ***
+//                       Reference 'perf' note for pcbData.
+//
+//  pcbData     - when pvData is NULL:
+//                  optional pointer to a dword that receives a size in bytes
+//                  which would be sufficient to hold the registry data (note
+//                  this size is not guaranteed to be exact, merely sufficient)
+//                when pvData is not NULL:
+//                  required pointer to a dword that specifies the size in
+//                  bytes of the buffer pointed to by the pvData parameter
+//                  and receives a size in bytes of:
+//                  a) the number of bytes read into pvData on ERROR_SUCCESS
+//                     (note this size is guaranteed to be exact)
+//                  b) the number of bytes which would be sufficient to hold
+//                     the registry data on ERROR_MORE_DATA -- pvData was of
+//                     insufficient size (note this size is not guaranteed to
+//                     be exact, merely sufficient)
+//
+//                Note1: pcbData can be NULL only if pvData is NULL.
+//                Note2: *** PERF ***
+//                       The potential for an 'extra' call to the registry to
+//                       read (or re-read) in the data exists when the data
+//                       type is REG_EXPAND_SZ and the SRRF_NOEXPAND flag has
+//                       not been set.  The following conditions will result
+//                       in this 'extra' read operation:
+//                       i)  when pvData is NULL and pcbData is not NULL
+//                           we must read in the data from the registry
+//                           anyway in order to obtain the string and perform
+//                           an expand on it to obtain and return the total
+//                           required size in pcbData
+//                       ii) when pvData is not NULL but is of insufficient
+//                           size we must re-read in the data from the
+//                           registry in order to obtain the entire string
+//                           and perform an expand on it to obtain and return
+//                           the total required size in pcbData
+//
+// Remarks:
+//
+//  The key identified by hkey must have been opened with KEY_QUERY_VALUE
+//  access.  If pszSubKey is not NULL or "", it must be able to be opened
+//  with KEY_QUERY_VALUE access in the current calling context.
+//
+//  If the data type is REG_SZ, REG_EXPAND_SZ or REG_MULTI_SZ then any
+//  returned data is guaranteed to take into account proper null termination.
+//  For example:  if pcbData is not NULL, its returned size will include the
+//  bytes for a null terminator  if pvData is not NULL, its returned data
+//  will be properly null terminated.
+//
+//  If the data type is REG_EXPAND_SZ, then unless the SRRF_NOEXPAND flag
+//  is set the data will be automatically expanded prior to being returned.
+//  For example:  if pdwType is not NULL, its returned type will be changed
+//  to REG_SZ,  if pcbData is not NULL, its returned size will include the
+//  bytes for a properly expanded string.  if pvData is not NULL, its
+//  returned data will be the expanded version of the string.
+//
+//  Reference MSDN documentation for RegQueryValueEx() for more information
+//  of the behaviour when pdwType, pvData, and/or pcbData are equal to NULL.
+//
+// Return Values:
+//
+//  If the function succeeds, the return value is ERROR_SUCCESS and all out
+//  parameters requested (pdwType, pvData, pcbData) are valid.
+//
+//  If the function fails due to insufficient space in a provided non-NULL
+//  pvData, the return value is ERROR_MORE_DATA and only pdwType and pcbData
+//  can contain valid data.  The content of pvData in this case is undefined.
+//
+// Examples:
+//
+//  1) read REG_SZ (or REG_EXPAND_SZ as REG_SZ) "string" data from the (default) value of an open hkey
+//
+//      TCHAR szData[128]
+//      DWORD cbData = sizeof(pszData)
+//      if (ERROR_SUCCESS == SHRegGetValue(hkey, NULL, NULL, SRRF_RT_REG_SZ, NULL, szData, &cbData))
+//      {
+//          // use sz (successful read)
+//      }
+//
+//  2) read REG_SZ (or REG_EXPAND_SZ as REG_SZ) "string" data of unknown size from the "MyValue" value of an open hkey
+//
+//      DWORD cbData
+//      if (ERROR_SUCCESS == SHRegGetValue(hkey, NULL, TEXT("MyValue"), SRRF_RT_REG_SZ, NULL, NULL, &cbData))
+//      {
+//          TCHAR *pszData = new TCHAR[cbData/sizeof(TCHAR)]
+//          if (pszData)
+//          {
+//              if (ERROR_SUCCESS == SHRegGetValue(hkey, NULL, TEXT("MyValue"), SRRF_RT_REG_SZ, NULL, pszData, &cbData))
+//              {
+//                  // use pszData (successful read)
+//              }
+//              delete[] pszData
+//          }
+//      }
+//
+//  3) read "dword" data from the "MyValue" value of the "MySubKey" subkey of an open hkey
+//
+//      DWORD dwData
+//      DWORD cbData = sizeof(dwData)
+//      if (ERROR_SUCCESS == SHRegGetValue(hkey, TEXT("MySubKey"), TEXT("MyValue"), SRRF_RT_REG_DWORD, NULL, &dwData, &cbData))
+//      {
+//          // use dwData (successful read)
+//      }
+//
+//  4) read "dword" data from the "MyValue" value of the "MySubKey" subkey of an open hkey (32-bit binary data also ok)
+//
+//      DWORD dwData
+//      DWORD cbData = sizeof(dwData)
+//      if (ERROR_SUCCESS == SHRegGetValue(hkey, TEXT("MySubKey"), TEXT("MyValue"), SRRF_RT_DWORD, NULL, &dwData, &cbData))
+//      {
+//          // use dwData (successful read)
+//      }
+//
+//  5) determine existence of "MyValue" value of an open hkey
+//
+//      BOOL bExists = ERROR_SUCCESS == SHRegGetValue(hkey, NULL, TEXT("MyValue"), SRRF_RT_ANY, NULL, NULL, NULL)
+
+{$EXTERNALSYM SHRegGetValueA}
+function SHRegGetValueA(hkey: HKEY; pszSubKey, pszValue: PAnsiChar; dwFlags: TSRRF; pdwType: PDWORD; pvData: Pointer; var pcbData: DWORD): Longint stdcall;
+{$EXTERNALSYM SHRegGetValueW}
+function SHRegGetValueW(hkey: HKEY; pszSubKey, pszValue: PWideChar; dwFlags: TSRRF; pdwType: PDWORD; pvData: Pointer; var pcbData: DWORD): Longint stdcall;
+{$EXTERNALSYM SHRegGetValue}
+function SHRegGetValue(hkey: HKEY; pszSubKey, pszValue: PChar; dwFlags: TSRRF; pdwType: PDWORD; pvData: Pointer; var pcbData: DWORD): Longint stdcall;
+
 // These functions work just like RegQueryValueEx, except if the
 // data type is REG_EXPAND_SZ, then these will go ahead and expand
 // out the string.  *pdwType will always be massaged to REG_SZ
@@ -2148,6 +2388,10 @@ function SHGetValue; external shlwapi32 name 'SHGetValueA';
 function SHSetValueA; external shlwapi32 name 'SHSetValueA';
 function SHSetValueW; external shlwapi32 name 'SHSetValueW';
 function SHSetValue; external shlwapi32 name 'SHSetValueA';
+
+function SHRegGetValueA; external shlwapi32 name 'SHRegGetValueA';
+function SHRegGetValueW; external shlwapi32 name 'SHRegGetValueW';
+function SHRegGetValue; external shlwapi32 name 'SHRegGetValueA';
 
 function SHQueryValueExA; external shlwapi32 name 'SHQueryValueExA';
 function SHQueryValueExW; external shlwapi32 name 'SHQueryValueExW';
