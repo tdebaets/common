@@ -1,9 +1,27 @@
-[Files]
-Source: "{#AddBackslash(ExtractFilePath(__PATHFILENAME__))}..\AppCompatShims\WMPx64PluginFix.sdb"; DestDir: "{tmp}"; Flags: deleteafterinstall; MinVersion: 0,6.0; Check: IsWin64
+;****************************************************************************
+;*
+;* Copyright 2019 Tim De Baets
+;*
+;* Licensed under the Apache License, Version 2.0 (the "License");
+;* you may not use this file except in compliance with the License.
+;* You may obtain a copy of the License at
+;*
+;*     http://www.apache.org/licenses/LICENSE-2.0
+;*
+;* Unless required by applicable law or agreed to in writing, software
+;* distributed under the License is distributed on an "AS IS" BASIS,
+;* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+;* See the License for the specific language governing permissions and
+;* limitations under the License.
+;*
+;****************************************************************************
+;*
+;* Common Inno Setup script for WMP plug-ins
+;*
+;****************************************************************************
 
 [Run]
 Filename: reg.exe; Parameters: "copy HKCU\SOFTWARE\Microsoft\MediaPlayer\UIPlugins HKCU\SOFTWARE\Wow6432Node\Microsoft\MediaPlayer\UIPlugins /s /f"; Flags: runhidden; MinVersion: 0,6.0; Check: "IsWin64 and not Wow6432UIPluginsKeyExists"; 
-Filename: sdbinst.exe; Parameters: "-q ""{tmp}\WMPx64PluginFix.sdb"""; Flags: runhidden; MinVersion: 0,6.0; Check: IsWin64; 
 Filename: {code:GetWMPExePath}; Description: {cm:RunNow}; Flags: nowait postinstall skipifsilent; Check: WMPExePathExists; Languages: 
 
 [CustomMessages]
