@@ -1,0 +1,1 @@
+ADDREDIRECT(HKCU\SOFTWARE\Microsoft\MediaPlayer\UIPlugins^HKCU\SOFTWARE\Wow6432Node\Microsoft\MediaPlayer\UIPlugins)
