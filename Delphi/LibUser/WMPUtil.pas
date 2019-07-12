@@ -626,7 +626,10 @@ function WMPMediaItemsAreIdentical(Item: IDispatch;
 function WMErrorMessage(ErrorCode: Cardinal): String;
 
 type
-  TWMPBoolSetting = (wmpbsFlushRatings);
+  TWMPBoolSetting = (
+    wmpbsFlushMetadata, // introduced in Win10
+    wmpbsFlushRating
+  );
 
 function GetWMPBoolSetting(Setting: TWMPBoolSetting): Boolean;
 
@@ -1374,9 +1377,9 @@ end;
 
 const
   WMPBoolSettingValues: array[TWMPBoolSetting] of String = (
-    'FlushRatingsToFiles');
+    'FlushMetadataToFiles', 'FlushRatingsToFiles');
   WMPBoolSettingDefaults: array[TWMPBoolSetting] of Boolean = (
-    True);
+    False, True);
 
 function GetWMPBoolSetting(Setting: TWMPBoolSetting): Boolean;
 begin
