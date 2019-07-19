@@ -632,6 +632,7 @@ type
   );
 
 function GetWMPBoolSetting(Setting: TWMPBoolSetting): Boolean;
+procedure SetWMPBoolSetting(Setting: TWMPBoolSetting; Value: Boolean);
 
 function IsWMPCDUrl(const URL: String): Boolean;
 function IsWMPDVDUrl(const URL: String): Boolean;
@@ -1391,6 +1392,17 @@ begin
     end
     else
       Result := WMPBoolSettingDefaults[Setting];
+  finally
+    Free;
+  end;
+end;
+
+procedure SetWMPBoolSetting(Setting: TWMPBoolSetting; Value: Boolean);
+begin
+  with TMyRegistry.Create do try
+    RootKey := HKEY_CURRENT_USER;
+    if OpenKey(WMPPreferencesRegKey, True) then
+      WriteBool(WMPBoolSettingValues[Setting], Value)
   finally
     Free;
   end;
