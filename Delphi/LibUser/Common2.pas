@@ -296,6 +296,7 @@ procedure Split(const S: String; Separator: Char; MyStringList: TStringList);
 function HexToInt(hexvar: string): integer;
 function FindInArray(const Str: String; const Arr: array of String): Boolean;
 function IsPrefix(const Str, Prefix: String): Boolean;
+function StripMnemonic(var Str: String): Char;
 function IsWhiteSpace(C: Char): Boolean;
 function DupeString(const AText: string; ACount: Integer): String;
 function ScanDateWithFormat(const S, Format: string; const Separator: Char;
@@ -383,7 +384,7 @@ function GetProcessSidToken(ProcessHandle: Integer; var Sid: PSID): Boolean;
 function RegKeyExists(const RootKey: DWORD; const SubKeyName: String): Boolean;
 function CreateRegistryLink(const LinkKey, TargetKey: WideString): Boolean;
 function RemoveRegistryLink(const LinkKey: WideString): Boolean;
-function GetPathFromKeyHandle(hKey: HKEY; var Path: WideString): Boolean;
+function GetPathFromHandle(hObject: THandle; var Path: WideString): Boolean;
 function NormalizeNTUserRegPath(const RegPath: String;
     var NormalizedPath: String): Boolean;
 
@@ -2625,7 +2626,7 @@ var
       ObjectInformation: Pointer; ObjectInformationLength: ULONG;
       ReturnLength: PULONG): NTSTATUS; stdcall = nil;
 
-function GetPathFromKeyHandle(hKey: HKEY; var Path: WideString): Boolean;
+function GetPathFromHandle(hObject: THandle; var Path: WideString): Boolean;
 var
   Status: NTSTATUS;
   InitialBuffer: OBJECT_NAME_INFORMATION;
@@ -2642,14 +2643,15 @@ begin
   NameInfo := @InitialBuffer;
   Size := SizeOf(InitialBuffer);
   // Query the name information a first time to get the size of the name.
-  Status := xNtQueryObject(hKey, ObjectNameInformation, NameInfo, Size, @Size);
+  Status := xNtQueryObject(hObject, ObjectNameInformation, NameInfo, Size, @Size);
   if Size > 0 then begin
     GetMem(NameInfo, Size);
     try
       FillChar(NameInfo^, Size, 0);
       // Query the name information a second time to get the name of the
       // object referenced by the handle.
-      Status := xNtQueryObject(hKey, ObjectNameInformation, NameInfo, Size, @Size);
+      Status := xNtQueryObject(hObject, ObjectNameInformation, NameInfo,
+          Size, @Size);
       if NT_SUCCESS(Status) then begin
         Path := NameInfo.ObjectName.Buffer;
         SetLength(Path, NameInfo.ObjectName.Length div SizeOf(WideChar));
