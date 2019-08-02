@@ -628,7 +628,7 @@ function WMErrorMessage(ErrorCode: Cardinal): String;
 type
   TWMPBoolSetting = (
     wmpbsFlushMetadata, // introduced in Win10
-    wmpbsFlushRating
+    wmpbsFlushRatings
   );
 
 function GetWMPBoolSetting(Setting: TWMPBoolSetting): Boolean;
