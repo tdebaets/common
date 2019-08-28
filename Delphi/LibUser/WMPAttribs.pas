@@ -406,10 +406,10 @@ const
         StoreTypes: [wmpastLibrary, wmpastFile];
         AppliesTo: [wmpmtAudio]),
     (Name: 'WM/ProviderRating'; Typ: wmpadtInt; MultipleValues: False;
-        StoreTypes: [wmpastLibrary, wmpastFile];
+        StoreTypes: [wmpastLibrary, wmpastFile]; // not stored in MP3 files
         AppliesTo: [wmpmtAudio]),
     (Name: 'WM/ProviderStyle'; Typ: wmpadtString; MultipleValues: False;
-        StoreTypes: [wmpastLibrary, wmpastFile];
+        StoreTypes: [wmpastLibrary, wmpastFile]; // not stored in MP3 files
         AppliesTo: [wmpmtAudio]),
     (Name: 'WM/Publisher'; Typ: wmpadtString; MultipleValues: False;
         StoreTypes: [wmpastLibrary, wmpastFile];
