@@ -309,6 +309,7 @@ function BooleanToStr(B: Boolean): string;
 procedure MoveWideChar(const Source; var Dest; Count: Integer);
 function IsAllCaps(const Str: String): Boolean;
 function ConvertAllCaps(var Str: String): Boolean;
+function GetCommandLineArgs(pCmdLine: PChar): PChar;
 
 type
   UTF8String = AnsiString;
@@ -1858,6 +1859,31 @@ begin
   end
   else
     Result := False;
+end;
+
+function GetCommandLineArgs(pCmdLine: PChar): PChar;
+begin
+  Result := pCmdLine;
+  // This is based on Wine's implementation of CommandLineToArgvW
+  if Result^ = '"' then begin
+    // The executable path ends at the next quote, no matter what
+    Inc(Result);
+    while Result^ <> #0 do begin
+      if Result^ = '"' then begin
+        Inc(Result);
+        Break;
+      end;
+      Inc(Result);
+    end;
+  end
+  else begin
+    // The executable path ends at the next space, no matter what
+    while (Result^ <> #0) and (Result^ <> ' ') and (Result^ <> ChrTab) do
+      Inc(Result);
+  end;
+  // skip to the first argument, if any
+  while (Result^ = ' ') or (Result^ = ChrTab) do
+    Inc(Result);
 end;
 
 function UnicodeToUtf8(Dest: PChar; MaxDestBytes: Cardinal; Source: PWideChar;
