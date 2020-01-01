@@ -1,5 +1,5 @@
 Common Code Utilities by Tim De Baets  
-Copyright © 2016-2019 Tim De Baets. All rights reserved.  
+Copyright © 2016-2020 Tim De Baets. All rights reserved.  
 For conditions of distribution and use, see [LICENSE](LICENSE).  
 
 Reporting issues
