@@ -35,7 +35,8 @@ if [%YEAR%]==[] (
 
 set /a YEARPLUS1=%YEAR%+1
 
-for /f tokens^=*^ delims^=^ eol^= %%g in ('git log --pretty^=format: --name-only --since^="1/1/%YEAR%" --until^="1/1/%YEARPLUS1%" ^| sort -u') do (
+rem We're relying on the undocumented /unique switch for sort.exe on Windows 10 here
+for /f tokens^=*^ delims^=^ eol^= %%g in ('git log --pretty^=format: --name-only --since^="1/1/%YEAR%" --until^="1/1/%YEARPLUS1%" ^| sort /unique') do (
     call %SCRIPTPATH%\checkdir.bat "%%g"
     if errorlevel 2 (
         echo %%g: no such file; skipping
@@ -44,7 +45,7 @@ for /f tokens^=*^ delims^=^ eol^= %%g in ('git log --pretty^=format: --name-only
         rem Only search the first 7 lines of the file for the year (should be
         rem enough to get the copyright)
         rem Using sed seems to be much faster than 'head -7 | grep'
-        for /f %%h in ('sed -n "/%YEAR%/p;7q" "%%g"') do (
+        for /f eol^= %%h in ('sed -n "/%YEAR%/p;7q" "%%g"') do (
             set COPYRIGHT_FOUND=1
         )
         if !COPYRIGHT_FOUND! equ 0 (
