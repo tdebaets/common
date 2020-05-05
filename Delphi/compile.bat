@@ -29,7 +29,8 @@ set LIBFIXED_UNITS= ^
     Controls.pas ^
     ComCtrls.pas ^
     FormDefs.pas ^
-    Forms.pas
+    Forms.pas ^
+    Menus.pas
 
 rem  Units in Imports to compile separately (keep alphabetical please)
 set IMPORTS_UNITS= ^
