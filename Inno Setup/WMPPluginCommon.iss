@@ -41,8 +41,9 @@ const
 var
   WMPExePath: String;
 
-function ExpandEnvironmentStrings(Src: PChar; Dst: PChar; Size: Longword): Longword;
-    external 'ExpandEnvironmentStringsA@kernel32.dll stdcall';
+function ExpandEnvironmentStrings(Src: String; Dst: String;
+    Size: Longword): Longword;
+    external 'ExpandEnvironmentStringsW@kernel32.dll stdcall';
 
 function ExpandEnvStr(var SysPath: String): Boolean;
 var
@@ -51,7 +52,7 @@ var
 begin
   BufSize := 1024;
   RealPath := StringOfChar(' ', BufSize);
-  BufSize := ExpandEnvironmentStrings(PChar(SysPath), RealPath, BufSize);
+  BufSize := ExpandEnvironmentStrings(SysPath, RealPath, BufSize);
   Result := BufSize > 0;
   if Result then
     SysPath := CastIntegerToString(CastStringToInteger(RealPath));
