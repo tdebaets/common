@@ -26,16 +26,38 @@ setlocal enabledelayedexpansion
 
 set SCRIPTPATH=%~dp0
 set REPONAME=
-set GITHOOKPATH=.git\hooks
 set LF=^
 
 
 rem Two empty lines above are required
 
+rem TODO remove?
 if exist common (
     set COMMONPATH=common\
 ) else (
     set COMMONPATH=
+)
+
+call "%SCRIPTPATH%\checkdir.bat" ".git"
+if errorlevel 1 (
+    rem A subdirectory called '.git' doesn't exist - assume that we're being
+    rem called by a parent repository that includes common as a submodule to
+    rem set up the 'common' repository (see below)
+    
+    if exist common (
+        echo ERROR: not expecting a 'common' subdirectory to exist
+        goto failed
+    )
+    
+    call "%SCRIPTPATH%\checkdir.bat" "..\.git\modules\common\hooks"
+    if errorlevel 1 (
+        echo ERROR: failed to determine path to git hooks
+        goto failed
+    )
+    
+    set GITHOOKPATH=..\.git\modules\common\hooks
+) else (
+    set GITHOOKPATH=.git\hooks
 )
 
 for /f %%i in ('%COMMONPATH%Scripts\getreponame.bat') do set REPONAME=%%i
@@ -74,19 +96,29 @@ cmd.exe //c "%COMMONPATH%Scripts\%%i.bat $@"
     if errorlevel 1 goto failed
 )
 
-rem Creating output directories for common here so that they are also created
-rem when running this script for a different repository that includes common as
-rem a submodule.
+rem If we are setting up a repository that includes common as a submodule, also
+rem call this script to set up the 'common' repository too.
+if exist common (
+    cd common
+    
+    call Scripts\setuprepo.bat %*
+    if errorlevel 1 goto failed_common
+    
+    cd ..
+) else (
+    echo %REPONAME%: creating directories...
 
-echo Creating directories in 'common'...
+    call "%SCRIPTPATH%\createdir.bat" "Output"
+    if errorlevel 1 goto failed
 
-call "%SCRIPTPATH%\createdir.bat" "%COMMONPATH%Output"
-if errorlevel 1 goto failed
-
-call "%SCRIPTPATH%\createdir.bat" "%COMMONPATH%Delphi\DCU"
-if errorlevel 1 goto failed
+    call "%SCRIPTPATH%\createdir.bat" "Delphi\DCU"
+    if errorlevel 1 goto failed
+)
 
 goto exit
+
+:failed_common
+cd ..
 
 :failed
 exit /b 1
