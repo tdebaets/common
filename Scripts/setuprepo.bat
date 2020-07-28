@@ -25,12 +25,22 @@ rem **************************************************************************
 setlocal enabledelayedexpansion
 
 set SCRIPTPATH=%~dp0
+set REPONAME=
+set GITHOOKPATH=.git\hooks
 set LF=^
 
 
 rem Two empty lines above are required
 
-echo Setting up repository...
+if exist common (
+    set COMMONPATH=common\
+) else (
+    set COMMONPATH=
+)
+
+for /f %%i in ('%COMMONPATH%Scripts\getreponame.bat') do set REPONAME=%%i
+
+echo Setting up repository '%REPONAME%'...
 
 git config pull.rebase preserve
 if errorlevel 1 goto failed
@@ -39,15 +49,7 @@ rem Check that all submodule commits to push are available on a remote
 git config push.recurseSubmodules check
 if errorlevel 1 goto failed
 
-echo Installing hooks...
-
-set GITHOOKPATH=.git\hooks
-
-if exist common (
-    set COMMONPATH=common\
-) else (
-    set COMMONPATH=
-)
+echo %REPONAME%: installing hooks...
 
 for /f %%i in ("post-checkout!LF!pre-push!LF!post-rewrite!LF!post-merge") do (
     rem Create backup of possible existing hook
@@ -73,8 +75,8 @@ cmd.exe //c "%COMMONPATH%Scripts\%%i.bat $@"
 )
 
 rem Creating output directories for common here so that they are also created
-rem when running this script for a different repository including common as a
-rem submodule.
+rem when running this script for a different repository that includes common as
+rem a submodule.
 
 echo Creating directories in 'common'...
 

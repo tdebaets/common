@@ -98,7 +98,7 @@ cd common
 if errorlevel 1 goto failed
 
 set LATEST_REV_SHA=
-for /F %%i in ('git rev-parse HEAD 2^>NUL') do (
+for /f %%i in ('git rev-parse HEAD 2^>NUL') do (
     set LATEST_REV_SHA=%%i
 )
 
