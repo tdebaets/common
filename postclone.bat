@@ -25,6 +25,11 @@ setlocal
 call .\Scripts\setuprepo.bat %*
 if errorlevel 1 goto failed
 
+rem NOTE: any additional steps that are added here won't be executed when common
+rem is included in another repository as a submodule. Therefore, it is
+rem recommended to add these steps in Scripts\setuprepo.bat instead (see for
+rem example the creation of the output directories for 'common').
+
 echo Success!
 goto exit
 

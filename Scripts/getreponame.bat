@@ -24,10 +24,10 @@ rem **************************************************************************
 
 setlocal enabledelayedexpansion
 
-SET ORIGINURL=
+set ORIGINURL=
 
 for /f %%i in ('git config --get remote.origin.url') do (
-    SET ORIGINURL=%%i
+    set ORIGINURL=%%i
 )
 
 set TMP=%ORIGINURL%
@@ -41,7 +41,9 @@ for /f "tokens=1* delims=/" %%i in ("%TMP%") do (
     goto loopprocess
 )
 
-for /f "tokens=%NUMSEGMENTS% delims=/" %%i in ("%ORIGINURL%") do set LASTSEGMENT=%%i
+for /f "tokens=%NUMSEGMENTS% delims=/" %%i in ("%ORIGINURL%") do (
+    set LASTSEGMENT=%%i
+)
 
 rem Now we just need to strip the trailing '.git' from the last URL segment
 echo %LASTSEGMENT:.git=%

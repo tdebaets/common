@@ -61,7 +61,9 @@ if errorlevel 1 (
     set GITHOOKPATH=.git\hooks
 )
 
-for /f %%i in ('%SCRIPTPATH%\getreponame.bat') do set REPONAME=%%i
+for /f %%i in ('%SCRIPTPATH%\getreponame.bat') do (
+    set REPONAME=%%i
+)
 
 echo Setting up repository '%REPONAME%'...
 
@@ -97,9 +99,9 @@ cmd.exe //c "%RELSCRIPTPATH%\%%i.bat $@"
     if errorlevel 1 goto failed
 )
 
-rem If we are setting up a repository that includes common as a submodule, also
-rem call this script to set up the 'common' repository too.
 if exist common (
+    rem We are setting up a repository that includes common as a submodule -
+    rem also call this script to set up the 'common' repository too.
     cd common
     
     call %SCRIPTPATH%\setuprepo.bat %*
@@ -107,6 +109,8 @@ if exist common (
     
     cd ..
 ) else (
+    rem We are setting up the 'common' repository itself - create the required
+    rem output directories.
     echo %REPONAME%: creating directories...
 
     call "%SCRIPTPATH%\createdir.bat" "Output"
