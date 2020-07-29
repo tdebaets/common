@@ -61,7 +61,7 @@ if errorlevel 1 (
     set GITHOOKPATH=.git\hooks
 )
 
-for /f %%i in ('%SCRIPTPATH%\getreponame.bat') do (
+for /f %%i in ('"%SCRIPTPATH%\getreponame.bat"') do (
     set REPONAME=%%i
 )
 
@@ -104,7 +104,7 @@ if exist common (
     rem also call this script to set up the 'common' repository too.
     cd common
     
-    call %SCRIPTPATH%\setuprepo.bat %*
+    call "%SCRIPTPATH%\setuprepo.bat" %*
     if errorlevel 1 goto failed_common
     
     cd ..
