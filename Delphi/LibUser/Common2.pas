@@ -442,6 +442,7 @@ function IsWin32Success(ErrorCode: DWORD): Boolean;
 function RectWidth(const R: TRect): Integer;
 function RectHeight(const R: TRect): Integer;
 
+function IsValidPtr(Ptr: Pointer): Boolean;
 function ComparePointers(P1, P2: Pointer): Integer;
 function InterlockedExchangePointer(var Target: Pointer;
     Value: Pointer): Pointer;
@@ -2852,6 +2853,18 @@ begin
     Result := R.Bottom - R.Top
   else
     Result := 0;
+end;
+
+function IsValidPtr(Ptr: Pointer): Boolean;
+begin
+  // While setting up the process address space, the kernel reserves the bottom
+  // 64KB of address space, so no valid objects will be allocated there. (Raymond
+  // Chen)
+  // So pointers are guaranteed to be always bigger than 64KB. This means that
+  // there are 65536 possible pointer values which are no valid pointers, a
+  // technique used by e.g. the MAKEINTRESOURCE macro. This function effectively
+  // does the reverse of the buddy IS_INTRESOURCE macro.
+  Result := HiWord(DWORD(Ptr)) <> 0;
 end;
 
 function ComparePointers(P1, P2: Pointer): Integer;
