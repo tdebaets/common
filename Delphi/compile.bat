@@ -36,7 +36,8 @@ rem  Units in Imports to compile separately (keep alphabetical please)
 set IMPORTS_UNITS= ^
     Accessibility_TLB.pas ^
     SHDocVw_TLB.pas ^
-    WMPLib_TLB.pas
+    WMPLib_TLB.pas ^
+    WMPPlug_TLB.pas
 
 rem Units in LibUser to compile separately (keep alphabetical please)
 set LIBUSER_UNITS= ^
