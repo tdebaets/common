@@ -24,7 +24,7 @@ unit NewDialogs;
 
 interface
 
-uses Controls, PJMessageDialog;
+uses Windows, Classes, Controls, PJMessageDialog;
 
 { PJMessageDialog forward declarations, so that units that are only importing
   this unit keep compiling. }
@@ -57,16 +57,46 @@ const
   dbDefButton3  = PJMessageDialog.dbDefButton3;
   dbDefButton4  = PJMessageDialog.dbDefButton4;
 
+{ TPJMessageDialoghWnd }
+
+type
+  TPJMessageDialoghWnd = class(TPJMessageDialog)
+  private
+    fhWndOwner: HWND;
+  protected
+    function GetHWND: THandle; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+  published
+    property hWndOwner: HWND read fhWndOwner write fhWndOwner default 0;
+  end;
+
 { New functions }
 
-function MsgBox(Prompt: String; bgButtons: TPJMsgDlgButtonGroup;
-    miStyle: TPJMsgDlgIconKind; Caption: TCaption; Context: Integer): Integer;
-procedure SimpleMsg(Prompt: String; Caption: TCaption);
+function MsgBox(const Prompt: String; bgButtons: TPJMsgDlgButtonGroup;
+    miStyle: TPJMsgDlgIconKind; const Caption: TCaption;
+    Context: Integer): Integer;
+procedure SimpleMsg(const Prompt: String; const Caption: TCaption);
 
 implementation
 
-function MsgBox(Prompt: String; bgButtons: TPJMsgDlgButtonGroup;
-    miStyle: TPJMsgDlgIconKind; Caption: TCaption; Context: Integer): Integer;
+constructor TPJMessageDialoghWnd.Create(AOwner: TComponent);
+begin
+  inherited;
+  fhWndOwner := 0;
+end;
+
+function TPJMessageDialoghWnd.GetHWND: THandle;
+begin
+  if fhWndOwner <> 0 then
+    Result := fhWndOwner
+  else
+    Result := GetForegroundWindow;
+end;
+
+function MsgBox(const Prompt: String; bgButtons: TPJMsgDlgButtonGroup;
+    miStyle: TPJMsgDlgIconKind; const Caption: TCaption;
+    Context: Integer): Integer;
 begin
   with TPJMessageDialog.Create(nil) do begin
     MakeSound := False;
@@ -80,7 +110,25 @@ begin
   end;
 end;
 
-procedure SimpleMsg(Prompt: String; Caption: TCaption);
+function MsgBoxhWnd(AhWndOwner: HWND; const Prompt: String;
+    bgButtons: TPJMsgDlgButtonGroup; miStyle: TPJMsgDlgIconKind;
+    const Caption: String; Context: Integer): Integer;
+begin
+  with TPJMessageDialoghWnd.Create(nil) do try
+    MakeSound := True;
+    Text := Prompt;
+    ButtonGroup := bgButtons;
+    IconKind := miStyle;
+    Title := Caption;
+    HelpContext := Context;
+    hWndOwner := AhWndOwner;
+    Result := Execute;
+  finally
+    Free;
+  end;
+end;
+
+procedure SimpleMsg(const Prompt: String; const Caption: TCaption);
 begin
   with TPJMessageDialog.Create(nil) do begin
     MakeSound := False;

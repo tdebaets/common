@@ -72,7 +72,7 @@ type
   protected
     function GetDefaultTitle: string;
       {Returns default title for window based on kind of icon}
-    function GetHWND: THandle;
+    function GetHWND: THandle; virtual;
       {Returns the window handle of the form (if any) that owns this component}
   public
     constructor Create(AOwner: TComponent); override;
