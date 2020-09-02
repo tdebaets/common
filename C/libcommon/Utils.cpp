@@ -24,6 +24,9 @@
 
 #include <strsafe.h>
 
+static const LPCSTR g_szKernel32    = "kernel32.dll";
+static const LPCSTR g_szUser32      = "user32.dll";
+
 BOOL CloseHandleSafe(PHANDLE phObject)
 {
     BOOL bResult = FALSE;

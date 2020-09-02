@@ -30,6 +30,9 @@ using namespace std;
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
 
+extern const LPCSTR g_szKernel32;
+extern const LPCSTR g_szUser32;
+
 BOOL CloseHandleSafe(PHANDLE phObject);
 
 wstring GetModuleName(HMODULE hModule);
