@@ -46,6 +46,7 @@ set LIBUSER_UNITS= ^
     cUnicodeChar.pas ^
     FastMM4\FastMM4.pas ^
     GIFImage.pas ^
+    HighDPIFunc.pas ^
     HugeIni.pas ^
     IntToStrList.pas ^
     JclResources.pas ^
