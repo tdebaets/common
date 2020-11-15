@@ -44,7 +44,11 @@ interface
 
 uses
   // Delphi
-  Windows, Classes, Controls, Forms;
+  Windows, Classes
+  {$IFNDEF NoVCL}
+  , Controls, Forms
+  {$ENDIF}
+  ;
 
 type
   {The kinds of icons that can be displayed in TPJMessageDialog dialog boxes}
@@ -62,26 +66,30 @@ type
   TPJMessageDialog = class(TComponent)
   private
     fText: string;
-    fTitle: TCaption;
+    fTitle: string;
     fHelpContext: Integer;
     fIconResource: string;
     fButtonGroup: TPJMsgDlgButtonGroup;
     fIconKind: TPJMsgDlgIconKind;
     fDefButton: TPJMsgDlgDefButton;
     fMakeSound: Boolean;
+    fDoDisableTaskWindows: Boolean;
+    fDoSetActiveWindow: Boolean;
+    procedure EnableDisableTaskWindows(Enable: Boolean; var WindowList: Pointer); 
   protected
     function GetDefaultTitle: string;
       {Returns default title for window based on kind of icon}
     function GetHWND: THandle; virtual;
       {Returns the window handle of the form (if any) that owns this component}
+    function DoMessageBoxIndirect(var Params: TMsgBoxParams): Integer; virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    function Execute: Integer;
+    function Execute: Integer; virtual;
   published
     property Text: string
       read fText write fText;
-    property Title: TCaption
+    property Title: string
       read fTitle write fTitle;
     property HelpContext: Integer
       read fHelpContext write fHelpContext;
@@ -95,6 +103,10 @@ type
       read fDefButton write fDefButton default dbDefButton1;
     property MakeSound: Boolean
       read fMakeSound write fMakeSound default False;
+    property DoDisableTaskWindows: Boolean
+      read fDoDisableTaskWindows write fDoDisableTaskWindows default True;
+    property DoSetActiveWindow: Boolean
+      read fDoSetActiveWindow write fDoSetActiveWindow default True;
   end;
 
 procedure Register;
@@ -108,13 +120,13 @@ end;
 
 { TPJMessageDialog }
 
-
-
 procedure HelpCallback(var HelpInfo: THelpInfo); stdcall;
   {Callback procedure for Execute method procedure. Starts win help with help
   context passed in HelpInfo param}
 begin
+  {$IFNDEF NoVCL}
   Application.HelpContext(HelpInfo.dwContextId);
+  {$ENDIF}
 end;
 
 constructor TPJMessageDialog.Create(AOwner: TComponent);
@@ -124,11 +136,31 @@ begin
   fIconKind := miInfo;
   fDefButton := dbDefButton1;
   fMakeSound := False;
+  fDoDisableTaskWindows := True;
+  fDoSetActiveWindow := True;
 end;
 
 destructor TPJMessageDialog.Destroy;
 begin
   inherited Destroy;
+end;
+
+procedure TPJMessageDialog.EnableDisableTaskWindows(Enable: Boolean;
+    var WindowList: Pointer);
+begin
+  if not fDoDisableTaskWindows then
+    Exit;
+  {$IFNDEF NoVCL}
+  if Enable then
+    EnableTaskWindows(WindowList)
+  else
+    WindowList := DisableTaskWindows(0);
+  {$ENDIF}
+end;
+
+function TPJMessageDialog.DoMessageBoxIndirect(var Params: TMsgBoxParams): Integer;
+begin
+  Result := Integer(MessageBoxIndirect(Params));
 end;
 
 function TPJMessageDialog.Execute: Integer;
@@ -149,6 +181,8 @@ var
   ActiveWindow: HWnd;
   WindowList: Pointer;
 begin
+  ActiveWindow := 0;
+  WindowList := nil;
   // Set up TMsgBoxParams structure
   FillChar(MsgBoxParams, SizeOf(MsgBoxParams), 0);
   with MsgBoxParams do
@@ -177,17 +211,19 @@ begin
     if fIconKind = miUser then
       lpszIcon := PChar(fIconResource);
   end;
-  ActiveWindow := GetActiveWindow;
-  WindowList := DisableTaskWindows(0);
+  if fDoSetActiveWindow then
+    ActiveWindow := GetActiveWindow;
+  EnableDisableTaskWindows(False, WindowList);
   try
     // Make sound if required
     if fMakeSound then
       MessageBeep(cSounds[fIconKind]);
     // Display dlg
-    Result := Integer(MessageBoxIndirect(MsgBoxParams));
+    Result := DoMessageBoxIndirect(MsgBoxParams);
   finally
-    EnableTaskWindows(WindowList);
-    SetActiveWindow(ActiveWindow);
+    EnableDisableTaskWindows(True, WindowList);
+    if fDoSetActiveWindow then
+      SetActiveWindow(ActiveWindow);
   end;
 end;
 
@@ -198,17 +234,23 @@ const
     'Warning', 'Information', 'Confirm', 'Error', '', '');
 begin
   Result := cDefTitles[fIconKind];
+  {$IFNDEF NoVCL}
   if Result = '' then
     Result := Application.Title;    // use application title when miUser
+  {$ENDIF}
 end;
 
 function TPJMessageDialog.GetHWND: THandle;
   {Returns the window handle of the form (if any) that owns this component}
 begin
+  {$IFDEF NoVCL}
+  Result := 0;
+  {$ELSE}
   if (Owner <> nil) and (Owner is TWinControl) then
     Result := (Owner as TWinControl).Handle
   else
     Result := Application.Handle;
+  {$ENDIF}
 end;
 
 end.

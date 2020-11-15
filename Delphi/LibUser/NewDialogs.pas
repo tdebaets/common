@@ -24,7 +24,7 @@ unit NewDialogs;
 
 interface
 
-uses Windows, Classes, Controls, PJMessageDialog;
+uses Windows, Classes, PJMessageDialog;
 
 { PJMessageDialog forward declarations, so that units that are only importing
   this unit keep compiling. }
@@ -74,15 +74,20 @@ type
 { New functions }
 
 function MsgBox(const Prompt: String; bgButtons: TPJMsgDlgButtonGroup;
-    miStyle: TPJMsgDlgIconKind; const Caption: TCaption;
+    miStyle: TPJMsgDlgIconKind; const Caption: String;
     Context: Integer): Integer;
-procedure SimpleMsg(const Prompt: String; const Caption: TCaption);
+function MsgBoxhWnd(AhWndOwner: HWND; const Prompt: String;
+    bgButtons: TPJMsgDlgButtonGroup; miStyle: TPJMsgDlgIconKind;
+    const Caption: String; Context: Integer): Integer;
+procedure SimpleMsg(const Prompt: String; const Caption: String);
 
 implementation
 
 constructor TPJMessageDialoghWnd.Create(AOwner: TComponent);
 begin
   inherited;
+  DoDisableTaskWindows := False;
+  DoSetActiveWindow := False;
   fhWndOwner := 0;
 end;
 
@@ -95,7 +100,7 @@ begin
 end;
 
 function MsgBox(const Prompt: String; bgButtons: TPJMsgDlgButtonGroup;
-    miStyle: TPJMsgDlgIconKind; const Caption: TCaption;
+    miStyle: TPJMsgDlgIconKind; const Caption: String;
     Context: Integer): Integer;
 begin
   with TPJMessageDialog.Create(nil) do begin
@@ -128,7 +133,7 @@ begin
   end;
 end;
 
-procedure SimpleMsg(const Prompt: String; const Caption: TCaption);
+procedure SimpleMsg(const Prompt: String; const Caption: String);
 begin
   with TPJMessageDialog.Create(nil) do begin
     MakeSound := False;
