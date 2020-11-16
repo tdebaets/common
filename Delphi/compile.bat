@@ -44,6 +44,7 @@ set LIBUSER_UNITS= ^
     CommonUnicode.pas ^
     cUnicode.pas ^
     cUnicodeChar.pas ^
+    DialogForm.pas ^
     FastMM4\FastMM4.pas ^
     GIFImage.pas ^
     HighDPIFunc.pas ^
