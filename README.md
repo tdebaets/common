@@ -33,4 +33,4 @@ A large portion of Common Code Utilities consists of Borland Delphi 4 source cod
 License
 -------
 
-Common Code Utilities by Tim De Baets is Copyright © 2016-2020 Tim De Baets. It is licensed under the Apache License version 2.0, with the exception of some individual third-party files. See [LICENSE](LICENSE) for details.
+Common Code Utilities by Tim De Baets is Copyright © 2016-2021 Tim De Baets. It is licensed under the Apache License version 2.0, with the exception of some individual third-party files. See [LICENSE](LICENSE) for details.
