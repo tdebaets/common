@@ -140,6 +140,10 @@ type
   TPWideCharArray = array[0..MaxInt div SizeOf(PWideChar) - 1] of PWideChar;
   PPWideCharArray = ^TPWideCharArray;
 
+type
+  TCancelResult = (crFail, crSuccess, crCancelled);
+  TSuccessOrCancel = crSuccess..crCancelled;
+
 var
   IsWinNT: Boolean;
 
