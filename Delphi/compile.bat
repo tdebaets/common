@@ -53,6 +53,7 @@ set LIBUSER_UNITS= ^
     JclResources.pas ^
     JclWideFormat.pas ^
     MBCSUtil.pas ^
+    Msvcrt.pas ^
     NewDialogs.pas ^
     PathFuncWide.pas ^
     PEStruct.pas ^
