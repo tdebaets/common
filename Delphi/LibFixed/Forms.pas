@@ -3160,6 +3160,19 @@ begin
   Result := nil;
 end;
 
+function EnumMonitorsProc(hm: HMONITOR; dc: HDC; r: PRect; Data: Pointer): Boolean; stdcall;
+var
+  L: TList;
+  M: TMonitor;
+begin
+  L := TList(Data);
+  M := TMonitor.Create;
+  M.FHandle := hm;
+  M.FMonitorNum := L.Count;
+  L.Add(M);
+  Result := True;
+end;
+
 function TCustomForm.GetMonitor: TMonitor;
 var
   HM: HMonitor;
@@ -3167,6 +3180,18 @@ var
 begin
   Result := nil;
   HM := MonitorFromWindow(Handle, MONITOR_DEFAULTTONEAREST);
+  for I := 0 to Screen.MonitorCount - 1 do
+    if Screen.Monitors[I].Handle = HM then
+    begin
+      Result := Screen.Monitors[I];
+      Exit;
+    end;
+
+  //if we get here, the Monitors array has changed, so we need to clear and reinitialize it
+  for i := 0 to Screen.MonitorCount-1 do
+    TMonitor(Screen.FMonitors[i]).Free;
+  Screen.FMonitors.Clear;
+  EnumDisplayMonitors(0, nil, @EnumMonitorsProc, LongInt(Screen.FMonitors));
   for I := 0 to Screen.MonitorCount - 1 do
     if Screen.Monitors[I].Handle = HM then
     begin
@@ -3363,25 +3388,32 @@ end;
 
 procedure TCustomForm.SetWindowToMonitor;
 var
-  AppMon, WinMon: HMONITOR;
+  AppMon, WinMon: TMonitor;
+  hAppMon, hWinMon: HMONITOR;
   I, J: Integer;
   ALeft, ATop: Integer;
 begin
     if (FDefaultMonitor <> dmDesktop) and (Application.MainForm <> nil) then
     begin
-      AppMon := 0;
+      AppMon := nil;
       if FDefaultMonitor = dmMainForm then
-        AppMon := Application.MainForm.Monitor.Handle
+        AppMon := Application.MainForm.Monitor
       else if (FDefaultMonitor = dmActiveForm) and (Screen.ActiveCustomForm <> nil) then
-        AppMon := Screen.ActiveCustomForm.Monitor.Handle
+        AppMon := Screen.ActiveCustomForm.Monitor
       else if FDefaultMonitor = dmPrimary then
-        AppMon := Screen.Monitors[0].Handle;
-      WinMon := Monitor.Handle;
+        AppMon := Screen.Monitors[0];
+      if not Assigned(AppMon) then // shouldn't happen, but check anyway
+        Exit;
+      hAppMon := AppMon.Handle;
+      WinMon := Monitor;
+      if not Assigned(WinMon) then // shouldn't happen, but check anyway
+        Exit;
+      hWinMon := WinMon.Handle;
       for I := 0 to Screen.MonitorCount - 1 do
-        if (Screen.Monitors[I].Handle = AppMon) then
-          if (AppMon <> WinMon) then
+        if (Screen.Monitors[I].Handle = hAppMon) then
+          if (hAppMon <> hWinMon) then
             for J := 0 to Screen.MonitorCount - 1 do
-              if (Screen.Monitors[J].Handle = WinMon) then
+              if (Screen.Monitors[J].Handle = hWinMon) then
               begin
                 if FPosition = poScreenCenter then
                   SetBounds(Screen.Monitors[I].Left + ((Screen.Monitors[I].Width - Width) div 2),
@@ -5175,19 +5207,6 @@ begin
   if (S.Count = 0) or (AnsiCompareText(S[S.Count-1], Temp) <> 0) then
     S.Add(Temp);
   Result := 1;
-end;
-
-function EnumMonitorsProc(hm: HMONITOR; dc: HDC; r: PRect; Data: Pointer): Boolean; stdcall;
-var
-  L: TList;
-  M: TMonitor;
-begin
-  L := TList(Data);
-  M := TMonitor.Create;
-  M.FHandle := hm;
-  M.FMonitorNum := L.Count;
-  L.Add(M);
-  Result := True;
 end;
 
 constructor TScreen.Create(AOwner: TComponent);
