@@ -273,6 +273,7 @@ function WindowOwnsVisibleWindows(Wnd, hWndIgnore: HWND): Boolean;
 function WindowGetVisibleOwnedGrandchild(hWnd: HWND): HWND;
 function IsCurrentProcessInForeground: Boolean;
 function GetTopFocusableWindow: HWND;
+function MAKE_X_Y_LPARAM(x, y: Smallint): LPARAM;
 
 type
   TWndMethod = procedure(var Message: TMessage) of object;
@@ -823,6 +824,14 @@ begin
     if GetWindowThreadProcessId(ForegroundWnd, @ProcId) <> 0 then
       Result := (ProcId = GetCurrentProcessId);
   end;
+end;
+
+function MAKE_X_Y_LPARAM(x, y: Smallint): LPARAM;
+begin
+  // Counterpart of the Win32 GET_X_LPARAM/GET_Y_LPARAM macros.
+  // Needed to put this in a seperate procedure because directly passing negative
+  // values to MAKELPARAM doesn't compile.
+  Result := MAKELPARAM(x, y);
 end;
 
 function ExecuteFile(hwnd: HWND; const FileName, Params, DefaultDir: string;
