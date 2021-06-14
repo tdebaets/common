@@ -356,7 +356,8 @@ function GetRandomSeed: LongWord; // throws ECryptError
 function Remainder(x, y: Integer): Integer;
 function Card(var tar; size: Integer): Integer;
 function SumWord(const Data: array of Word): Integer;
-function IsSubRangeMember(Info: PTypeInfo; const Value): Boolean;
+function IsSubRangeMember(pInfo: PTypeInfo; const Value: Variant): Boolean;
+function GetEnumName(pInfo: PTypeInfo; const Value: Variant): String;
 procedure IncludeFlag(var Flags: Cardinal; Flag: Cardinal);
 
 // Arrays
@@ -2526,19 +2527,25 @@ begin
 end;
 
 resourcestring
-  sNotAnEnum = 'IsSubRangeMember: argument must be a enum type; %s not allowed';
+  sNotAnEnum = 'IsSubRangeMember: argument must be an enum type; %s is of type %s';
 
-function IsSubRangeMember(Info: PTypeInfo; const Value): Boolean;
+function IsSubRangeMember(pInfo: PTypeInfo; const Value: Variant): Boolean;
 var
-  IntValue: Integer absolute Value;
-  Data: PTypeData;
+  pData: PTypeData;
 begin
-  if Info.Kind <> tkEnumeration then begin
+  if pInfo.Kind <> tkEnumeration then begin
     raise EConvertError.CreateFmt(sNotAnEnum,
-        [GetEnumName(TypeInfo(TTypeKind), Ord(Info.Kind))]);
+        [pInfo.Name, GetEnumName(TypeInfo(TTypeKind), pInfo.Kind)]);
   end;
-  Data := GetTypeData(Info);
-  Result := (IntValue >= Data.MinValue) and (IntValue <= Data.MaxValue);
+  pData := GetTypeData(pInfo);
+  Result := (Value >= pData.MinValue) and (Value <= pData.MaxValue);
+end;
+
+function GetEnumName(pInfo: PTypeInfo; const Value: Variant): String;
+begin
+  // Wrapper function around TypInfo.GetEnumName that prevents us from having to
+  // explicitly cast Value to Integer.
+  Result := TypInfo.GetEnumName(pInfo, Value);
 end;
 
 procedure IncludeFlag(var Flags: Cardinal; Flag: Cardinal);
