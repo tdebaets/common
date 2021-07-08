@@ -44,17 +44,17 @@ type
   private
     FUpDown: TUpDown32;
     FValue: Integer;
-    FIncrement: Integer;
     FAllowPlusMin: Boolean;
     FUpDownKeys: Boolean;
-    //FOldWndProc: TWndMethod;
     FOnHideBalloon: THideBalloonEvent;
     FLButtonDown: Boolean;
     FFirstFocusClick: Boolean;
     function GetMaximum: Integer;
     function GetMinimum: Integer;
+    function GetIncrement: Integer;
     procedure SetMaximum(const Value: Integer);
     procedure SetMinimum(const Value: Integer);
+    procedure SetIncrement(const Value: Integer);
     function GetEmpty: Boolean;
     procedure SetEmpty(Empty: Boolean);
     function IsWithInMinMax(const Value: Integer): Boolean;
@@ -67,15 +67,12 @@ type
     procedure WMKillFocus(var Message: TWMKillFocus); message WM_KILLFOCUS;
     procedure WMLButtonDown(var Message: TMessage); message WM_LBUTTONDOWN;
     procedure WMLButtonUp(var Message: TMessage); message WM_LBUTTONUP;
-    procedure CMEnter(var Message: TCMGotFocus); message CM_ENTER;
     procedure CMTextChanged(var Message: TMessage); message CM_TEXTCHANGED;
     //procedure EMShowBalloonTip(var Message: TMessage); message EM_SHOWBALLOONTIP;
     procedure EMHideBalloonTip(var Message: TMessage); message EM_HIDEBALLOONTIP;
     procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
-    //procedure WndProc(var Message: TMessage);
   protected
     procedure CreateWnd; override;
-    procedure Loaded; override;
     procedure Change; override;
 
     procedure AdjustSpin;
@@ -90,8 +87,6 @@ type
     function TextToInt(const Value: string): Integer;
     function IntToText(const Value: Integer): String;
 
-    procedure UpClick(Sender: TObject); virtual;
-    procedure DownClick(Sender: TObject); virtual;
     procedure UpDownClick(Sender: TObject; Button: TUDBtnType);
 
     procedure Increase(Increment: Integer); virtual;
@@ -113,6 +108,7 @@ type
   published
     property Maximum: Integer read GetMaximum write SetMaximum default 100;
     property Minimum: Integer read GetMinimum write SetMinimum default 0;
+    property Increment: Integer read GetIncrement write SetIncrement default 1;
     property Value: Integer read GetValue write SetValue;
     property AllowPlusMin: Boolean read FAllowPlusMin write SetAllowPlusMin
         default False;
@@ -170,13 +166,6 @@ begin
   inherited;
 end;
 
-procedure TSpinIntEdit.CMEnter(var Message: TCMGotFocus);
-begin
-//  if AutoSelect {and not (csLButtonDown in ControlState)} then
-//    SelectAll;
-  inherited;
-end;
-
 procedure TSpinIntEdit.Change;
 begin
   inherited Change;
@@ -202,8 +191,8 @@ procedure TSpinIntEdit.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   if FUpDownKeys then begin
     case Key of
-      VK_UP:    Increase(FIncrement);
-      VK_DOWN:  Increase(-FIncrement);
+      VK_UP:    Increase(Increment);
+      VK_DOWN:  Increase(-Increment);
     end;
   end;
   inherited KeyDown(Key, Shift);
@@ -245,17 +234,13 @@ begin
   Result := IsValidValueString(EditText);
 end;
 
-
 constructor TSpinIntEdit.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle - [csSetCaption, csCaptureMouse];
-  FIncrement := 1;
   FAllowPlusMin := False;
   FUpDownKeys := True;
   CreateSpin;
-  //FOldWndProc := WindowProc;
-  //WindowProc := WndProc;
   FLButtonDown := False;
   FFirstFocusClick := False;
 end;
@@ -270,13 +255,6 @@ procedure TSpinIntEdit.CreateWnd;
 begin
   inherited CreateWnd;
   SetEditRect;
-end;
-
-procedure TSpinIntEdit.Loaded;
-begin
-  inherited Loaded;
-  {if Text = '' then
-    Text := '0';}
 end;
 
 procedure TSpinIntEdit.CreateSpin;
@@ -318,24 +296,10 @@ begin
   SendMessage(Handle, EM_SETRECTNP, 0, LongInt(@Loc));
 end;
 
-procedure TSpinIntEdit.UpClick(Sender: TObject);
-begin
-  Increase(FIncrement);
-end;
-
-procedure TSpinIntEdit.DownClick(Sender: TObject);
-begin
-  Increase(-FIncrement);
-end;
-
 procedure TSpinIntEdit.UpDownClick(Sender: TObject; Button: TUDBtnType);
 begin
-  case Button of
-    btPrev: DownClick(Sender);
-    btNext: UpClick(Sender);
-  else
-    Assert(False);
-  end;
+  SetValue(FUpDown.Position32);
+  Modified := True;
 end;
 
 procedure TSpinIntEdit.AdjustSpin;
@@ -357,7 +321,6 @@ procedure TSpinIntEdit.WMSetFocus(var Message: TWMSetFocus);
 begin
   FFirstFocusClick := FLButtonDown;
   inherited;
-  //SelectAll; // doesn't work here
 end;
 
 procedure TSpinIntEdit.WMKillFocus(var Message: TWMKillFocus);
@@ -385,27 +348,6 @@ begin
     FFirstFocusClick := False;
   end;
 end;
-
-//procedure TSpinIntEdit.WndProc(var Message: TMessage);
-//var
-//  oldsellength: Integer;
-//begin
-//  if Message.Msg = CM_ENTER then
-//    Exit;
-////  if Message.Msg = WM_SETFOCUS then begin
-////    Message.Result := DefWindowProc(Handle, Message.Msg, Message.WParam,
-////        Message.LParam);
-////    Exit;
-////  end;
-//  oldsellength := sellength;
-//  FOldWndProc(Message);
-//  if (Message.msg <> 176) and (oldsellength <> sellength) then
-//    debug(inttostr(message.msg));
-////  if SelLength > 0 then
-////    debug('ok')
-////  else
-////    debug('fail');
-//end;
 
 function TSpinIntEdit.GetValue: Integer;
 begin
@@ -484,6 +426,11 @@ begin
   Result := FUpDown.Min32;
 end;
 
+function TSpinIntEdit.GetIncrement: Integer;
+begin
+  Result := FUpDown.Increment;
+end;
+
 procedure TSpinIntEdit.SetMaximum(const Value: Integer);
 begin
   FUpDown.Max32 := Value;
@@ -492,6 +439,11 @@ end;
 procedure TSpinIntEdit.SetMinimum(const Value: Integer);
 begin
   FUpDown.Min32 := Value;
+end;
+
+procedure TSpinIntEdit.SetIncrement(const Value: Integer);
+begin
+  FUpDown.Increment := Value;
 end;
 
 function TSpinIntEdit.IsWithInMinMax(const Value: Integer): Boolean;
