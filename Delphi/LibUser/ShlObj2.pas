@@ -187,6 +187,8 @@ const
   CLSID_MenuBandSite : TGUID = (
     D1:$e13ef4e4; D2:$d2f2; D3:$11d0; D4:($98, $16, $00, $c0, $4f, $d9, $19, $72));
 
+  CLSID_TrayDeskBand: TGUID = '{E6442437-6C68-4f52-94DD-2CFED267EFB9}';
+
   STR_MYDOCS_CLSID = '{450D8FBA-AD25-11D0-98A8-0800361B1103}';
 
   //  BHIDs for IShellItem::BindToHandler()
@@ -447,6 +449,8 @@ const
   IID_IShellDetails: TGUID = (
     D1:$000214EC; D2:$0000; D3:$0000; D4:($C0,$00,$00,$00,$00,$00,$00,$46));
 {$ENDIF}
+
+  IID_ITrayDeskBand: TGUID = '{6D67E846-5B9C-4db8-9CBC-DDE12F4254F1}';
 
   SID_IDelayedRelease    = '{000214ED-0000-0000-C000-000000000046}';
   SID_LinkSite           = '{000214F9-0000-0000-C000-000000000046}';
@@ -3271,6 +3275,15 @@ const
 const
   { FILEDESCRIPTOR.dwFlags field indicate which fields are to be used }
   FD_PROGRESSUI       = $4000;       // Show Progress UI w/Drag and Drop
+
+type
+  ITrayDeskBand = interface(IUnknown)
+    ['{6D67E846-5B9C-4db8-9CBC-DDE12F4254F1}']
+    function ShowDeskBand(const clsid: TCLSID): HResult; stdcall;
+    function HideDeskBand(const clsid: TCLSID): HResult; stdcall;
+    function IsDeskBandShown(const clsid: TCLSID): HResult; stdcall;
+    function DeskBandRegistrationChanged(): HResult; stdcall;
+  end;
 
 type
   SHChangeNotifyEntry = record
