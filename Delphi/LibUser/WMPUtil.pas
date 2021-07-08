@@ -83,7 +83,6 @@ const
   ATLListViewClass: PChar = 'ATL:SysListView32';
   WMPFullScreenClass: PChar = 'WMPTransition';
   WMPControlContainerClass: PChar = 'CWmpControlCntr';
-  RebarWindowClass: PChar = 'ReBarWindow32';
 
   // WMP 11
   LibraryTreeViewCaption11: PChar = 'LibraryTree';
@@ -625,6 +624,8 @@ function WMPMediaItemsAreIdentical(Item: IDispatch;
 
 function WMErrorMessage(ErrorCode: Cardinal): String;
 
+// TODO: merge bool, int and string settings into one array of Variants
+
 type
   TWMPBoolSetting = (
     wmpbsFlushMetadata, // introduced in Win10
@@ -633,6 +634,13 @@ type
 
 function GetWMPBoolSetting(Setting: TWMPBoolSetting): Boolean;
 procedure SetWMPBoolSetting(Setting: TWMPBoolSetting; Value: Boolean);
+
+type
+  TWMPIntSetting = (wmpisDeskbandFlyoutTimeout);
+
+function GetWMPIntSettingDefault(Setting: TWMPIntSetting): Integer;
+function GetWMPIntSetting(Setting: TWMPIntSetting): Integer;
+procedure SetWMPIntSetting(Setting: TWMPIntSetting; Value: Integer);
 
 function IsWMPCDUrl(const URL: String): Boolean;
 function IsWMPDVDUrl(const URL: String): Boolean;
@@ -845,7 +853,7 @@ var
   hRebarWindow: HWND;
 begin
   Result := False;
-  hRebarWindow := FindWindowEx(WMPlayerAppWnd, 0, RebarWindowClass, nil);
+  hRebarWindow := FindWindowEx(WMPlayerAppWnd, 0, REBARCLASSNAME, nil);
   if hRebarWindow = 0 then
     Exit;
   Result := IsWindowVisible(hRebarWindow);
@@ -1377,7 +1385,7 @@ begin
 end;
 
 const
-  WMPBoolSettingValues: array[TWMPBoolSetting] of String = (
+  WMPBoolSettingValueNames: array[TWMPBoolSetting] of String = (
     'FlushMetadataToFiles', 'FlushRatingsToFiles');
   WMPBoolSettingDefaults: array[TWMPBoolSetting] of Boolean = (
     False, True);
@@ -1387,7 +1395,7 @@ begin
   with TMyRegistry.Create do try
     RootKey := HKEY_CURRENT_USER;
     if OpenKeyReadOnly(WMPPreferencesRegKey) then begin
-      Result := ReadBoolDef(WMPBoolSettingValues[Setting],
+      Result := ReadBoolDef(WMPBoolSettingValueNames[Setting],
           WMPBoolSettingDefaults[Setting])
     end
     else
@@ -1402,7 +1410,44 @@ begin
   with TMyRegistry.Create do try
     RootKey := HKEY_CURRENT_USER;
     if OpenKey(WMPPreferencesRegKey, True) then
-      WriteBool(WMPBoolSettingValues[Setting], Value)
+      WriteBool(WMPBoolSettingValueNames[Setting], Value)
+  finally
+    Free;
+  end;
+end;
+
+const
+  WMPIntSettingValueNames: array[TWMPIntSetting] of String = (
+    'DeskbandFlyoutTimeout');
+  WMPIntSettingDefaults: array[TWMPIntSetting] of Integer = (
+    5000);
+
+function GetWMPIntSettingDefault(Setting: TWMPIntSetting): Integer;
+begin
+  Result := WMPIntSettingDefaults[Setting];
+end;
+
+function GetWMPIntSetting(Setting: TWMPIntSetting): Integer;
+begin
+  with TMyRegistry.Create do try
+    RootKey := HKEY_CURRENT_USER;
+    if OpenKeyReadOnly(WMPPreferencesRegKey) then begin
+      Result := ReadIntegerSafe(WMPIntSettingValueNames[Setting],
+          WMPIntSettingDefaults[Setting])
+    end
+    else
+      Result := WMPIntSettingDefaults[Setting];
+  finally
+    Free;
+  end;
+end;
+
+procedure SetWMPIntSetting(Setting: TWMPIntSetting; Value: Integer);
+begin
+  with TMyRegistry.Create do try
+    RootKey := HKEY_CURRENT_USER;
+    if OpenKey(WMPPreferencesRegKey, True) then
+      WriteIntegerSafe(WMPIntSettingValueNames[Setting], Value)
   finally
     Free;
   end;
