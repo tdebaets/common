@@ -27,7 +27,7 @@ interface
 // TODO: remove Classes? (initialization/finalization)
 uses Windows, Messages, CommCtrl, SysUtils, ShlObj, ShellApi, ActiveX, Classes,
     Math, ComObj, ShFolder, PathFunc, Graphics, WinCrypt, WinSvc, TypInfo,
-    MyRegistry, EZDSLHsh;
+    MyRegistry, EZDSLHsh, CmnFunc2;
 
 type
   PPointer = ^Pointer;
@@ -213,7 +213,8 @@ procedure InterfaceDisconnect(const Source: IUnknown; const IID: TIID;
 
 function CoCreateInstanceAsAdmin(Handle: HWND; const ClassID, IID: TGuid;
     out ppv): HResult;
-function GetComObjectInprocServerPath(const CLSID: TGUID): String;
+function GetComObjectInprocServerPath(const CLSID: TGUID;
+    RegView: TRegView = rvDefault): String;
 
 // Menus
 
@@ -257,6 +258,16 @@ const
   WC_EDIT = 'Edit';
 
 const
+  GA_PARENT = 1;
+  GA_ROOT = 2;
+  GA_ROOTOWNER = 3;
+
+function GetAncestor (hwnd : Integer; gaFlags : Integer) : Integer; stdcall;
+    external user32 name 'GetAncestor'
+
+function GetShellWindow: HWND; stdcall; external user32;
+
+const
   OrigBaseUnitX = 6;
   OrigBaseUnitY = 13;
   BasePixelsPerInch = 96;
@@ -280,14 +291,7 @@ type
 
 function AllocateHWnd(Method: TWndMethod): HWND;
 procedure DeallocateHWnd(Wnd: HWND);
-
-const
-  GA_PARENT = 1;
-  GA_ROOT = 2;
-  GA_ROOTOWNER = 3;
-
-function GetAncestor (hwnd : Integer; gaFlags : Integer) : Integer; stdcall;
-    external user32 name 'GetAncestor'
+procedure DeallocateHWndSafe(var Wnd: HWND);
 
 // Strings
 
@@ -455,6 +459,9 @@ function InterlockedExchangePointer(var Target: Pointer;
 
 procedure FreeAndNilPIDL(var PIDL: PItemIDList);
 
+function GetTaskbarWindow: HWND;
+function RegisterTaskbarCreatedMsg: UINT;
+
 procedure GetFormatSettings2;
 
 type
@@ -504,7 +511,7 @@ type
 
 implementation
 
-uses DzURL, ShLwApi, ShlObj2, NativeApi, CmnFunc2;
+uses DzURL, ShLwApi, ShlObj2, NativeApi;
 
 procedure FreeAndNil(var Obj);
 var
@@ -595,7 +602,7 @@ begin
   // 'see' the old address before we patch.
   if Assigned(OldAddress) then
     InterlockedExchangePointer(OldAddress^, OrigAddress);
-  // Finally, parch the function table.
+  // Finally, patch the function table.
   // Using WriteProcessMemory because (unlike a direct write) it handles the
   // case where the function table resides in memory not marked as writeable.
   if WriteProcessMemory(GetCurrentProcess, TableEntry, @NewAddress,
@@ -1229,15 +1236,30 @@ begin
   Result := NewCoGetObject(PWideChar(MonikerName), @BindOpts, IID, ppv);
 end;
 
-function GetComObjectInprocServerPath(const CLSID: TGUID): String;
+function GetComObjectInprocServerPath(const CLSID: TGUID;
+    RegView: TRegView = rvDefault): String;
+var
+  KeyHandle: HKEY;
 begin
   Result := '';
-  with TMyRegistry.Create do try
-    RootKey := HKEY_CLASSES_ROOT;
-    if OpenKeyReadOnly('CLSID\' + GUIDToString(CLSID) + '\InprocServer32') then
-      Result := RemoveQuotes(ReadExpandStringSafe('', ''));
+  if RegOpenKeyExView(RegView, HKEY_CLASSES_ROOT,
+      PChar('CLSID\' + GUIDToString(CLSID)), 0, KEY_READ,
+      KeyHandle) <> ERROR_SUCCESS then
+    Exit;
+  try
+    with TMyRegistry.Create do try
+      // Small hack because TRegistry doesn't allow us to pass a custom
+      // samDesired parameter for the RegOpenKeyEx call. So we open the key
+      // ourselves first and then set the returned handle as RootKey so that we
+      // can still use TMyRegistry.ReadExpandStringSafe.
+      RootKey := KeyHandle;
+      if OpenKeyReadOnly('InprocServer32') then
+        Result := RemoveQuotes(ReadExpandStringSafe('', ''));
+    finally
+      Free;
+    end;
   finally
-    Free;
+    RegCloseKey(KeyHandle);
   end;
 end;
 
@@ -1516,6 +1538,14 @@ begin
   DestroyWindow(Wnd);
   if Instance <> @DefWindowProc then
     FreeObjectInstance(Instance);
+end;
+
+procedure DeallocateHWndSafe(var Wnd: HWND);
+begin
+  if Wnd <> 0 then begin
+    DeallocateHWnd(Wnd);
+    Wnd := 0;
+  end;
 end;
 
 function GetNextToken(const S: String; Separator: Char;
@@ -2910,6 +2940,16 @@ begin
   OldPIDL := PIDL;
   PIDL := nil;
   ILFree(OldPIDL)
+end;
+
+function GetTaskbarWindow: HWND;
+begin
+  Result := FindWindow('Shell_TrayWnd', '');
+end;
+
+function RegisterTaskbarCreatedMsg: UINT;
+begin
+  Result := RegisterWindowMessage('TaskbarCreated');
 end;
 
 procedure GetFormatSettings2;
