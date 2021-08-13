@@ -132,6 +132,9 @@ const
   IDTRYAGAIN = 10;
   IDCONTINUE = 11;
 
+const
+  ONE_SEC = 1000;
+
 type
   PMethod = ^TMethod;
   TMethodFunc = procedure of object;
