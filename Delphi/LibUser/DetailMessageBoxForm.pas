@@ -27,7 +27,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   DialogForm, ExtCtrls, ThemeMgr, StdCtrls, ComCtrls, CtrlsCommon, Common2,
-  ImgList, EnhListView, ExtListView, SizeGrip, SysLink, ClipBrd;
+  ImgList, EnhListView, ExtListView, SizeGrip, SysLink, ClipBrd, CommCtrl;
 
 type
   TDetailMessageBoxForm = class(TDialogForm)
@@ -51,11 +51,13 @@ type
   private
     fpWidth: PInteger;
     fpHeight: PInteger;
+    fDetailIcon: TCommonIcon;
   public
     constructor Create(hWndParent: HWND; pWidth, pHeight: PInteger;
         const Title, MessageText: String; MainIcon: PChar;
         DetailIcon: TCommonIcon); reintroduce;
-    procedure AddDetail(const Fields: array of String);
+    procedure AddDetail(const Fields: array of String); overload;
+    procedure AddDetail(const Fields: array of String; Icon: TCommonIcon); overload;
     procedure ClearDetails;
     procedure SetColumns(const Columns: array of String);
     procedure SetDetailIcon(ResourceID: PChar);
@@ -74,25 +76,32 @@ constructor TDetailMessageBoxForm.Create(hWndParent: HWND;
     pWidth, pHeight: PInteger; const Title, MessageText: String; MainIcon: PChar;
     DetailIcon: TCommonIcon);
 var
-  Icon: TIcon;
+  CommonIcon: TCommonIcon;
+  IconHandle: HICON;
 begin
   inherited Create(hWndParent);
   fpWidth := pWidth;
   fpHeight := pHeight;
+  fDetailIcon := DetailIcon;
   Caption := Title;
   lblMessage.Caption := MessageText + MessageEpilog;
   imgIcon.Picture.Icon.Handle := LoadIcon(0, MainIcon);
   ConvertTo32BitImageList(Images);
   Images.Clear;
-  if DetailIcon <> ciNone then begin
-    Icon := TIcon.Create;
-    try
-      Icon.ReleaseHandle;
-      Icon.Handle := LoadCommonIcon(DetailIcon, 16, 16);
-      Images.AddIcon(Icon);
-    finally
-      FreeAndNil(Icon);
-    end;
+  for CommonIcon := Low(TCommonIcon) to High(TCommonIcon) do begin
+    if CommonIcon = ciNone then begin
+      // Load a dummy (OEM) icon for ciNone to add to the image list. This way,
+      // the indices in the image list are consistent with the corresponding
+      // TCommonIcon values.
+      IconHandle := LoadImage(0, MakeIntResource(OIC_SAMPLE), IMAGE_ICON,
+          16, 16, LR_SHARED);
+    end
+    else
+      IconHandle := LoadCommonIcon(CommonIcon, 16, 16);
+    ImageList_AddIcon(Images.Handle, IconHandle);
+    // OEM icons shouldn't be destroyed
+    if CommonIcon <> ciNone then
+      DestroyIcon(IconHandle);
   end;
 end;
 
@@ -125,6 +134,12 @@ begin
 end;
 
 procedure TDetailMessageBoxForm.AddDetail(const Fields: array of String);
+begin
+  AddDetail(Fields, fDetailIcon);
+end;
+
+procedure TDetailMessageBoxForm.AddDetail(const Fields: array of String;
+    Icon: TCommonIcon);
 var
   i: Integer;
 begin
@@ -134,6 +149,7 @@ begin
       for i := Low(Fields) + 1 to High(Fields) do
         SubItems.Add(Fields[i]);
     end;
+    ImageIndex := Integer(Icon);
   end;
 end;
 
