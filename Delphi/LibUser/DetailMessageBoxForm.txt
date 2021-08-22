@@ -1,0 +1,105 @@
+object DetailMessageBoxForm: TDetailMessageBoxForm
+  Left = 372
+  Top = 435
+  BorderStyle = bsDialog
+  Caption = 'Info'
+  ClientHeight = 273
+  ClientWidth = 641
+  Color = clBtnFace
+  Constraints.MinHeight = 250
+  Constraints.MinWidth = 550
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Shell Dlg 2'
+  Font.Style = []
+  OldCreateOrder = True
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnResize = FormResize
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+  object imgIcon: TImage
+    Left = 12
+    Top = 12
+    Width = 32
+    Height = 32
+    AutoSize = True
+  end
+  object lblMessage: TLabel
+    Left = 62
+    Top = 12
+    Width = 567
+    Height = 37
+    AutoSize = False
+    Caption = 'xxx'
+    WordWrap = True
+  end
+  object lvDetails: TdfsExtListView
+    Left = 12
+    Top = 56
+    Width = 617
+    Height = 139
+    Columns = <>
+    ExtendedStyles = [lvxFullRowSelect, lvxLabelTip]
+    NoColumnResize = False
+    ColumnsFormat = <>
+    ShowSortArrows = True
+    AutoColumnSort = acsSortToggle
+    AutoSortStyle = assDefault
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    ReadOnly = True
+    TabOrder = 0
+    ViewStyle = vsReport
+    SmallImages = Images
+    DoubleBuffered = False
+  end
+  object BottomPanel: TPanel
+    Left = 0
+    Top = 224
+    Width = 641
+    Height = 49
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 2
+    OnResize = BottomPanelResize
+    object btnOK: TButton
+      Left = 278
+      Top = 12
+      Width = 75
+      Height = 23
+      Cancel = True
+      Caption = 'OK'
+      Default = True
+      TabOrder = 0
+      OnClick = btnOKClick
+    end
+  end
+  object SizeGrip1: TSizeGrip
+    Left = 624
+    Top = 256
+    Width = 17
+    Height = 17
+    Cursor = crSizeNWSE
+  end
+  object lnkCopy: TSysLink
+    Left = 12
+    Top = 202
+    Width = 181
+    Height = 17
+    OnClickLink = lnkCopyClickLink
+    Anchors = [akLeft, akBottom]
+    Caption = '<a>Copy to Clipboard</a>'
+    TabOrder = 1
+    TabStop = True
+  end
+  object ThemeManager1: TThemeManager
+    Left = 20
+    Top = 232
+  end
+  object Images: TImageList
+    Left = 80
+    Top = 230
+  end
+end
