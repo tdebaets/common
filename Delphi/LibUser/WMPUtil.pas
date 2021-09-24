@@ -151,7 +151,8 @@ function GetWMPMainVersion(const Version: WideString): Byte;
 function GetWMPLibraryPath: String;
 function WMPGetItemInfo(Media: IWMPMedia;
     const bstrItemName: WideString): WideString;
-function FindAtlWindow(hwndParent: HWND; const WindowTitle: String): Integer;
+function FindATLWindow(hWndParent: HWND; const ClassName: String;
+    pWindowTitle: PChar): Integer;
 procedure GetWMPLocalizedCaptions(hWMPLoc: HMODULE;
     var Captions: TWMPLocalizedCaptions);
 
@@ -665,8 +666,8 @@ uses CmnFunc2, PathFunc, PathFuncWide, Scanf;
 
 type
   TFindWindowInfo = record
-    ClassName: PChar;
-    WindowTitle: PChar;
+    pClassName: PChar;
+    pWindowTitle: PChar;
     ExStyle: Integer;
     Result: HWND;
   end;
@@ -681,7 +682,7 @@ var
 begin
   Result := True;
   GetClassName(hWnd, Buffer, SizeOf(Buffer));
-  if lstrcmpi(Buffer, pInfo.ClassName) = 0 then begin
+  if lstrcmpi(Buffer, pInfo.pClassName) = 0 then begin
     if pInfo.ExStyle <> 0 then begin
       ExStyle := GetWindowLong(hWnd, GWL_EXSTYLE);
       if (ExStyle and pInfo.ExStyle) = 0 then
@@ -701,7 +702,7 @@ var
   Info: TFindWindowInfo;
 begin
   FillChar(Info, SizeOf(Info), 0);
-  Info.ClassName := PChar(ClassName);
+  Info.pClassName := PChar(ClassName);
   Info.ExStyle := ExStyle;
   EnumWindows(@FindWinInCurrentProcessProc, Integer(@Info));
   Result := Info.Result;
@@ -764,29 +765,32 @@ end;
 const
   AtlClassName = 'ATL:';
 
-function FindAtlWindowProc(hWnd: HWND; pInfo: PFindWindowInfo): BOOL; stdcall;
+function FindATLWindowProc(hWnd: HWND; pInfo: PFindWindowInfo): BOOL; stdcall;
 var
-  ClassName: array[0..Length(AtlClassName)] of Char;
-  WinText: String;
+  ClassName, WinText: String;
 begin
   Result := True;
-  GetClassName(hWnd, ClassName, SizeOf(ClassName));
-  if lstrcmpi(ClassName, AtlClassName) = 0 then begin
+  ClassName := WindowClassName(hWnd);
+  if lstrcmpi(PChar(ClassName), pInfo.pClassName) <> 0 then
+    Exit;
+  if Assigned(pInfo.pWindowTitle) then begin
     WinText := WindowText(hWnd);
-    if lstrcmpi(PChar(WinText), pInfo.WindowTitle) = 0 then begin
-      pInfo.Result := hWnd;
-      Result := False;
-    end;
+    if lstrcmpi(PChar(WinText), pInfo.pWindowTitle) <> 0 then
+      Exit;
   end;
+  pInfo.Result := hWnd;
+  Result := False;
 end;
 
-function FindAtlWindow(hwndParent: HWND; const WindowTitle: String): Integer;
+function FindATLWindow(hWndParent: HWND; const ClassName: String;
+    pWindowTitle: PChar): Integer;
 var
   Info: TFindWindowInfo;
 begin
   FillChar(Info, SizeOf(Info), 0);
-  Info.WindowTitle := PChar(WindowTitle);
-  EnumChildWindows(hwndParent, @FindAtlWindowProc, Integer(@Info));
+  Info.pClassName := PChar(AtlClassName + ClassName);
+  Info.pWindowTitle := pWindowTitle;
+  EnumChildWindows(hWndParent, @FindATLWindowProc, Integer(@Info));
   Result := Info.Result;
 end;
 
