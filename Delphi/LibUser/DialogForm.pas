@@ -76,7 +76,6 @@ type
     function ScaleY(Y: Integer): Integer;
     function DescaleX(X: Integer): Integer;
     function DescaleY(Y: Integer): Integer;
-    //class procedure ShowDialog(hWndParent: HWND);
   published
     { Make TCustomForm members public }
     //property Action;
@@ -175,7 +174,6 @@ const
 
 constructor TDialogForm.Create(hWndParent: HWND; pData: Pointer);
 var
-  //VerInfo: TOSVersionInfo;
   ThemesAvailable: Boolean;
   MsgBoxFont: TLogFontW;
 begin
@@ -202,15 +200,6 @@ begin
           MsgBoxFont)) then
         Font.Handle := CreateFontIndirectW(MsgBoxFont);
     end;
-    // TODO: remove
-//    FillChar(VerInfo, SizeOf(VerInfo), 0);
-//    VerInfo.dwOSVersionInfoSize := SizeOf(VerInfo);
-//    GetVersionEx(VerInfo);
-//    if (VerInfo.dwMajorVersion >= 6) then begin
-//      //or ((VerInfo.dwMajorVersion = 6) and (VerInfo.dwMinorVersion >= 1)) then begin
-//      Font.Name := 'Segoe UI';
-//      Font.Size := 9;
-//    end;
   end;
 end;
 
@@ -236,8 +225,7 @@ begin
   if Resizable then begin
     Style := GetWindowLongW(fDialogHandle, GWL_STYLE);
     // Combining WS_SYSMENU with WS_THICKFRAME has the side-effect that resizing
-    // doesnt work anymore
-    // see WM_NCLBUTTONDOWN handler
+    // doesn't work anymore, see WM_NCLBUTTONDOWN handler
     SetWindowLongW(fDialogHandle, GWL_STYLE,
         (Style {and not WS_SYSMENU}) or WS_THICKFRAME);
   end;
@@ -291,24 +279,16 @@ begin
   if fhWndParent <> 0 then
     fhWndParent := GetAncestor(fhWndParent, GA_ROOT);
   fWasDisabled := EnableWindow(fhWndParent, False);
-  {while fDialogActive and GetMessage(Msg, 0, 0, 0) do begin
-    if not IsDialogMessage(fDialogHandle, Msg) then begin
-      TranslateMessage(Msg);
-      DispatchMessage(Msg);
-    end;
-  end;
-  if Msg.message = WM_QUIT then
-    PostQuitMessage(msg.wParam);}
   repeat
     // TODO: restore original exit code?
     if not HandleAppMessage then
       Break;
   until not fDialogActive;
   Result := DialogResult;
-//  if not fWasDisabled then
-//    EnableWindow(fhWndParent, True);
-//  ShowWindow(fDialogHandle, SW_HIDE);
-//  Hide;
+  // Note: re-enabling our owner window and hiding ourselves doesn't happen here,
+  // but in TDialogForm.Close
+  // We can't just set ParentWindow to 0 because then Delphi destroys our
+  // window handle
   ParentWindow := GetDesktopWindow;
 end;
 
@@ -353,14 +333,10 @@ begin
       fOrigWndProc := Pointer(GetWindowLongW(hWnd, GWL_WNDPROC));
       SetWindowLongW(hWnd, GWL_WNDPROC, Longint(fObjectInstance));
     end;
-    WM_CLOSE: begin
-      //EndDialog(hWnd, 0);
+    WM_CLOSE:
       Close;
-      //DoClose;
-    end;
-    WM_DESTROY: begin
+    WM_DESTROY:
       fDialogHandle := 0;
-    end;
     WM_SIZE: begin
       if fInitialBoundsSet then begin
         ClientHeight := HiWord(lParam);
