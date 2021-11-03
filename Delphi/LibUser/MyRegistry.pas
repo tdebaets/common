@@ -28,6 +28,11 @@ interface
 
 uses Windows, Registry, Classes, SysUtils;
 
+function RegLoadMUIStringW(hKey: HKEY; pszValue: PWideChar; pszOutBuf: PWideChar;
+    cbOutBuf: DWORD; pcbData: PDWORD; Flags: DWORD;
+    pszDirectory: PWideChar): Longint; stdcall;
+    external advapi32 name 'RegLoadMUIStringW'; // TODO: must use Unicode version instead?
+
 type
   TMyRegistry = class;
   
@@ -46,6 +51,8 @@ type
     function ReadIntegerDef(const Name: String; default: Integer): Integer;
     function ReadBoolDef(const Name: String; default: Boolean): Boolean;
     function ReadStringDef(const Name: String; default: String): String;
+    function ReadMUIStringDef(const Name: WideString;
+        default: WideString): WideString;
 
     function ReadIntegerSafe(const Name: String; default : Integer): Integer;
     function ReadStringSafe(const Name, default: String): String;
@@ -149,6 +156,29 @@ begin
   end
   else
     Result := default;
+end;
+
+function TMyRegistry.ReadMUIStringDef(const Name: WideString;
+    default: WideString): WideString;
+var
+  Len: Integer;
+  Res: Longint;
+begin
+  Result := default;
+  Len := 0;
+  // Must use the Unicode version of RegLoadMUIString here - the ANSI version
+  // always returns ERROR_CALL_NOT_IMPLEMENTED.
+  RegLoadMUIStringW(CurrentKey, PWideChar(Name), nil, 0, @Len, 0, nil);
+  if Len <= 0 then
+    Exit;
+  SetString(Result, nil, Len div SizeOf(WideChar));
+  Res := RegLoadMUIStringW(CurrentKey, PWideChar(Name), PWideChar(Result), Len,
+      @Len, 0, nil);
+  if Res <> ERROR_SUCCESS then begin
+    Result := default;
+    Exit;
+  end;
+  SetLength(Result, lstrlenW(PWideChar(Result)));
 end;
 
 function TMyRegistry.ReadIntegerSafe(const Name: String;
