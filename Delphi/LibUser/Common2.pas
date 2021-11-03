@@ -214,10 +214,18 @@ procedure InterfaceDisconnect(const Source: IUnknown; const IID: TIID;
 
 // COM
 
+type
+  TCOMObjectInfo = record
+    InprocServerPath: String;
+    LocalizedString: String;
+  end;
+
 function CoCreateInstanceAsAdmin(Handle: HWND; const ClassID, IID: TGuid;
     out ppv): HResult;
-function GetComObjectInprocServerPath(const CLSID: TGUID;
+function GetCOMObjectInprocServerPath(const CLSID: TGUID;
     RegView: TRegView = rvDefault): String;
+function GetCOMObjectInfo(const CLSID: TGUID; var Info: TCOMObjectInfo;
+    RegView: TRegView = rvDefault): Boolean;
 
 // Menus
 
@@ -1239,12 +1247,23 @@ begin
   Result := NewCoGetObject(PWideChar(MonikerName), @BindOpts, IID, ppv);
 end;
 
-function GetComObjectInprocServerPath(const CLSID: TGUID;
+function GetCOMObjectInprocServerPath(const CLSID: TGUID;
     RegView: TRegView = rvDefault): String;
+var
+  Info: TCOMObjectInfo;
+begin
+  if GetCOMObjectInfo(CLSID, Info, RegView) then
+    Result := Info.InprocServerPath
+  else
+    Result := '';
+end;
+
+function GetCOMObjectInfo(const CLSID: TGUID; var Info: TCOMObjectInfo;
+    RegView: TRegView = rvDefault): Boolean;
 var
   KeyHandle: HKEY;
 begin
-  Result := '';
+  Result := False;
   if RegOpenKeyExView(RegView, HKEY_CLASSES_ROOT,
       PChar('CLSID\' + GUIDToString(CLSID)), 0, KEY_READ,
       KeyHandle) <> ERROR_SUCCESS then
@@ -1256,11 +1275,15 @@ begin
       // ourselves first and then set the returned handle as RootKey so that we
       // can still use TMyRegistry.ReadExpandStringSafe.
       RootKey := KeyHandle;
+      if not OpenKeyReadOnly('') then
+        Exit;
+      Info.LocalizedString := ReadMUIStringDef('LocalizedString', '');
       if OpenKeyReadOnly('InprocServer32') then
-        Result := RemoveQuotes(ReadExpandStringSafe('', ''));
+        Info.InprocServerPath := RemoveQuotes(ReadExpandStringSafe('', ''));
     finally
       Free;
     end;
+    Result := True;
   finally
     RegCloseKey(KeyHandle);
   end;
