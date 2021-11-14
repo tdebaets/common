@@ -68,6 +68,7 @@ set LIBUSER_UNITS= ^
     uProcessMemMgr.pas ^
     WMPAttribs.pas ^
     WMPPlug.pas ^
+    WMPRestartMgr.pas ^
     WMPUndocumented.pas ^
     WMPUtil.pas ^
     WMPWSZFormat.pas
