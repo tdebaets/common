@@ -129,6 +129,9 @@ const
 const
   PLUGIN_TYPE_MASK = $000000FF;
 
+const
+  SID_SWMPRemoteMediaServices: TGUID = '{DF333473-2CF7-4be2-907F-9AAD5661364F}';
+
 function GetWMPlayerAppWindow: HWND;
 function IsMainWMPWindow(hWnd: HWND; pClassName: PChar): Boolean;
 function GetWMPNowPlayingWindow: HWND;
