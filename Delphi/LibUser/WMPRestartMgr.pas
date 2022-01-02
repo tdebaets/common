@@ -22,13 +22,12 @@
 
 unit WMPRestartMgr;
 
-// TODO: send message to deskband to deactivate itself
 // TODO: force WMPStateRestore to always restore all state regardless of current settings (by passing command-line param)
 
 interface               
 
-uses Windows, Messages, SysUtils, ShellAPI, WMPUtil, Common2, CommonUnicode,
-    CmnFunc2, PathFunc;
+uses Windows, Messages, SysUtils, ShellAPI, ActiveX, WMPUtil, Common2,
+    CommonUnicode, CmnFunc2, PathFunc;
 
 type
   TWMPRestartMgrErrorReason = (wmprmeNoExitProcessHook, wmprmeNoWMPlayerApp,
@@ -67,6 +66,8 @@ type
     fhRestarterProc: THandle;
     function CheckRemoteApps(hWndParent: HWND; Core: IWMPCoreSafe;
         var IsCanceled: Boolean): Boolean;
+    function GetRemoteApps(Core: IWMPCoreSafe; var Count: Integer;
+        pNames: PStringArray): Boolean;
     procedure OnError(hWndParent: HWND; Reason: TWMPRestartMgrErrorReason;
         ErrorCode: Integer);
     procedure TimerProc(hwnd: HWND; uMsg, idEvent: UINT; dwTime: DWORD); stdcall;
@@ -86,7 +87,7 @@ function RestartWMP(Wnd: HWnd; Instance: HInst; CmdLine: PChar;
 
 implementation
 
-uses ClassCallback;
+uses ClassCallback, WMPLib_TLB, WMPUndocumented;
 
 const
   AppRestarterTimeout = 5000; // milliseconds
@@ -224,7 +225,7 @@ var
 begin
   Result := True;
   while True do begin
-    if not GetWMPRemoteApps(Core, NumRemoteApps, @RemoteAppNames) then
+    if not GetRemoteApps(Core, NumRemoteApps, @RemoteAppNames) then
       Break;
     if NumRemoteApps = 0 then
       Break;
@@ -237,6 +238,67 @@ begin
       Break;
     end;
   end;
+end;
+
+function TWMPRestartMgr.GetRemoteApps(Core: IWMPCoreSafe; var Count: Integer;
+    pNames: PStringArray): Boolean;
+  procedure HandleRemoteLocation(RemoteObj: IUnknown);
+  var
+    OleObject: IOleObject;
+    ClientSite: IOleClientSite;
+    ServiceProvider: IServiceProvider;
+    RemoteServices: IWMPRemoteMediaServices;
+    ServiceType, AppName: WideString;
+  begin
+    if not Assigned(RemoteObj) then
+      Exit;
+    if not Succeeded(RemoteObj.QueryInterface(IOleObject, OleObject)) then
+      Exit;
+    if not Succeeded(OleObject.GetClientSite(ClientSite)) then
+      Exit;
+    if not Succeeded(ClientSite.QueryInterface(IServiceProvider,
+        ServiceProvider)) then
+      Exit;
+    // On WMP 11, the following call (for an actual remote app that isn't a
+    // deskband), always fails
+    // TODO: try to find out why (WMP11)
+    if not Succeeded(ServiceProvider.QueryService(SID_SWMPRemoteMediaServices,
+        IWMPRemoteMediaServices, RemoteServices)) then
+      Exit;
+    if not Succeeded(RemoteServices.GetServiceType(ServiceType)) then
+      Exit;
+    if CompareText(ServiceType, WMPServiceType_RemoteDeskband) = 0 then
+      Exit;
+    if not Succeeded(RemoteServices.GetApplicationName(AppName)) then
+      Exit;
+    Inc(Count);
+    if Assigned(pNames) then
+      AddToStringArray(pNames^, AppName);
+  end;
+var
+  PluginMgr: IWMPPluginMgr;
+  NumLocations, i: Integer;
+  RemoteObj: IUnknown;
+  RequestType: Integer;
+begin
+  Result := False;
+  if Assigned(pNames) then
+    SetLength(pNames^, 0);
+  Count := 0;
+  if not Succeeded(Core.QueryInterface(IWMPPluginMgr, PluginMgr)) then
+    Exit;
+  // On WMP 11, the following call returns a count of 0 when only the deskband is
+  // enabled
+  // TODO: try to find out why (WMP11)
+  if not Succeeded(PluginMgr.getRemoteLocationsCount(NumLocations)) then
+    Exit;
+  for i := 0 to NumLocations - 1 do begin
+    if not Succeeded(PluginMgr.getRemoteLocationInfo(i, RemoteObj,
+        RequestType)) then
+      Continue;
+    HandleRemoteLocation(RemoteObj);
+  end;
+  Result := True;
 end;
 
 procedure TWMPRestartMgr.SetExitProcessHooked;
