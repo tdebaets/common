@@ -26,7 +26,10 @@ unit WMPUndocumented;
 
 interface
 
-uses Windows, ActiveX;
+uses Windows, ActiveX, WMPLib_TLB;
+
+const
+  WMPServiceType_RemoteDeskband = 'RemoteDeskband';
 
 type
   IWMPItemData = interface(IUnknown)
@@ -654,6 +657,37 @@ type
     ExportToXML}
   end;
 
+  IWMPPluginMgr = interface(IDispatch)
+    ['{d658392c-e872-11d2-83c2-00c04f8edcc4}']
+    function add: HResult; stdcall; // prototype not known - do not use
+    function remove: HResult; stdcall; // prototype not known - do not use
+    function removeAll: HResult; stdcall; // prototype not known - do not use
+    function registerRemoteLocation: HResult; stdcall; // prototype not known - do not use
+    function unregisterRemoteLocation: HResult; stdcall; // prototype not known - do not use
+    function setCurrentLocation: HResult; stdcall; // prototype not known - do not use
+    function hasDisplay: HResult; stdcall; // prototype not known - do not use
+    function finishPendingWork: HResult; stdcall; // prototype not known - do not use
+    function getRemoteLocationsCount(out Count: Integer): HResult; stdcall;
+    function getRemoteLocationInfo(Index: Integer; out RemoteObj: IUnknown;
+        out RequestType: Integer): HResult; stdcall;
+    {CPluginMgr::getActiveVideoControl
+    CPluginMgr::notifyDeviceArrivalRemoval
+    CPluginMgr::notifyDeviceStatusChange
+    CPluginMgr::notifyDeviceSyncStateChange
+    CPluginMgr::notifyDeviceSyncError
+    CPluginMgr::notifyCreatePartnershipComplete
+    CPluginMgr::notifyCdromRipStateChange
+    CPluginMgr::notifyCdromRipMediaError
+    CPluginMgr::notifyCdromBurnStateChange
+    CPluginMgr::notifyCdromBurnMediaError
+    CPluginMgr::notifyCdromBurnError
+    CPluginMgr::notifyGrovelStateChange
+    CPluginMgr::notifyLibraryConnect
+    CPluginMgr::notifyLibraryDisconnect
+    CPluginMgr::InstallPlugins
+    CPluginMgr::notifyDeviceEstimationComplete}
+  end;
+
   IWMPPlaylistMgr = interface(IUnknown)
     ['{68087ca1-72da-11d3-b15e-00c04f79faa6}']
     function Init: HResult; stdcall; // prototype not known - do not use
@@ -693,6 +727,14 @@ type
     function IsMinimumLibraryRightsRead
     function CanAddToLibrary
     function InitWMDRMQuery}
+  end;
+
+  IWMPPlaylistEventHandler = interface(IUnknown)
+    ['{68087ca2-72da-11d3-b15e-00c04f79faa6}']
+    function NotifyAboutToClearPlaylist: HResult; stdcall; // prototype not known - do not use
+    function NotifyAboutToRemoveItem: HResult; stdcall; // prototype not known - do not use
+    function NotifyPlaylistChanged(Playlist: IUnknown {IWMPPlaylist};
+        Unknown: Integer; change: WMPPlaylistChangeEventType): HResult; stdcall;
   end;
 
   IWMPListControlViewHandler = interface(IUnknown)
