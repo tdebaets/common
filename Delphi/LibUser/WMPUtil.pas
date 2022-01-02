@@ -632,7 +632,6 @@ function WMErrorMessage(ErrorCode: Cardinal): String;
 
 type
   TWMPBoolSetting = (
-    wmpbsCanEnableDeskBand,
     wmpbsFlushMetadata, // introduced in Win10
     wmpbsFlushRatings
   );
@@ -1394,9 +1393,9 @@ end;
 
 const
   WMPBoolSettingValueNames: array[TWMPBoolSetting] of String = (
-    'CanEnableDeskBand', 'FlushMetadataToFiles', 'FlushRatingsToFiles');
+    'FlushMetadataToFiles', 'FlushRatingsToFiles');
   WMPBoolSettingDefaults: array[TWMPBoolSetting] of Boolean = (
-    False, False, True);
+    False, True);
 
 function GetWMPBoolSetting(Setting: TWMPBoolSetting): Boolean;
 begin
