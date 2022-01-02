@@ -39,6 +39,8 @@ wstring GetModuleName(HMODULE hModule);
 
 bool Is64BitWindows();
 
+bool LoadResString(HINSTANCE hInstance, UINT uID, wstring & refString);
+
 /*
  * Defining DbgOut as a macro to allow projects to override this with their own
  * specific define (e.g. to prepend a project-specific prefix).

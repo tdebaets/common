@@ -73,6 +73,18 @@ bool Is64BitWindows()
 #endif
 }
 
+bool LoadResString(HINSTANCE hInstance, UINT uID, wstring & refString)
+{
+    TCHAR buffer[1024];
+
+    if (LoadString(hInstance, uID, buffer, ARRAYSIZE(buffer)) == 0)
+        return false;
+
+    refString = wstring(buffer);
+
+    return true;
+}
+
 void _DbgOut(LPCWSTR kwszDebugFormatString, ...)
 {
     INT     cbFormatString = 0;
