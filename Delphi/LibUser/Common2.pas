@@ -27,7 +27,7 @@ interface
 // TODO: remove Classes? (initialization/finalization)
 uses Windows, Messages, CommCtrl, SysUtils, ShlObj, ShellApi, ActiveX, Classes,
     Math, ComObj, ShFolder, PathFunc, Graphics, WinCrypt, WinSvc, TypInfo,
-    MyRegistry, EZDSLHsh, CmnFunc2;
+    Registry, MyRegistry, EZDSLHsh, CmnFunc2;
 
 type
   PPointer = ^Pointer;
@@ -214,18 +214,12 @@ procedure InterfaceDisconnect(const Source: IUnknown; const IID: TIID;
 
 // COM
 
-type
-  TCOMObjectInfo = record
-    InprocServerPath: String;
-    LocalizedString: String;
-  end;
-
 function CoCreateInstanceAsAdmin(Handle: HWND; const ClassID, IID: TGuid;
     out ppv): HResult;
-function GetCOMObjectInprocServerPath(const CLSID: TGUID;
-    RegView: TRegView = rvDefault): String;
-function GetCOMObjectInfo(const CLSID: TGUID; var Info: TCOMObjectInfo;
+function OpenCOMObjectKey(Registry: TRegistry; const CLSID: TGUID;
     RegView: TRegView = rvDefault): Boolean;
+function GetCOMObjectInprocServerPath(const CLSID: TGUID;
+    RegView: TRegView = rvDefault): String; overload
 
 // Menus
 
@@ -1247,18 +1241,7 @@ begin
   Result := NewCoGetObject(PWideChar(MonikerName), @BindOpts, IID, ppv);
 end;
 
-function GetCOMObjectInprocServerPath(const CLSID: TGUID;
-    RegView: TRegView = rvDefault): String;
-var
-  Info: TCOMObjectInfo;
-begin
-  if GetCOMObjectInfo(CLSID, Info, RegView) then
-    Result := Info.InprocServerPath
-  else
-    Result := '';
-end;
-
-function GetCOMObjectInfo(const CLSID: TGUID; var Info: TCOMObjectInfo;
+function OpenCOMObjectKey(Registry: TRegistry; const CLSID: TGUID;
     RegView: TRegView = rvDefault): Boolean;
 var
   KeyHandle: HKEY;
@@ -1268,24 +1251,37 @@ begin
       PChar('CLSID\' + GUIDToString(CLSID)), 0, KEY_READ,
       KeyHandle) <> ERROR_SUCCESS then
     Exit;
+  Registry.CloseKey;
+  // Small hack because TRegistry doesn't allow us to pass a custom
+  // samDesired parameter (to access the 64-bit registry view) for the
+  // RegOpenKeyEx call. So we open the key ourselves first and then set the
+  // returned handle as RootKey so that we can still use
+  // TMyRegistry.ReadExpandStringSafe.
+  Registry.RootKey := KeyHandle;
+  Result := Registry.OpenKeyReadOnly('');
+end;
+
+function GetCOMObjectInprocServerPath(Registry: TMyRegistry): String; overload;
+begin
+  if Registry.OpenKeyReadOnly('InprocServer32') then
+    Result := RemoveQuotes(Registry.ReadExpandStringSafe('', ''))
+  else
+    Result := '';
+end;
+
+function GetCOMObjectInprocServerPath(const CLSID: TGUID;
+    RegView: TRegView = rvDefault): String; overload;
+var
+  Registry: TMyRegistry;
+begin
+  Registry := TMyRegistry.Create;
   try
-    with TMyRegistry.Create do try
-      // Small hack because TRegistry doesn't allow us to pass a custom
-      // samDesired parameter for the RegOpenKeyEx call. So we open the key
-      // ourselves first and then set the returned handle as RootKey so that we
-      // can still use TMyRegistry.ReadExpandStringSafe.
-      RootKey := KeyHandle;
-      if not OpenKeyReadOnly('') then
-        Exit;
-      Info.LocalizedString := ReadMUIStringDef('LocalizedString', '');
-      if OpenKeyReadOnly('InprocServer32') then
-        Info.InprocServerPath := RemoveQuotes(ReadExpandStringSafe('', ''));
-    finally
-      Free;
-    end;
-    Result := True;
+    if OpenCOMObjectKey(Registry, CLSID, RegView) then
+      Result := GetCOMObjectInprocServerPath(Registry)
+    else
+      Result := '';
   finally
-    RegCloseKey(KeyHandle);
+    FreeAndNil(Registry);
   end;
 end;
 
