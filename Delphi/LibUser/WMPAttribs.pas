@@ -75,6 +75,7 @@ type
     wmpaFileType,
     wmpaIs_Protected,
     wmpaIsVBR,
+    wmpaMediaContentTypes,
     wmpaMediaType,
     wmpaMoreInfo,
     wmpaPeakValue,
@@ -213,6 +214,9 @@ const
     (Name: 'IsVBR'; Typ: wmpadtInt; MultipleValues: False;
         StoreTypes: [wmpastFile];
         AppliesTo: [wmpmtAudio]),
+    (Name: 'MediaContentTypes'; Typ: wmpadtInt; MultipleValues: False;
+        StoreTypes: [wmpastLibrary];
+        AppliesTo: [wmpmtPlaylist]),
     (Name: 'MediaType'; Typ: wmpadtString; MultipleValues: False;
         StoreTypes: [wmpastLibrary];
         AppliesTo: [wmpmtAudio]),
@@ -442,6 +446,18 @@ const
         StoreTypes: [wmpastFile];
         AppliesTo: [wmpmtAudio])
   );
+
+// Possible values for MediaContentTypes, according to WMP's Attribute Reference
+type
+  WMPMediaContentType = Cardinal;
+const
+  wmpmctAudio         = 1;
+  wmpmctToBeSupplied  = 2;
+  wmpmctAudio2        = 3;
+  wmpmctVideo         = 4;
+  wmpmctPicture       = 5;
+  wmpmctTv            = 6;
+
 
 function FindWMPAttribute(const Name: WideString;
     var Attribute: TWMPAttribute): Boolean;
