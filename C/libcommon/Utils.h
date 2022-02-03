@@ -38,6 +38,7 @@ BOOL CloseHandleSafe(PHANDLE phObject);
 wstring GetModuleName(HMODULE hModule);
 
 bool Is64BitWindows();
+bool Is64BitExplorerRunning(bool & bIs64Bit);
 
 bool LoadResString(HINSTANCE hInstance, UINT uID, wstring & refString);
 

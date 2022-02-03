@@ -73,6 +73,48 @@ bool Is64BitWindows()
 #endif
 }
 
+bool Is64BitExplorerRunning(bool & bIs64Bit)
+{
+    HWND    hWndShell   = 0;
+    DWORD   dwProcID    = 0;
+    HANDLE  hProc       = 0;
+    BOOL    bIsWow64    = FALSE;
+
+    if (!Is64BitWindows())
+    {
+        bIs64Bit = false;
+        return true;
+    }
+
+    hWndShell = GetShellWindow();
+    if (!hWndShell)
+        goto error_exit1;
+
+    if (!GetWindowThreadProcessId(hWndShell, &dwProcID))
+        goto error_exit1;
+
+    hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwProcID);
+    if (!hProc)
+        goto error_exit1;
+
+    if (!IsWow64Process(hProc, &bIsWow64))
+        goto error_exit2;
+
+    bIs64Bit = !bIsWow64;
+
+    CloseHandleSafe(&hProc);
+
+    return TRUE;
+
+error_exit2:
+
+    CloseHandleSafe(&hProc);
+
+error_exit1:
+
+    return FALSE;
+}
+
 bool LoadResString(HINSTANCE hInstance, UINT uID, wstring & refString)
 {
     TCHAR buffer[1024];
