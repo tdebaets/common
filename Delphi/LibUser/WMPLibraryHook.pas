@@ -52,7 +52,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    function HookMedia(Core: IWMPCoreSafe; Media: IWMPMediaSafe): Boolean;
+    function HookMedia(Core: IWMPCoreSafe; Media: IWMPMediaSafe): Boolean; virtual;
     function UnhookMedia(Media: IWMPMediaSafe): Boolean;
     function GetFlushableWMPItemData(Media: IWMPMediaSafe): IWMPItemData;
 
