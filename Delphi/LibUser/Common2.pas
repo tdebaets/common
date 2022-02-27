@@ -218,6 +218,7 @@ function CoCreateInstanceAsAdmin(Handle: HWND; const ClassID, IID: TGuid;
     out ppv): HResult;
 function OpenCOMObjectKey(Registry: TRegistry; const CLSID: TGUID;
     RegView: TRegView = rvDefault): Boolean;
+function GetCOMObjectInprocServerPath(Registry: TMyRegistry): String; overload;
 function GetCOMObjectInprocServerPath(const CLSID: TGUID;
     RegView: TRegView = rvDefault): String; overload
 
