@@ -133,10 +133,7 @@ begin
       'SOFTWARE\Wow6432Node\Microsoft\MediaPlayer\UIPlugins');
 end;
 
-function IsUpgrade: Boolean;
-var
-  PrevPath: String;
+function IsUpgradeOrReinstall: Boolean;
 begin
-  PrevPath := WizardForm.PrevAppDir;
-  Result := (PrevPath <> '');
+  Result := (WizardForm.PrevAppDir <> '');
 end;
