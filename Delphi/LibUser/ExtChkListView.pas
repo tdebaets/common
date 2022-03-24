@@ -185,6 +185,7 @@ type
     procedure DoSubItemCheckClick(Item: TListItem; SubItem: Integer);
     function OnSubItemCheckRect(X, Y: Integer; var SubItem: Integer): Boolean;
     procedure SetHideItemFocusRect(Value: Boolean);
+    function BeginUpdateWhenHandle: Boolean;
     procedure UpdateBeforePrimaryColumnIdx;
     function NMCustomDraw(NMCustomDraw: PNMCustomDraw): Integer;
     function LVNItemChanging(NMListView: PNMListView): Boolean;
@@ -745,6 +746,23 @@ begin
   end;
 end;
 
+function TCustomExtChkListView.BeginUpdateWhenHandle: Boolean;
+begin
+  // BeginUpdate() internally allocates a window handle if this hasn't happened
+  // yet. If this method is being called early in the component's initialization
+  // phase, a handle already gets created and immediately destroyed again (due
+  // to a RecreateWnd() call when reading properties from the form's resource).
+  // Destroying the window handle saves the initial component's dimensions to a
+  // memory stream. After this, these dimensions are scaled when being displayed
+  // on a high DPI monitor (still before the window handle is recreated). When
+  // the handle is subsequently recreated again, the old (non-scaled) dimensions
+  // are incorrectly being restored. To prevent this, we only call BeginUpdate()
+  // when a window handle is allocated.
+  Result := HandleAllocated;
+  if Result then
+    BeginUpdate;
+end;
+
 procedure TCustomExtChkListView.UpdateThemeData(const Close, Open: Boolean);
 begin
   if not FCheckBoxOptions.Themed then begin
@@ -1284,21 +1302,23 @@ end;
 
 procedure TCustomExtChkListView.UpdateColumn(Index: Integer);
 var
+  NeedsEndUpdate: Boolean;
   OrigWidth: TWidth;
 begin
   if Index >= Columns.Count then
     Exit;
-  // For lack of a better way to update a column, we simply do it by changing the
-  // width to 0, and then changing it back
-  BeginUpdate;
+  NeedsEndUpdate := BeginUpdateWhenHandle;
   try
     with Column[Index] do begin
+      // For lack of a better way to update a column, we simply do it by
+      // changing the width to 0, and then changing it back.
       OrigWidth := WidthType;
       Width := 0;
       Width := OrigWidth;
     end;
   finally
-    EndUpdate;
+    if NeedsEndUpdate then
+      EndUpdate;
   end;
 end;
 
@@ -1700,7 +1720,7 @@ begin
   inherited;
   // ignore when Ctrl is pressed, eg. Ctrl+Tab is used for tab controls
   if GetKeyState(VK_CONTROL) < 0 then
-    Exit; 
+    Exit;
   if Message.CharCode = VK_TAB then begin
     // Return a nonzero value if this key should be handled by us. This will
     // cause the handler in the VCL to indicate that the app hasn't processed
