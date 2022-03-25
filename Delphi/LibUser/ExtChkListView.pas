@@ -23,6 +23,7 @@
 // TODO: handle space-bar triggered checking similar to mouse-triggered checking
 //    item should only be checked on spacebar button up, a la windows update list
 //    do this for main item as well as subitem checkboxes
+// TODO: add option to auto-select item on check/uncheck
 // TODO: add support for hot-tracking checkboxes?
 // (see removed comments in change history involving FHotIndex + removed code
 // involving FLastMouseMoveIndex)
@@ -89,7 +90,6 @@ type
     procedure SetSubItemEnabled(SubItem: Integer; Enabled: Boolean);
   public
     constructor Create(Owner: TListItems);
-    destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     property SubItem_Checked[SubItem: Integer]: Boolean
         read GetSubItemChecked write SetSubItemChecked;
@@ -166,8 +166,10 @@ type
         State: TCheckBoxState; CheckState: TCheckState);
     procedure DrawDisabledIcon(hDC: Integer; Index: Integer;
         const IconRect: TRect);
+    function BeginUpdateWhenHandle: Boolean;
+    procedure UpdateItemWhenHandle(ItemIndex: Integer);
     procedure UpdateItemCheck(Index: Integer);
-    procedure UpdateSubItem(ItemIndex, SubItemIndex: Integer);
+    procedure UpdateSubItemWhenHandle(ItemIndex, SubItemIndex: Integer);
     procedure UpdateColumn(Index: Integer);
     procedure EndCapture(Cancel: Boolean);
     function CanFocusItem(Index: Integer): Boolean;
@@ -185,7 +187,6 @@ type
     procedure DoSubItemCheckClick(Item: TListItem; SubItem: Integer);
     function OnSubItemCheckRect(X, Y: Integer; var SubItem: Integer): Boolean;
     procedure SetHideItemFocusRect(Value: Boolean);
-    function BeginUpdateWhenHandle: Boolean;
     procedure UpdateBeforePrimaryColumnIdx;
     function NMCustomDraw(NMCustomDraw: PNMCustomDraw): Integer;
     function LVNItemChanging(NMListView: PNMListView): Boolean;
@@ -209,8 +210,6 @@ type
     procedure CMWantSpecialKey(var Message: TCMWantSpecialKey);
         message CM_WANTSPECIALKEY;
   protected
-    constructor Create(Owner: TComponent); override;
-    destructor Destroy; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyUp(var Key: Word; Shift: TShiftState); override;
     function DoMouseDown(Button: TMouseButton; X, Y: Integer): Boolean;
@@ -248,6 +247,8 @@ type
     property HideItemFocusRect: Boolean
         read FHideItemFocusRect write SetHideItemFocusRect default False;
   public
+    constructor Create(Owner: TComponent); override;
+    destructor Destroy; override;
     function OnStateIcon(X, Y: Integer): Boolean;
   end;
 
@@ -523,7 +524,7 @@ end;
 procedure TChkListItem.SetEnabled(Value: Boolean);
 begin
   FEnabled := Value;
-  ListView.UpdateItems(Self.Index, Self.Index);
+  FListView.UpdateItemWhenHandle(Self.Index);
 end;
 
 procedure TChkListItem.Assign(Source: TPersistent);
@@ -535,23 +536,17 @@ begin
   end;
 end;
 
-destructor TChkListItem.Destroy;
-begin
-  // TODO: remove?
-  inherited;
-end;
-
 procedure TChkListItem.SetGrayed(Value: Boolean);
 begin
   if FGrayed <> Value then begin
     FGrayed := Value;
-    TCustomExtChkListView(ListView).FProcessItemChecked := False;
+    FListView.FProcessItemChecked := False;
     try
       Checked := False;
     finally
-      TCustomExtChkListView(ListView).FProcessItemChecked := True;
+      FListView.FProcessItemChecked := True;
     end;
-    ListView.UpdateItems(Self.Index, Self.Index);
+    FListView.UpdateItemWhenHandle(Self.Index);
   end;
 end;
 
@@ -570,7 +565,7 @@ begin
       Include(FCheckedSubItems, Byte(SubItem))
     else
       Exclude(FCheckedSubItems, Byte(SubItem));
-    FListView.UpdateSubItem(Self.Index, SubItem);
+    FListView.UpdateSubItemWhenHandle(Self.Index, SubItem);
   end;
 end;
 
@@ -594,7 +589,7 @@ begin
         FListView.FFocusedSubItemIndex := -1;
       Include(FDisabledSubItems, Byte(SubItem));
     end;
-    FListView.UpdateSubItem(Self.Index, SubItem);
+    FListView.UpdateSubItemWhenHandle(Self.Index, SubItem);
   end;
 end;
 
@@ -742,25 +737,8 @@ begin
   if Value <> FHideItemFocusRect then begin
     FHideItemFocusRect := Value;
     if Assigned(ItemFocused) then
-      UpdateItems(ItemFocused.Index, ItemFocused.Index);
+      UpdateItemWhenHandle(ItemFocused.Index);
   end;
-end;
-
-function TCustomExtChkListView.BeginUpdateWhenHandle: Boolean;
-begin
-  // BeginUpdate() internally allocates a window handle if this hasn't happened
-  // yet. If this method is being called early in the component's initialization
-  // phase, a handle already gets created and immediately destroyed again (due
-  // to a RecreateWnd() call when reading properties from the form's resource).
-  // Destroying the window handle saves the initial component's dimensions to a
-  // memory stream. After this, these dimensions are scaled when being displayed
-  // on a high DPI monitor (still before the window handle is recreated). When
-  // the handle is subsequently recreated again, the old (non-scaled) dimensions
-  // are incorrectly being restored. To prevent this, we only call BeginUpdate()
-  // when a window handle is allocated.
-  Result := HandleAllocated;
-  if Result then
-    BeginUpdate;
 end;
 
 procedure TCustomExtChkListView.UpdateThemeData(const Close, Open: Boolean);
@@ -1285,7 +1263,32 @@ begin
     TChkListItem(Item).SubItem_Enabled[SubItemIndex] := Enabled;
 end;
 
-// workaround to redraw only the checkmark of an item, and not the whole item
+function TCustomExtChkListView.BeginUpdateWhenHandle: Boolean;
+begin
+  // BeginUpdate() internally allocates a window handle if this hasn't happened
+  // yet. If this method is being called early in the component's initialization
+  // phase, a handle already gets created and immediately destroyed again (due
+  // to a RecreateWnd() call when reading properties from the form's resource).
+  // Destroying the window handle saves the initial component's dimensions to a
+  // memory stream. After this, these dimensions are scaled when being displayed
+  // on a high DPI monitor (still before the window handle is recreated). When
+  // the handle is subsequently recreated again, the old (non-scaled) dimensions
+  // are incorrectly being restored. To prevent this, we only call BeginUpdate()
+  // when a window handle is allocated.
+  Result := HandleAllocated;
+  if Result then
+    BeginUpdate;
+end;
+
+procedure TCustomExtChkListView.UpdateItemWhenHandle(ItemIndex: Integer);
+begin
+  // See comment in BeginUpdateWhenHandle method
+  if not HandleAllocated then
+    Exit;
+  UpdateItems(ItemIndex, ItemIndex);
+end;
+
+// Workaround to redraw only the checkmark of an item, and not the whole item
 procedure TCustomExtChkListView.UpdateItemCheck(Index: Integer);
 var
   Checked: Boolean;
@@ -1295,9 +1298,10 @@ begin
   ListView_SetCheckState(Handle, Index, Checked);
 end;
 
-procedure TCustomExtChkListView.UpdateSubItem(ItemIndex, SubItemIndex: Integer);
+procedure TCustomExtChkListView.UpdateSubItemWhenHandle(ItemIndex,
+    SubItemIndex: Integer);
 begin
-  UpdateItems(ItemIndex, ItemIndex); // TODO: improve
+  UpdateItemWhenHandle(ItemIndex); // TODO: improve
 end;
 
 procedure TCustomExtChkListView.UpdateColumn(Index: Integer);
@@ -1352,7 +1356,7 @@ begin
       // subitem enabled/disabled state gets checked in DoSubItemCheckClick
       if not Cancel then
         DoSubItemCheckClick(Item, SubItemIdx);
-      UpdateSubItem(Item.Index, SubItemIdx);
+      UpdateSubItemWhenHandle(Item.Index, SubItemIdx);
     end;
   end;
   if MouseCapture then
@@ -1530,7 +1534,7 @@ begin
       FCaptureSubItemIndex := SubItem;
       ItemFocused := Item;
       FFocusedSubItemIndex := SubItem;
-      UpdateSubItem(Item.Index, SubItem);
+      UpdateSubItemWhenHandle(Item.Index, SubItem);
     end;
   end;
 end;
@@ -1578,7 +1582,7 @@ begin
   if Assigned(FocusItem) then begin
     FFocusedSubItemIndex := GetNextFocusableSubItem;
     if FFocusedSubItemIndex >= 0 then
-      UpdateSubItem(FocusItem.Index, FFocusedSubItemIndex);
+      UpdateSubItemWhenHandle(FocusItem.Index, FFocusedSubItemIndex);
   end;
 end;
 
@@ -1615,7 +1619,7 @@ begin
       else
         FFocusedSubItemIndex := GetNextFocusableSubItem;
       if FFocusedSubItemIndex >= 0 then
-        UpdateSubItem(FocusItem.Index, FFocusedSubItemIndex);
+        UpdateSubItemWhenHandle(FocusItem.Index, FFocusedSubItemIndex);
     end;
     Exit;
   end
