@@ -53,6 +53,7 @@ type
     FIcon: TAppIcon;
     FLink: TSysLink;
     FMargins: TIconMessageMargins;
+    FAdjustingBounds: Boolean;
     procedure AdjustBounds;
     procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
     procedure CMTextChanged(var Message: TMessage); message CM_TEXTCHANGED;
@@ -157,6 +158,7 @@ begin
   Width := 185;
   Height := 0; // work around alignment bug
   FMargins := TIconMessageMargins.Create(Self);
+  FAdjustingBounds := False;
   FIcon := TAppIcon.Create(Self);
   FIcon.Parent := Self;
   FIcon.IconSize := icon16x16;
@@ -191,31 +193,38 @@ procedure TIconMessage.AdjustBounds;
 var
   IdealHeight: Integer;
 begin
-  if Assigned(FIcon) and Assigned(FLink) then begin
-    FIcon.Top := FMargins.FMargins.Top;
-    FLink.Top := FMargins.FMargins.Top;
-    FIcon.Left := FMargins.FMargins.Left;
-    FLink.Left := FIcon.Left + FIcon.Width + 4;
-    FLink.Width := Max(0, Width - FLink.Left - FMargins.FMargins.Right);
-    if FLink.LinkAvailable then begin
-      IdealHeight := FMargins.FMargins.Top + Max(FLink.Height, FIcon.Height) +
-          FMargins.FMargins.Bottom;
-    end
-    else begin
-      IdealHeight := Max(Height,
-          FMargins.FMargins.Top + FIcon.Height + FMargins.FMargins.Bottom);
-      FLink.Height := Height - FMargins.FMargins.Top - FMargins.FMargins.Bottom;
+  if FAdjustingBounds then
+    Exit;
+  FAdjustingBounds := True;
+  try
+    if Assigned(FIcon) and Assigned(FLink) then begin
+      FIcon.Top := FMargins.FMargins.Top;
+      FLink.Top := FMargins.FMargins.Top;
+      FIcon.Left := FMargins.FMargins.Left;
+      FLink.Left := FIcon.Left + FIcon.Width + 4;
+      FLink.Width := Max(0, Width - FLink.Left - FMargins.FMargins.Right);
+      if FLink.LinkAvailable then begin
+        IdealHeight := FMargins.FMargins.Top + Max(FLink.Height, FIcon.Height) +
+            FMargins.FMargins.Bottom;
+      end
+      else begin
+        IdealHeight := Max(Height,
+            FMargins.FMargins.Top + FIcon.Height + FMargins.FMargins.Bottom);
+        FLink.Height := Height - FMargins.FMargins.Top - FMargins.FMargins.Bottom;
+      end;
+      inherited SetBounds(Left, Top, Width, IdealHeight);
     end;
-    inherited SetBounds(Left, Top, Width, IdealHeight);
+  finally
+    FAdjustingBounds := False;
   end;
 end;
 
 procedure TIconMessage.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
 begin
   inherited;
-  if HandleAllocated then begin
-    // if we set a new height by passing it to SetBounds here, then it won't
-    // be taken into account by e.g. alignment
+  if not FAdjustingBounds and HandleAllocated then begin
+    // If we set a new height by passing it to SetBounds here, then it won't
+    // be taken into account by e.g. alignment.
     PostMessage(Handle, CM_ADJUSTBOUNDS, 0, 0);
   end;
 end;
