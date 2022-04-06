@@ -77,6 +77,7 @@ type
     procedure SetTabStop(Value: Boolean);
   protected
     procedure CreateParams(var Params: TCreateParams); override;
+    procedure CreateWnd; override;
     procedure Loaded; override;
     procedure DoEnter; override;
   public
@@ -187,6 +188,12 @@ begin
   inherited CreateParams(Params);
   with Params.WindowClass do
     style := style and not (CS_HREDRAW or CS_VREDRAW);
+end;
+
+procedure TIconMessage.CreateWnd;
+begin
+  inherited;
+  AdjustBounds;
 end;
 
 procedure TIconMessage.AdjustBounds;
