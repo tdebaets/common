@@ -336,39 +336,13 @@ begin
   Result := fhWMPLoc;
 end;
 
-// TODO: remove
-{function WndProc(Window: hWnd; Msg, WParam, LParam: Integer): Integer; stdcall;
-var
-  MsgDlg: TPJMessageDialog;
-  Method: PMethod;
-begin
-  case Msg of
-    WM_MSGBOX: begin
-      MsgDlg := TPJMessageDialog(WParam);
-      if MsgDlg <> nil then begin
-        Result := MsgDlg.Execute;
-        MsgDlg.Free;
-      end
-      else
-        Result := 0;
-    end;
-    WM_RUNASYNC: begin
-      Method := PMethod(WParam);
-      TMethodFunc(Method^);
-      Dispose(Method);
-      Result := 0;
-    end
-    else
-      Result := DefWindowProc(Window, Msg, WParam, LParam);
-  end;
-end;}
-
 function TWMPPlug.GetPlugWindow: Integer;
 var
   ClassName: String;
   WndClass: TWndClass;
 begin
-  if fPlugWindow = 0 then begin
+  if fPlugWindow = 0 then try
+    Result := 0;
     ClassName := GetPlugClassName(PlugName);
     with WndClass do begin
       Style := 0;
@@ -382,12 +356,19 @@ begin
       lpszClassName := PChar(ClassName);
       hInstance := SysInit.HInstance;
     end;
-    if RegisterClass(WndClass) = 0 then
-      Debug('Failed to register class'); // TODO: remove or improve
+    if RegisterClass(WndClass) = 0 then begin
+      Debug('Failed to register class');
+      Exit;
+    end;
     fPlugWindow := CreateWindow(PChar(ClassName), nil, 0, 0, 0, 0, 0, 0, 0,
         hInstance, nil);
+    if fPlugWindow = 0 then begin
+      Debug('Failed to create window');
+      Exit;
+    end;
+  finally
     if fPlugWindow = 0 then
-      Debug('Failed to create window'); // TODO: remove or improve
+      UnregisterClass(PChar(ClassName), hInstance);
   end;
   Result := fPlugWindow;
 end;
