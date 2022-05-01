@@ -2580,7 +2580,7 @@ begin
 end;
 
 resourcestring
-  sNotAnEnum = 'IsSubRangeMember: argument must be an enum type; %s is of type %s';
+  sNotAnEnum = '%s: argument must be an enum type; %s is of type %s';
 
 function IsSubRangeMember(pInfo: PTypeInfo; const Value: Variant): Boolean;
 var
@@ -2588,7 +2588,8 @@ var
 begin
   if pInfo.Kind <> tkEnumeration then begin
     raise EConvertError.CreateFmt(sNotAnEnum,
-        [pInfo.Name, GetEnumName(TypeInfo(TTypeKind), pInfo.Kind)]);
+        ['IsSubRangeMember', pInfo.Name,
+         GetEnumName(TypeInfo(TTypeKind), pInfo.Kind)]);
   end;
   pData := GetTypeData(pInfo);
   Result := (Value >= pData.MinValue) and (Value <= pData.MaxValue);
@@ -2598,7 +2599,18 @@ function GetEnumName(pInfo: PTypeInfo; const Value: Variant): String;
 begin
   // Wrapper function around TypInfo.GetEnumName that prevents us from having to
   // explicitly cast Value to Integer.
-  Result := TypInfo.GetEnumName(pInfo, Value);
+  // This wrapper also performs error checking for the supplied type and
+  // out-of-range values, while the original function throws an access violation
+  // or returns garbage in those cases.
+  if pInfo.Kind <> tkEnumeration then begin
+    raise EConvertError.CreateFmt(sNotAnEnum,
+        ['GetEnumName', pInfo.Name,
+         TypInfo.GetEnumName(TypeInfo(TTypeKind), Integer(pInfo.Kind))]);
+  end;
+  if IsSubRangeMember(pInfo, Value) then
+    Result := TypInfo.GetEnumName(pInfo, Value)
+  else
+    Result := Format('<out of %s range (%d)>', [pInfo.Name, Integer(Value)]);
 end;
 
 procedure IncludeFlag(var Flags: Cardinal; Flag: Cardinal);
