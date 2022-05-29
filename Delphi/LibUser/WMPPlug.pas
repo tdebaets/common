@@ -50,8 +50,6 @@ type
     function GetPlugWindow: Integer;
     function GetIsPlayerDocked: Boolean;
 
-    function DisplayPropertyPage(hwndParent: HWND): HResult; virtual; stdcall;
-
     function WndProc(hWnd, uMsg, wParam, lParam: Integer): Integer; stdcall;
 
   protected
@@ -72,10 +70,12 @@ type
     function GetWMPVersion: Byte;
     function GethWMPLoc: HMODULE;
 
+    // IWMPPluginUI
     function SetCore(const pCore: IWMPCore): HResult; virtual; stdcall;
     function CreateProc(hwndParent: HWND;
         out phwndWindow: HWND): HResult; virtual; stdcall;
     function DestroyProc: HResult; virtual; stdcall;
+    function DisplayPropertyPage(hwndParent: HWND): HResult; virtual; stdcall;
     function GetProperty(pwszName: PWideChar;
         out pvarProperty: OleVariant): HResult; virtual; stdcall;
     function SetProperty(pwszName: PWideChar;
