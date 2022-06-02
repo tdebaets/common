@@ -26,14 +26,16 @@ interface
 
 uses Windows, SysUtils, SyncObjs, Common2;
 
-function CreateStub(ObjectPtr: Pointer; MethodPtr: Pointer;
+function CreateStub(Obj: TObject; MethodPtr: Pointer;
     ThisCall: Boolean; pData: PPointer = nil): Pointer; overload;
-function CreateStub(ObjectPtr: Pointer; MethodPtr: Pointer;
+function CreateStub(Obj: TObject; MethodPtr: Pointer;
     pData: PPointer = nil): Pointer; overload;
-function CreateNoFreeStub(ObjectPtr: Pointer; MethodPtr: Pointer;
+function CreateNoFreeStub(Obj: TObject; MethodPtr: Pointer;
     ThisCall: Boolean; pData: PPointer = nil): Pointer;
-procedure DisposeStub(Stub: Pointer);
+procedure DisposeStub(pStub: Pointer);
+procedure DisposeAndNilStub(var pStub: Pointer);
 procedure RestoreNoFreeStub(pStub: Pointer; pOrigProc: Pointer);
+function GetStubMethodName(pStub: Pointer): ShortString;
 
 implementation
 
@@ -98,6 +100,7 @@ type
     PushEDX: Byte;
     JmpShort: Byte;
     Displacement: Integer;
+    MethodName: ShortString;
   end;
   PStub = ^TStub;
 
@@ -106,51 +109,55 @@ var
   hNoFreeCodeHeap: THandle = 0;
   HeapLock: TCriticalSection = nil;
 
-procedure AssembleStub(pStub: PStub; ObjectPtr: Pointer; MethodPtr: Pointer;
+procedure AssembleStub(pStub: PStub; Obj: TObject; MethodPtr: Pointer;
     ThisCall: Boolean; pData: PPointer);
 begin
-  if Assigned(ObjectPtr) then begin
+  if Assigned(Obj) then begin
     // Pop the return address off the stack
-    pStub^.PopEDX := AsmPopEDX;
+    pStub.PopEDX := AsmPopEDX;
 
     if Assigned(pData) then begin
       // Push the data pointer on the stack
-      pStub^.MovEAX := AsmMovEAX;
-      pStub^.DataPointer := nil;
-      pStub^.PushEAX := AsmPushEAX;
-      pData^ := @pStub^.DataPointer;
+      pStub.MovEAX := AsmMovEAX;
+      pStub.DataPointer := nil;
+      pStub.PushEAX := AsmPushEAX;
+      pData^ := @pStub.DataPointer;
     end
     else begin
-      pStub^.MovEAX := AsmNop;
-      FillChar(pStub^.DataPointer, SizeOf(pStub^.DataPointer), AsmNop);
-      pStub^.PushEAX := AsmNop;
+      pStub.MovEAX := AsmNop;
+      FillChar(pStub.DataPointer, SizeOf(pStub.DataPointer), AsmNop);
+      pStub.PushEAX := AsmNop;
     end;
 
     if ThisCall then begin
       // Push the this pointer (ecx) on the stack
-      pStub^.PushECX := AsmPushECX
+      pStub.PushECX := AsmPushECX
     end
     else
-      pStub^.PushECX := AsmNop;
+      pStub.PushECX := AsmNop;
 
     // Push the object pointer on the stack
-    pStub^.MovEAX2 := AsmMovEAX;
-    pStub^.SelfPointer := ObjectPtr;
-    pStub^.PushEAX2 := AsmPushEAX;
+    pStub.MovEAX2 := AsmMovEAX;
+    pStub.SelfPointer := Obj;
+    pStub.PushEAX2 := AsmPushEAX;
     // Push the return address back on the stack
-    pStub^.PushEDX := AsmPushEDX;
+    pStub.PushEDX := AsmPushEDX;
+
+    // Note: this will be an empty string if MethodPtr doesn't point to a
+    // *published* method.
+    pStub.MethodName := Obj.MethodName(MethodPtr);
   end
   else
     FillChar(pStub^, SizeOf(pStub^), AsmNop);
     
   // Jump to the 'real' procedure, the method or the original function.
-  pStub^.JmpShort := AsmJmpShort;
-  pStub^.Displacement := (Integer(MethodPtr) - Integer(@(pStub^.JmpShort))) -
-      (SizeOf(pStub^.JmpShort) + SizeOf(pStub^.Displacement));
+  pStub.JmpShort := AsmJmpShort;
+  pStub.Displacement := (Integer(MethodPtr) - Integer(@(pStub.JmpShort))) -
+      (SizeOf(pStub.JmpShort) + SizeOf(pStub.Displacement));
 end;
 
 { ----------------------------------------------------------------------------- }
-function CreateStubInternal(ObjectPtr: Pointer; MethodPtr: Pointer;
+function CreateStubInternal(Obj: TObject; MethodPtr: Pointer;
     ThisCall, NoFree: Boolean; pData: PPointer): Pointer;
 var
   phHeap: PHandle;
@@ -184,27 +191,27 @@ begin
   {$ELSE}
   New(Stub);
   {$ENDIF}
-  AssembleStub(Stub, ObjectPtr, MethodPtr, ThisCall, pData);
+  AssembleStub(Stub, Obj, MethodPtr, ThisCall, pData);
   // Return a pointer to the stub
   Result := Stub;
 end;
 
-function CreateStub(ObjectPtr: Pointer; MethodPtr: Pointer;
+function CreateStub(Obj: TObject; MethodPtr: Pointer;
     ThisCall: Boolean; pData: PPointer = nil): Pointer;
 begin
-  Result := CreateStubInternal(ObjectPtr, MethodPtr, ThisCall, False, pData);
+  Result := CreateStubInternal(Obj, MethodPtr, ThisCall, False, pData);
 end;
 
-function CreateStub(ObjectPtr: Pointer; MethodPtr: Pointer;
+function CreateStub(Obj: TObject; MethodPtr: Pointer;
     pData: PPointer = nil): Pointer;
 begin
-  Result := CreateStubInternal(ObjectPtr, MethodPtr, False, False, pData);
+  Result := CreateStubInternal(Obj, MethodPtr, False, False, pData);
 end;
 
-function CreateNoFreeStub(ObjectPtr: Pointer; MethodPtr: Pointer;
+function CreateNoFreeStub(Obj: TObject; MethodPtr: Pointer;
     ThisCall: Boolean; pData: PPointer = nil): Pointer;
 begin
-  Result := CreateStubInternal(ObjectPtr, MethodPtr, ThisCall, True, pData);
+  Result := CreateStubInternal(Obj, MethodPtr, ThisCall, True, pData);
 end;
 
 procedure RestoreNoFreeStub(pStub: Pointer; pOrigProc: Pointer);
@@ -216,17 +223,39 @@ end;
 
 
 { ----------------------------------------------------------------------------- }
-procedure DisposeStub(Stub: Pointer);
+procedure DisposeStubInternal(Stub: PStub);
 begin
+  Stub.MethodName := '';
   // 1/10/04 Support for 64 bit, executable code must be in virtual space
   // currently New/Dispose use Virtual space but a replacement memory manager
   // may not
   {$IFDEF VIRTUALMEMSTUB}
-  //VirtualFree(Stub, SizeOf(TStub),MEM_DECOMMIT);
+  //VirtualFree(Stub, SizeOf(TStub), MEM_DECOMMIT);
   HeapFree(hCodeHeap, 0, Stub);
   {$ELSE}
   Dispose(Stub);
   {$ENDIF}
+end;
+
+procedure DisposeStub(pStub: Pointer);
+begin
+  DisposeStubInternal(pStub);
+end;
+
+procedure DisposeAndNilStub(var pStub: Pointer);
+begin
+  DisposeStubInternal(pStub);
+  pStub := nil;
+end;
+
+function GetStubMethodNameInternal(Stub: PStub): ShortString;
+begin
+  Result := Stub.MethodName;
+end;
+
+function GetStubMethodName(pStub: Pointer): ShortString;
+begin
+  Result := GetStubMethodNameInternal(pStub);
 end;
 
 initialization

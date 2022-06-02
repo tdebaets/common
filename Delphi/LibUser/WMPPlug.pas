@@ -232,8 +232,7 @@ begin
     UnregisterClass(PChar(GetPlugClassName(PlugName)), hInstance);
     fPlugWindow := 0;
   end;
-  DisposeStub(fWndProcStub);
-  fWndProcStub := nil;
+  DisposeAndNilStub(fWndProcStub);
   ReleaseCore;
   fWMPPlayerApp := nil;
   if fhWMPLoc <> 0 then

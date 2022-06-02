@@ -75,8 +75,7 @@ begin
   inherited;
   // dispose stub *after* calling the inherited method to make sure that
   // UnhookWinEvents has been called first
-  DisposeStub(fpWinEventStub);
-  fpWinEventStub := nil;
+  DisposeAndNilStub(fpWinEventStub);
 end;
 
 procedure TEnhScrollBox.DoFocusOnClick;

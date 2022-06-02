@@ -79,7 +79,7 @@ end;
 
 destructor TWMPLibraryHook.Destroy;
 begin
-  DisposeStub(fStub_IWMPMediaInternal_Advise);
+  DisposeAndNilStub(fStub_IWMPMediaInternal_Advise);
   fWMPPlaylistEventHandler := nil;
   inherited;
 end;

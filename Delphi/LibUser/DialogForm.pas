@@ -253,8 +253,7 @@ begin
   DestroyWindow(fDialogHandle);
   SetWindowLongW(fDialogHandle, GWL_WNDPROC, Integer(@DefWindowProc));
   FreeThemeLibrary;
-  DisposeStub(fDialogProcStub);
-  fDialogProcStub := nil;
+  DisposeAndNilStub(fDialogProcStub);
   if Assigned(fObjectInstance) then begin
     FreeObjectInstance(fObjectInstance);
     fObjectInstance := nil;

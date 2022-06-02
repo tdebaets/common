@@ -131,10 +131,8 @@ end;
 
 destructor TWMPRestartMgr.Destroy;
 begin
-  DisposeStub(fpStub_ErrorThreadProc);
-  fpStub_ErrorThreadProc := nil;
-  DisposeStub(fpStub_TimerProc);
-  fpStub_TimerProc := nil;
+  DisposeAndNilStub(fpStub_ErrorThreadProc);
+  DisposeAndNilStub(fpStub_TimerProc);
   if fhRestarterProc <> INVALID_HANDLE_VALUE then
     CloseHandle(fhRestarterProc);
   fEvents := nil;
