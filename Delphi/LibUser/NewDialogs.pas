@@ -96,7 +96,7 @@ begin
   if fhWndOwner <> 0 then
     Result := fhWndOwner
   else
-    Result := GetForegroundWindow;
+    Result := 0;
 end;
 
 function MsgBox(const Prompt: String; bgButtons: TPJMsgDlgButtonGroup;
