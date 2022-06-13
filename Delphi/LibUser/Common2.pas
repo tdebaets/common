@@ -2534,8 +2534,12 @@ var
   hProv: HCRYPTPROV;
 begin
   LastError := TryAcquireContext(hProv);
-  if not IsWin32Success(LastError) then
+  if not IsWin32Success(LastError) then begin
+    // This error can be triggered by temporarily renaming this registry key:
+    // HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Cryptography\Defaults\Provider Types\Type 001
+    // -> CryptAcquireContext failed (0x80090017).
     raise ECryptError.CreateFmt('CryptAcquireContext failed (0x%.8x).', [LastError]);
+  end;
   try
     if not CryptGenRandom(hProv, SizeOf(Result), @Result) then begin
       // last error may get overwritten in CreateFmt method so save it first
