@@ -25,7 +25,7 @@ unit CtrlsCommon;
 interface
 
 uses Windows, Messages, CommCtrl, ComCtrls, Controls, Forms, StdCtrls, Classes,
-    Consts, Graphics, Common2, shlwapi, EnhListView;
+    Consts, Graphics, ImgList, Common2, shlwapi, EnhListView;
 
 const
   BCM_FIRST = $00001600;
@@ -39,7 +39,15 @@ procedure PostActivateAppMessage;
 procedure ConvertTo32BitImageList(const ImageList: TImageList);
 function AddResIconToImageList(ResourceID: PChar;
     ImageList: TImageList): Integer;
-Function FitOnCanvas(Control: TGraphicControl; MyString: String): String;
+
+type
+  TResizeImageListFlag = (rilfForceStretch);
+  TResizeImageListFlags = set of TResizeImageListFlag;
+
+procedure ResizeImageListForHighDPI(ImgList: TImageList;
+    Flags: TResizeImageListFlags = []);
+
+function FitOnCanvas(Control: TGraphicControl; MyString: String): String;
 procedure SetElevationRequiredState(aControl: TWinControl; Required: Boolean);
 
 type
@@ -127,6 +135,109 @@ begin
     Result := ImageList.AddIcon(Ico);
   finally
     Ico.Free;
+  end;
+end;
+
+// Heavily modified version of the ResizeImageListImagesforHighDPI function by
+// Žarko Gajic - Resizing TImageList Bitmaps to Fit High-DPI Scaling Size (for
+// Menus, Toolbars, Trees, etc.)
+// http://zarko-gajic.iz.hr/resizing-delphis-timagelist-bitmaps-to-fit-high-dpi-scaling-size-for-menus-toolbars-trees-etc
+procedure ResizeImageListForHighDPI(ImgList: TImageList;
+    Flags: TResizeImageListFlags = []);
+  procedure SetBitmapDimensions(Bitmap: TBitmap; Width, Height: Integer);
+  begin
+    Bitmap.Width := Width;
+    Bitmap.Height := Height;
+  end;
+  procedure ClearBitmap(Bitmap: TBitmap);
+  begin
+    Bitmap.Canvas.FillRect(Bitmap.Canvas.ClipRect);
+  end;
+  procedure DrawImageListImageToBitmap(ImgList: TImageList; Index: Integer;
+      ImageType: TImageType; Bitmap: TBitmap);
+  const
+    Images: array[TImageType] of Longint = (0, ILD_MASK);
+  begin
+    ImageList_DrawEx(ImgList.Handle, Index, Bitmap.Canvas.Handle, 0, 0,
+        Bitmap.Width, Bitmap.Height, CLR_NONE, CLR_NONE, Images[ImageType]);
+  end;
+const
+  CenterThreshold = 150; // percentage
+var
+  NewWidth, NewHeight: Integer;
+  TempImgList: TImageList;
+  i: Integer;
+  ImgBmp, MaskBmp: TBitmap;
+  ResizedImgBmp, ResizedMaskBmp: TBitmap; // resized (or centered) image/mask
+begin
+  if Screen.PixelsPerInch = BasePixelsPerInch then
+    Exit;
+  NewWidth := MulDiv(ImgList.Width, Screen.PixelsPerInch, BasePixelsPerInch);
+  NewHeight := MulDiv(ImgList.Height, Screen.PixelsPerInch, BasePixelsPerInch);
+  if ImgList.Count = 0 then begin
+    // Optimization: no need to do any resizing when the image list is empty -
+    // just change the width and height and exit.
+    ImgList.Width := NewWidth;
+    ImgList.Height := NewHeight;
+    Exit;
+  end;
+  TempImgList := TImageList.CreateSize(ImgList.Width, ImgList.Height);
+  ImgBmp := TBitmap.Create;
+  MaskBmp := TBitmap.Create;
+  ResizedImgBmp := TBitmap.Create;
+  ResizedMaskBmp := TBitmap.Create;
+  try
+    // Copy all images from ImgList to TempImgList
+    TempImgList.AddImages(imgList);
+    // Set size to match DPI size (like 250% of 16px = 40px)
+    // This clears all existing images in ImgList
+    ImgList.Width := NewWidth;
+    ImgList.Height := NewHeight;
+    SetBitmapDimensions(ImgBmp, TempImgList.Width, TempImgList.Height);
+    SetBitmapDimensions(MaskBmp, TempImgList.Width, TempImgList.Height);
+    SetBitmapDimensions(ResizedImgBmp, ImgList.Width, ImgList.Height);
+    SetBitmapDimensions(ResizedMaskBmp, ImgList.Width, ImgList.Height);
+    // Add images back to ImgList stretched (if DPI scaling > 150%) or centered
+    // (if DPI scaling <= 150%)
+    for i := 0 to TempImgList.Count - 1 do begin
+      ClearBitmap(ImgBmp);
+      DrawImageListImageToBitmap(TempImgList, i, itImage, ImgBmp);
+      ClearBitmap(MaskBmp);
+      DrawImageListImageToBitmap(TempImgList, i, itMask, MaskBmp);
+      if not (rilfForceStretch in Flags)
+          and (Screen.PixelsPerInch * 100 / BasePixelsPerInch <=
+              CenterThreshold) then begin
+        // Center if <= 150%
+        ClearBitmap(ResizedImgBmp);
+        with ResizedImgBmp do begin
+          Canvas.Draw(
+              (Width - ImgBmp.Width) div 2,
+              (Height - ImgBmp.Height) div 2,
+              ImgBmp);
+        end;
+        ClearBitmap(ResizedMaskBmp);
+        with ResizedMaskBmp do begin
+          Canvas.Draw(
+              (Width - MaskBmp.Width) div 2,
+              (Height - MaskBmp.Height) div 2,
+              MaskBmp);
+        end;
+      end
+      else begin
+        // Stretch if > 150%
+        with ResizedImgBmp do
+          Canvas.StretchDraw(Rect(0, 0, Width, Height), ImgBmp);
+        with ResizedMaskBmp do
+          Canvas.StretchDraw(Rect(0, 0, Width, Height), MaskBmp);
+      end;
+      ImgList.Add(ResizedImgBmp, ResizedMaskBmp);
+    end;
+  finally
+    FreeAndNil(ResizedMaskBmp);
+    FreeAndNil(ResizedImgBmp);
+    FreeAndNil(MaskBmp);
+    FreeAndNil(ImgBmp);
+    FreeAndNil(TempImgList);
   end;
 end;
 
