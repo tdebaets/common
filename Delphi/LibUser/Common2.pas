@@ -357,6 +357,8 @@ type
 
 function LoadCommonIcon(Icon: TCommonIcon; X, Y: Integer): THandle;
 
+function DestroyIconSafe(var IconHandle: HICON): Boolean;
+
 // Math
 
 type
@@ -2510,6 +2512,16 @@ begin
     Result := LoadImage(GetModuleHandle(User32), PChar(CommonIconIDs[Icon]),
         IMAGE_ICON, X, Y, LR_DEFAULTCOLOR);
   end;
+end;
+
+function DestroyIconSafe(var IconHandle: HICON): Boolean;
+begin
+  if IconHandle = 0 then begin
+    Result := False;
+    Exit;
+  end;
+  Result := DestroyIcon(IconHandle);
+  IconHandle := 0;
 end;
 
 function GetRandomSeed: LongWord;
