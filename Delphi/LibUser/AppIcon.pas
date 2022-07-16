@@ -40,6 +40,11 @@ uses Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 
 type
   TIconSize = (icon16x16, icon24x24, icon32x32, icon48x48, iconCustom);
+
+const
+  IconSizes: array[TIconSize] of Integer = (16, 24, 32, 48, -1);
+
+type
   TAppIcon = class(TGraphicControl)
   private
     { Private declarations }
@@ -144,15 +149,24 @@ begin
 end;
 
 procedure TAppIcon.ChangeIconSize(Size: TPoint);
+var
+  IconSize: TIconSize;
+  IsStandardSize: Boolean;
 begin
   FIconWidth := Max(Size.x, 16);
   FIconHeight := Max(Size.y, 16);
-  if (FIconSize <> iconCustom) and
-      ((FIconWidth <> 16) or (FIconHeight <> 16)) and
-      ((FIconWidth <> 24) or (FIconHeight <> 24)) and
-      ((FIconWidth <> 32) or (FIconHeight <> 32)) and
-      ((FIconWidth <> 48) or (FIconHeight <> 48)) then
-    FIconSize:= iconCustom;
+  if FIconSize <> iconCustom then begin
+    IsStandardSize := False;
+    for IconSize := Low(TIconSize) to High(TIconSize) do begin
+      if (FIconWidth = IconSizes[IconSize])
+          and (FIconHeight = IconSizes[IconSize]) then begin
+        IsStandardSize := True;
+        Break;
+      end;
+    end;
+    if not IsStandardSize then
+      FIconSize := iconCustom;
+  end;
   ReloadIcon;
 end;
 
@@ -169,12 +183,8 @@ end;
 procedure TAppIcon.SetIconSize(const Value: TIconSize);
 begin
   FIconSize := Value;
-  case FIconSize of
-    icon16x16: ChangeIconSize(Point(16, 16));
-    icon24x24: ChangeIconSize(Point(24, 24));
-    icon32x32: ChangeIconSize(Point(32, 32));
-    icon48x48: ChangeIconSize(Point(48, 48));
-  end;
+  if FIconSize <> iconCustom then
+    ChangeIconSize(Point(IconSizes[FIconSize], IconSizes[FIconSize]));
 end;
 
 procedure TAppIcon.Paint;
