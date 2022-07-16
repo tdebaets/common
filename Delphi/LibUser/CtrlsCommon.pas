@@ -25,7 +25,7 @@ unit CtrlsCommon;
 interface
 
 uses Windows, Messages, CommCtrl, ComCtrls, Controls, Forms, StdCtrls, Classes,
-    Consts, Graphics, ImgList, Common2, shlwapi, EnhListView;
+    Consts, Graphics, ImgList, Buttons, Common2, shlwapi, EnhListView;
 
 const
   BCM_FIRST = $00001600;
@@ -37,8 +37,7 @@ function HandleAppMessage: Boolean;
 procedure PostActivateAppMessage;
 
 procedure ConvertTo32BitImageList(const ImageList: TImageList);
-function AddResIconToImageList(ResourceID: PChar;
-    ImageList: TImageList): Integer;
+function AddResIconToImageList(ResourceID: PChar; ImageList: TImageList): Integer;
 
 type
   TResizeImageListFlag = (rilfForceStretch);
@@ -46,6 +45,8 @@ type
 
 procedure ResizeImageListForHighDPI(ImgList: TImageList;
     Flags: TResizeImageListFlags = []);
+
+procedure ResizeBitBtnGlyphsForHighDPI(Btn: TBitBtn);
 
 function FitOnCanvas(Control: TGraphicControl; MyString: String): String;
 procedure SetElevationRequiredState(aControl: TWinControl; Required: Boolean);
@@ -124,17 +125,19 @@ begin
   end;
 end;
 
-function AddResIconToImageList(ResourceID: PChar;
-    ImageList: TImageList): Integer;
+function AddResIconToImageList(ResourceID: PChar; ImageList: TImageList): Integer;
 var
-  Ico: TIcon;
+  IconHandle: HICON;
 begin
-  Ico := TIcon.Create;
+  Result := -1;
+  IconHandle := LoadImage(hInstance, ResourceID, IMAGE_ICON,
+      ImageList.Width, ImageList.Height, LR_DEFAULTCOLOR);
+  if IconHandle = 0 then
+    Exit;
   try
-    Ico.Handle := LoadIcon(hInstance, ResourceID);
-    Result := ImageList.AddIcon(Ico);
+    Result := ImageList_AddIcon(ImageList.Handle, IconHandle);
   finally
-    Ico.Free;
+    DestroyIconSafe(IconHandle);
   end;
 end;
 
@@ -238,6 +241,24 @@ begin
     FreeAndNil(MaskBmp);
     FreeAndNil(ImgBmp);
     FreeAndNil(TempImgList);
+  end;
+end;
+
+procedure ResizeBitBtnGlyphsForHighDPI(Btn: TBitBtn);
+var
+  Bmp: TBitmap;
+begin
+  if Btn.Glyph.Empty then
+    Exit;
+  Bmp := TBitmap.Create;
+  with Bmp do try
+    Width := MulDiv(Btn.Glyph.Width, Screen.PixelsPerInch, BasePixelsPerInch);
+    Height := MulDiv(Btn.Glyph.Height, Screen.PixelsPerInch, BasePixelsPerInch);
+    Canvas.FillRect(Canvas.ClipRect);
+    Canvas.StretchDraw(Rect(0, 0, Width, Height), Btn.Glyph);
+    Btn.Glyph.Assign(Bmp);
+  finally
+    FreeAndNil(Bmp);
   end;
 end;
 
