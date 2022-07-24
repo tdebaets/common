@@ -22,7 +22,8 @@
 
 unit WMPRestartMgr;
 
-// TODO: force WMPStateRestore to always restore all state regardless of current settings (by passing command-line param)
+// TODO: test: not restarting WMP when first run under a fresh user account? (command-line related?)
+// TODO: force WMPStateRestore to always restore all state regardless of current settings (by passing new command-line param)
 
 interface               
 
