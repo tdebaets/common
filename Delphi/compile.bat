@@ -54,6 +54,7 @@ set LIBUSER_UNITS= ^
     JclResources.pas ^
     JclWideFormat.pas ^
     MBCSUtil.pas ^
+    MsgBoxEx.pas ^
     Msvcrt.pas ^
     NewDialogs.pas ^
     PathFuncWide.pas ^
@@ -64,6 +65,7 @@ set LIBUSER_UNITS= ^
     ShellApi2.pas ^
     ShlObj2.pas ^
     StreamUtil.pas ^
+    TaskDialog.pas ^
     UIntList.pas ^
     uProcessMemMgr.pas ^
     WMPAttribs.pas ^
