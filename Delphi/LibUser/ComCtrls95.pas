@@ -122,6 +122,8 @@ type
     fTabShifting:boolean;
     FTabInactiveColor: TColor;
     FTabInactiveFont: TFont;
+    FNeedsEnableAlign: Boolean;
+    FPrevFormWndProc: TWndMethod;
     fOnTabTrack: TTab95TabTrackEvent;
     fMSDraw : boolean;
     function GetDisplayRect: TRect;
@@ -162,9 +164,10 @@ type
     procedure TabFontChanged(Sender: TObject); virtual;
     procedure SetTabInactiveColor(Value: TColor);
     procedure SetTabInactiveFont(Value: TFont);
+    procedure FormWndProc(var Message: TMessage);
   protected
     procedure MyRecreateWND;
-    procedure loaded; override;
+    procedure Loaded; override;
     procedure AlignControls(AControl: TControl; var Rect: TRect); override;
     function CanChange: Boolean; dynamic;
     procedure Change; dynamic;
@@ -173,6 +176,7 @@ type
     procedure DestroyWnd; override;
     procedure DisplayTabHint(TabIndex:integer); virtual; abstract;
     procedure DrawTab(Caption: String; PageIndex:integer; const wRect: TRect);
+    procedure ReadState(Reader: TReader); override;
     property DisplayRect: TRect read GetDisplayRect;
     property FocusButtons:boolean read ffocusbutton write setfocusbutton default false;
     property MultiLine: Boolean read FMultiLine write SetMultiLine default False;
@@ -833,6 +837,8 @@ end;
 { TCustomTab95Control }
 
 constructor TCustomTab95Control.Create(AOwner: TComponent);
+var
+  OwnerForm: TCustomForm;
 begin
   inherited Create(AOwner);
   Width := 289;
@@ -856,16 +862,58 @@ begin
   FTabInactiveColor := $00A4A0A0;
   FTabInactiveFont := TFont.Create;
   FTabInactiveFont.OnChange := TabFontChanged;
+  FNeedsEnableAlign := False;
+  if Assigned(AOwner) and (AOwner is TCustomForm) then begin
+    // Subclass the owner form, to allow us to re-enable alignment quickly enough
+    // in the loading phase, after having disabled it in ReadState().
+    OwnerForm := TCustomForm(AOwner);
+    FPrevFormWndProc := OwnerForm.WindowProc;
+    OwnerForm.WindowProc := FormWndProc;
+  end;
 end;
 
-procedure TCustomTab95Control.loaded;
+procedure TCustomTab95Control.ReadState(Reader: TReader);
 begin
-     inherited;
-     updatetabsize;
+  // Temporarily disable alignment if we're being loaded from a form stream. It
+  // will be enabled again later in the loading phase, see the FormWndProc()
+  // method.
+  // The reason for doing this, is that if we have an 'Images' property, Delphi
+  // will set this property quite late in the loading phase (since the TImageList
+  // control itself must have already been loaded too). This will cause the rect
+  // returned by GetDisplayRect() to become slightly bigger, which in turn will
+  // cause Delphi to 'think' that we have been resized. The result is that Delphi
+  // will resize some of our child controls incorrectly during alignment (most
+  // notably controls with akTop and akBottom anchors). Disabling alignment fixes
+  // this.
+  if csLoading in ComponentState then begin
+    DisableAlign;
+    FNeedsEnableAlign := True;
+  end;
+  inherited ReadState(Reader);
+end;
+
+procedure TCustomTab95Control.Loaded;
+begin
+  // Under normal circumstances, alignment should already have been re-enabled in
+  // the FormWndProc() method. As a fallback, we also re-enable it here if that
+  // hasn't happened yet for some reason.
+  // Note: we're probably already too late in the loading phase here to have
+  // disabled alignment without getting away with it. If alignment is being
+  // re-enabled here, expect Delphi to resize controls incorrectly!
+  if FNeedsEnableAlign then begin
+    EnableAlign;
+    FNeedsEnableAlign := False;
+  end;
+  inherited;
+  UpdateTabSize;
 end;
 
 destructor TCustomTab95Control.Destroy;
 begin
+  if Assigned(FPrevFormWndProc) then begin
+    (Owner as TCustomForm).WindowProc := FPrevFormWndProc;
+    FPrevFormWndProc := nil;
+  end;
   fhint.free;
   FCanvas.Free;
   FTabs.Free;
@@ -1801,6 +1849,29 @@ begin
      end
      else
      fmouseovertab := -1;
+end;
+
+procedure TCustomTab95Control.FormWndProc(var Message: TMessage);
+begin
+  // Hack: if we disabled alignment in ReadState, we must enable it again here.
+  // This must happen as soon as possible after our 'Images' property was read
+  // from the form stream. Since TCustomForm sends a CM_PARENTBIDIMODECHANGED
+  // message to itself at the end of its ReadState method, receiving this message
+  // is a chance for us to do this (although it is a bit of a hack that relies on
+  // an implementation detail).
+  // An alternative that also works is to re-enable alignment in the SetImageList()
+  // method, but that of course breaks for controls that don't have the 'Images'
+  // property set, since then that method is never called.
+  // An alternative that *doesn't* work is to re-enable alignment in the Loaded()
+  // method, since that method is called too late in the loading phase and causes
+  // Delphi to resize controls incorrectly.
+  if Message.Msg = CM_PARENTBIDIMODECHANGED then begin
+    if (csLoading in ComponentState) and FNeedsEnableAlign then begin
+      EnableAlign;
+      FNeedsEnableAlign := False;
+    end;
+  end;
+  FPrevFormWndProc(Message);
 end;
 
 { TFloatingForm }
