@@ -46,6 +46,7 @@
 -$X+                // extended syntax on
 -$Y-                // symbol info off
 -$Z1                // min enum size: 1 byte
+-GD                 // detailed .map file
 -CG                 // GUI target
 -AWinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
 -M                  // make modified units
