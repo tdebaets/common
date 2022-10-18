@@ -195,6 +195,7 @@ function ThisCall(This: Pointer; Func: Pointer; Args: array of const): Integer;
 function IIf(Condition: Boolean; const TrueVal, FalseVal: String): String;
 function IIfInt(Condition: Boolean; TrueVal, FalseVal: Integer): Integer;
 procedure Debug(const Text: String);
+procedure DebugFmt(const Fmt: String; const Args: array of const);
 procedure DebugWithTID(const Text: String);
 
 function AllocStringRec(const Str: String): Pointer;
@@ -590,10 +591,10 @@ begin
     Exit;
   end;
   if HasDebugStr then begin
-    Debug(Format('Original address: %x, new address: %x',
-        [Integer(OrigAddress), Integer(NewAddress)]));
-    Debug('Original address located in module: ' +
-        GetModuleNameFromAddress(OrigAddress));
+    DebugFmt('Original address: %x, new address: %x',
+        [Integer(OrigAddress), Integer(NewAddress)]);
+    DebugFmt('Original address located in module: %s',
+        [GetModuleNameFromAddress(OrigAddress)]);
   end;
   Result := 5;
   if OrigAddress = NewAddress then begin
@@ -1038,9 +1039,14 @@ begin
   OutputDebugString(PChar(Text));
 end;
 
+procedure DebugFmt(const Fmt: String; const Args: array of const);
+begin
+  Debug(Format(Fmt, Args));
+end;
+
 procedure DebugWithTID(const Text: String);
 begin
-  OutputDebugString(PChar(Text + ' - ' + IntToStr(GetCurrentThreadID)));
+  DebugFmt('%s - %x', [Text, GetCurrentThreadID]);
 end;
 
 type
