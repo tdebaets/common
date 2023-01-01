@@ -1,6 +1,6 @@
 
 Common Code Utilities by Tim De Baets  
-Copyright © 2016-2022 Tim De Baets. All rights reserved.  
+Copyright © 2016-2023 Tim De Baets. All rights reserved.  
 For conditions of distribution and use, see [LICENSE](../LICENSE).  
 
 Installing Borland Delphi
