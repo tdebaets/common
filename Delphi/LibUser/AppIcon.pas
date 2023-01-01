@@ -15,7 +15,7 @@ above.
 
 (****************************************************************************
  *
- * Modifications are Copyright 2016 Tim De Baets
+ * Modifications are Copyright 2016-2022 Tim De Baets
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

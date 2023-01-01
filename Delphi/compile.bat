@@ -2,7 +2,7 @@
 
 rem **************************************************************************
 rem *
-rem * Copyright 2016-2021 Tim De Baets
+rem * Copyright 2016-2022 Tim De Baets
 rem *
 rem * Licensed under the Apache License, Version 2.0 (the "License");
 rem * you may not use this file except in compliance with the License.
