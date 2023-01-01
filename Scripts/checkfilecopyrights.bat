@@ -36,7 +36,7 @@ if [%YEAR%]==[] (
 set /a YEARPLUS1=%YEAR%+1
 
 rem We're relying on the undocumented /unique switch for sort.exe on Windows 10 here
-for /f tokens^=*^ delims^=^ eol^= %%g in ('git log --pretty^=format: --name-only --since^="2/1/%YEAR%" --until^="1/1/%YEARPLUS1%" ^| sort /unique') do (
+for /f tokens^=*^ delims^=^ eol^= %%g in ('git log --pretty^=format: --name-only --since^="%YEAR%-1-1" --until^="%YEARPLUS1%-1-1" ^| sort /unique') do (
     call %SCRIPTPATH%\checkdir.bat "%%g"
     if errorlevel 2 (
         echo %%g: no such file; skipping
