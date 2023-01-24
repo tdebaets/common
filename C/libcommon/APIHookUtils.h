@@ -22,7 +22,8 @@
 
 #pragma once
 
-static const LPCSTR KERNEL32_DLL = "kernel32.dll";
+static const LPCSTR KERNEL32_DLL    = "kernel32.dll";
+static const LPCSTR USER32_DLL      = "user32.dll";
 
 static const LPCSTR API_SET_PREFIX_LIBRARY_LOADER =
         "API-MS-WIN-CORE-LIBRARYLOADER-L1-";
