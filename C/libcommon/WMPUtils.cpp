@@ -23,3 +23,18 @@
 #include "WMPUtils.h"
 
 static const LPCSTR g_szWMPDLL = "wmp.dll";
+
+BYTE GetWMPMainVersion(CComBSTR &pbstrVersionInfo)
+{
+    wstring str(pbstrVersionInfo);
+    size_t  dotIdx;
+
+    dotIdx = str.find('.');
+
+    if (dotIdx == wstring::npos)
+        return 0;
+
+    str.erase(dotIdx, wstring::npos);
+
+    return _wtoi(str.c_str());
+}

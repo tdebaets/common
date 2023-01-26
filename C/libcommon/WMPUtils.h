@@ -22,6 +22,16 @@
 
 #pragma once
 
+#include <string>
 #include <windows.h>
 
+#include "atlbase.h" // CComBSTR
+
+using namespace std;
+
+#define WMP_VERSION_11  (11)
+#define WMP_VERSION_12  (12)
+
 extern const LPCSTR g_szWMPDLL;
+
+BYTE GetWMPMainVersion(CComBSTR &pbstrVersionInfo);
