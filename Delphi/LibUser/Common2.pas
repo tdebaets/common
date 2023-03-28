@@ -586,7 +586,7 @@ begin
   end;
   Result := 4;
   try
-    OrigAddress := PPointer(TableEntry)^;
+    OrigAddress := TableEntry^;
   except
     Exit;
   end;
@@ -614,6 +614,8 @@ begin
   // Finally, patch the function table.
   // Using WriteProcessMemory because (unlike a direct write) it handles the
   // case where the function table resides in memory not marked as writeable.
+  // TODO: change to InterlockedExchangePointer call (+ VirtualProtect calls to handle the non-writeable case)?
+  //  because WriteProcessMemory has no atomicity guarantee! (see Old New Thing article)
   if WriteProcessMemory(GetCurrentProcess, TableEntry, @NewAddress,
       SizeOf(Pointer), Bytes) and (Bytes = SizeOf(Pointer)) then begin
     Result := 0;
