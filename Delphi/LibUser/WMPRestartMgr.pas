@@ -241,34 +241,77 @@ end;
 
 function TWMPRestartMgr.GetRemoteApps(Core: IWMPCoreSafe; var Count: Integer;
     pNames: PStringArray): Boolean;
-  procedure HandleRemoteLocation(RemoteObj: IUnknown);
+  function GetIsDeskBandLocation(RemoteServices: IWMPRemoteMediaServices): HResult;
+  var
+    ServiceType: WideString;
+  begin
+    Result := RemoteServices.GetServiceType(ServiceType);
+    {$IFDEF Debug}
+    DebugFmt('GetServiceType result: %x', [Result]);
+    {$ENDIF Debug}
+    if not Succeeded(Result) then
+      Exit;
+    {$IFDEF Debug}
+    DebugFmt('Service type: %s', [ServiceType]);
+    {$ENDIF Debug}
+    if CompareText(ServiceType, WMPServiceType_RemoteDeskband) = 0 then begin
+      Result := S_OK;
+      Exit;
+    end;
+    Result := S_FALSE;
+  end;
+  function HandleRemoteLocation(RemoteObj: IUnknown): HResult;
   var
     OleObject: IOleObject;
     ClientSite: IOleClientSite;
     ServiceProvider: IServiceProvider;
     RemoteServices: IWMPRemoteMediaServices;
-    ServiceType, AppName: WideString;
+    AppName: WideString;
   begin
+    Result := E_POINTER;
     if not Assigned(RemoteObj) then
       Exit;
-    if not Succeeded(RemoteObj.QueryInterface(IOleObject, OleObject)) then
+    Result := RemoteObj.QueryInterface(IOleObject, OleObject);
+    if not Succeeded(Result) then
       Exit;
-    if not Succeeded(OleObject.GetClientSite(ClientSite)) then
+    Result := OleObject.GetClientSite(ClientSite);
+    if not Succeeded(Result) then
       Exit;
-    if not Succeeded(ClientSite.QueryInterface(IServiceProvider,
-        ServiceProvider)) then
+    Result := ClientSite.QueryInterface(IServiceProvider, ServiceProvider);
+    if not Succeeded(Result) then
       Exit;
-    // On WMP 11, the following call (for an actual remote app that isn't a
-    // deskband), always fails
-    // TODO: try to find out why (WMP11)
-    if not Succeeded(ServiceProvider.QueryService(SID_SWMPRemoteMediaServices,
-        IWMPRemoteMediaServices, RemoteServices)) then
+    // The following QueryService() call always fails with E_FAIL on a default
+    // installation of WMP 11. This is because the IWMPRemoteMediaServices
+    // interface isn't marked with the TYPEFLAG_FOLEAUTOMATION flag in WMP 11's
+    // type library, for a similar issue, see
+    // https://stackoverflow.com/questions/67169818/pure-dispinterface-marshaling
+    // In WMP 12's type library, IWMPRemoteMediaServices already has
+    // TYPEFLAG_FOLEAUTOMATION set, so this isn't an issue there.
+    // This can be worked around by installing an ITypeLib/ITypeInfo (oleaut.dll)
+    // COM hook to intercept the ITypeInfo::GetTypeAttr() call for the
+    // IWMPRemoteMediaServices interface and trick combase.dll into thinking that
+    // the interface has the TYPEFLAG_FOLEAUTOMATION flag set. Note that such a
+    // hook must be installed on both the client (wmplayer.exe) and server
+    // (remote location) side. For an example implementation, see
+    // WMPOleautHook.pas in the WMP Plus plug-in, and OleautHook.cpp in
+    // WMPPlusDeskBand.
+    // In addition to the COM hook, the IWMPRemoteMediaServices interface must
+    // also be registered manually in the registry, together with the
+    // PSOAInterface proxy ({00020424-0000-0000-C000-000000000046}) as
+    // ProxyStubClsid(32), since the version 11 wmp.dll doesn't do this in its
+    // DllRegisterServer() implementation (see Misc\IWMPRemoteMediaServices.reg).
+    Result := ServiceProvider.QueryService(SID_SWMPRemoteMediaServices,
+        IWMPRemoteMediaServices, RemoteServices);
+    {$IFDEF Debug}
+    DebugFmt('QueryService result: %x', [Result]);
+    {$ENDIF Debug}
+    if not Succeeded(Result) then
       Exit;
-    if not Succeeded(RemoteServices.GetServiceType(ServiceType)) then
+    Result := GetIsDeskBandLocation(RemoteServices);
+    if not Succeeded(Result) or (Result = S_OK) then
       Exit;
-    if CompareText(ServiceType, WMPServiceType_RemoteDeskband) = 0 then
-      Exit;
-    if not Succeeded(RemoteServices.GetApplicationName(AppName)) then
+    Result := RemoteServices.GetApplicationName(AppName);
+    if not Succeeded(Result) then
       Exit;
     Inc(Count);
     if Assigned(pNames) then
@@ -286,9 +329,16 @@ begin
   Count := 0;
   if not Succeeded(Core.QueryInterface(IWMPPluginMgr, PluginMgr)) then
     Exit;
-  // On WMP 11, the following call returns a count of 0 when only the deskband is
-  // enabled
-  // TODO: try to find out why (WMP11)
+  // On WMP 11, the following call returns a count of 0 when only the standard
+  // WMP desk band is enabled. This is because the WMP 11 OCX control skips the
+  // normal registration of the remote service provider as a WMP remote location
+  // when the provider's IWMPRemoteMediaServices::GetServiceType() implementation
+  // returns "RemoteDeskband". The GetServiceType() implementation in the WMP
+  // Plus desk band also returns that same string, to make it easier for us here
+  // to detect *all* desk bands, see GetIsDeskBandLocation(). But our desk band
+  // works around the WMP 11 limitation above by registering itself as a remote
+  // location (needed for crash resiliency), see
+  // CAxHost::_RegisterAsRemoteLocation().
   if not Succeeded(PluginMgr.getRemoteLocationsCount(NumLocations)) then
     Exit;
   for i := 0 to NumLocations - 1 do begin
