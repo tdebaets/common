@@ -42,6 +42,11 @@ bool Is64BitExplorerRunning(bool & bIs64Bit);
 
 bool LoadResString(HINSTANCE hInstance, UINT uID, wstring & refString);
 
+HRESULT PatchCOMMethod(PVOID    pObj,
+                       WORD     wMethodIndex,
+                       PVOID    pNewAddress,
+                       PVOID   *ppOldAddress);
+
 /*
  * Defining DbgOut as a macro to allow projects to override this with their own
  * specific define (e.g. to prepend a project-specific prefix).

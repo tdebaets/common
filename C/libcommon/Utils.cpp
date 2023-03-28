@@ -127,6 +127,58 @@ bool LoadResString(HINSTANCE hInstance, UINT uID, wstring & refString)
     return true;
 }
 
+// TODO: automatically determine method index by macro?
+//      see https://devblogs.microsoft.com/oldnewthing/20130329-00/?p=4813
+HRESULT PatchCOMMethod(PVOID    pObj,
+                       WORD     wMethodIndex,
+                       PVOID    pNewAddress,
+                       PVOID   *ppOldAddress)
+{
+    PVOID   pVFuncTable     = *((PVOID *)pObj);
+    PVOID  *ppTableEntry    = (PVOID *)pVFuncTable; // first method
+    PVOID   pOrigAddress    = NULL;
+    DWORD   dwOldProtect    = 0;
+
+    ppTableEntry += wMethodIndex;
+
+    pOrigAddress = *ppTableEntry;
+
+    /* Don't hook twice (prevent endless loop) */
+    if (pOrigAddress == pNewAddress)
+        return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
+
+    /*
+     * For multithreaded COM objects, important to write old function address *before* patching the
+     * function table!
+     * Also using InterlockedExchangePointer to be really sure that other threads 'see' the old
+     * address before we patch.
+     */
+    if (ppOldAddress)
+    {
+        InterlockedExchangePointer(ppOldAddress, pOrigAddress);
+    }
+
+    /*
+     * Finally, patch the function table.
+     * Using InterlockedExchangePointer() because WriteProcessMemory() isn't atomic (see "Is
+     * WriteProcessMemory atomic?" - https://devblogs.microsoft.com/oldnewthing/20140515-00/?p=983)
+     * The drawback of InterlockedExchangePointer() is that we have to mark the memory as writeable
+     * first ourselves (WriteProcessMemory() already does this for us).
+     */
+
+    if (!VirtualProtect(ppTableEntry, sizeof(ppTableEntry), PAGE_EXECUTE_READWRITE, &dwOldProtect))
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    InterlockedExchangePointer(ppTableEntry, pNewAddress);
+
+    if (!VirtualProtect(ppTableEntry, sizeof(ppTableEntry), dwOldProtect, &dwOldProtect))
+    {
+        DbgOut(TEXT("Failed to restore original protection of virtual function table entry"));
+    }
+
+    return S_OK;
+}
+
 void _DbgOut(LPCWSTR kwszDebugFormatString, ...)
 {
     INT     cbFormatString = 0;
