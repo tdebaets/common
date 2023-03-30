@@ -372,6 +372,7 @@ function SumWord(const Data: array of Word): Integer;
 function IsSubRangeMember(pInfo: PTypeInfo; const Value: Variant): Boolean;
 function GetEnumName(pInfo: PTypeInfo; const Value: Variant): String;
 procedure IncludeFlag(var Flags: Cardinal; Flag: Cardinal);
+procedure IncludeFlagWord(var Flags: Word; Flag: Word);
 
 // Arrays
 
@@ -2638,6 +2639,11 @@ begin
 end;
 
 procedure IncludeFlag(var Flags: Cardinal; Flag: Cardinal);
+begin
+  Flags := Flags or Flag;
+end;
+
+procedure IncludeFlagWord(var Flags: Word; Flag: Word);
 begin
   Flags := Flags or Flag;
 end;
