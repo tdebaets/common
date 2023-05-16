@@ -326,6 +326,7 @@ procedure MoveWideChar(const Source; var Dest; Count: Integer);
 function IsAllCaps(const Str: String): Boolean;
 function ConvertAllCaps(var Str: String): Boolean;
 function GetCommandLineArgs(pCmdLine: PChar): PChar;
+function StrLCopyW(Dest, Source: PWideChar; MaxLen: Cardinal): PWideChar;
 
 type
   UTF8String = AnsiString;
@@ -464,6 +465,15 @@ function RectHeight(const R: TRect): Integer;
 
 function IsValidPtr(Ptr: Pointer): Boolean;
 function ComparePointers(P1, P2: Pointer): Integer;
+
+type
+  EPointerReadError = class(Exception);
+
+function ReadGUID(var pData: PByte; pEndOfData: PByte): TGUID;
+function ReadCardinal(var pData: PByte; pEndOfData: PByte): Cardinal;
+function ReadWideString(var pData: PByte; pEndOfData: PByte;
+    Len: Cardinal): WideString;
+
 function InterlockedExchangePointer(var Target: Pointer;
     Value: Pointer): Pointer;
 
@@ -1965,6 +1975,22 @@ begin
     Inc(Result);
 end;
 
+function StrLCopyW(Dest, Source: PWideChar; MaxLen: Cardinal): PWideChar;
+var
+  Count: Cardinal;
+begin
+  // copies a specified maximum number of characters from Source to Dest
+  Result := Dest;
+  Count := 0;
+  While (Count < MaxLen) and (Source^ <> #0) do begin
+    Dest^ := Source^;
+    Inc(Source);
+    Inc(Dest);
+    Inc(Count);
+  end;
+  Dest^ := #0;
+end;
+
 function UnicodeToUtf8(Dest: PChar; MaxDestBytes: Cardinal; Source: PWideChar;
     SourceChars: Cardinal): Cardinal;
 var
@@ -2990,6 +3016,47 @@ begin
     Result := 1
   else
     Result := 0;
+end;
+
+function OffsetBytePointer(P: PByte; Offset: Integer): PByte;
+begin
+  Result := PByte(PChar(P) + Offset);
+end;
+
+function ReadGUID(var pData: PByte; pEndOfData: PByte): TGUID;
+var
+  pEnd: PByte;
+begin
+  pEnd := OffsetBytePointer(pData, SizeOf(TGUID));
+  if ComparePointers(pEnd, pEndOfData) > 0 then
+    raise EPointerReadError.Create('ReadGUID');
+  Result := PGUID(pData)^;
+  pData := pEnd;
+end;
+
+function ReadCardinal(var pData: PByte; pEndOfData: PByte): Cardinal;
+var
+  pEnd: PByte;
+begin
+  pEnd := OffsetBytePointer(pData, SizeOf(Cardinal));
+  if ComparePointers(pEnd, pEndOfData) > 0 then
+    raise EPointerReadError.Create('ReadCardinal');
+  Result := PCardinal(pData)^;
+  pData := pEnd;
+end;
+
+function ReadWideString(var pData: PByte; pEndOfData: PByte;
+    Len: Cardinal): WideString;
+var
+  pEnd: PByte;
+begin
+  Result := '';
+  pEnd := OffsetBytePointer(pData, Len * SizeOf(WideChar));
+  if ComparePointers(pEnd, pEndOfData) > 0 then
+    raise EPointerReadError.Create('ReadWideString');
+  SetLength(Result, Len);
+  StrLCopyW(PWideChar(Result), PWideChar(pData), Len);
+  pData := pEnd;
 end;
 
 function InterlockedExchangePointer(var Target: Pointer;
