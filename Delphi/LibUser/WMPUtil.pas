@@ -661,7 +661,7 @@ function IsWMPBurning(Core: IWMPCoreSafe): Boolean;
 function IsWMPRipping(Core: IWMPCoreSafe): Boolean;
 
 function WMPNavigateToSingleMedia(WMPAppDispatch: IDispatch; WMPVersion: Byte;
-    Media: IWMPMedia3Safe): Boolean;
+    Media: IWMPMediaSafe): Boolean;
   
 implementation
 
@@ -1027,7 +1027,7 @@ begin
 end;
 
 function WMPNavigateToSingleMedia(WMPAppDispatch: IDispatch; WMPVersion: Byte;
-    Media: IWMPMedia3Safe): Boolean;
+    Media: IWMPMediaSafe): Boolean;
 var
   TrackingID: WideString;
 begin
