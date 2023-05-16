@@ -989,6 +989,41 @@ type
     function GetName(out Name: WideString): HResult; stdcall;
   end;
 
+type
+  IWMPLocation = interface(IUnknown)
+    ['{d2ad3487-7cb5-49cc-86de-0251f9939019}']
+    function Navigate(pLocationData: Pointer; LocationDataSize: Cardinal;
+        pUnknown1: Pointer; Flags: Cardinal; pSourceIID: PIID;
+        pUnknown2: Pointer): HResult; stdcall;
+    function NavigateUsingAddress: HResult; stdcall;
+    function NavigateNotify: HResult; stdcall;
+    function NavigateComplete: HResult; stdcall;
+    function GetNavigateCaps: HResult; stdcall;
+    function Back: HResult; stdcall;
+    function Forward: HResult; stdcall;
+  end;
+
+  IWMPLocationWithNavigate = interface(IWMPLocation)
+    ['{a62751cc-411e-42d6-87a0-94c5f79ec052}']
+  end;
+
+  IWMPLibraryContainer = interface(IUnknown)
+    ['{d871ad12-18ac-49d9-a301-846a5afe4907}']
+    function get_libraryLocationType(out LocationType: WideString): HResult; stdcall;
+    function get_libraryLocationID(out LocationID: WideString): HResult; stdcall;
+    function get_selectedItemType(out ItemType: WideString): HResult; stdcall;
+    function get_selectedItemID(out ItemID: WideString): HResult; stdcall;
+    function get_filter: HResult; stdcall; // prototype not known - do not use
+    function get_task: HResult; stdcall; // prototype not known - do not use
+    function addToBasket: HResult; stdcall; // prototype not known - do not use
+    function get_basketTitle: HResult; stdcall; // prototype not known - do not use
+    function saveCurrentViewToLibrary: HResult; stdcall; // prototype not known - do not use
+    function playCurrentView: HResult; stdcall; // prototype not known - do not use
+    function downloadCurrentView: HResult; stdcall; // prototype not known - do not use
+    function get_currentList(out List: IWMPList): HResult; stdcall;
+    //wmp_1\WI.CLibraryContainer::get_templateBeingDisplayedInLocalLibrary}
+  end;
+
 implementation
 
 const
