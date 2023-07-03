@@ -2,7 +2,7 @@
 
 rem **************************************************************************
 rem *
-rem * Copyright 2016-2018 Tim De Baets
+rem * Copyright 2023 Tim De Baets
 rem *
 rem * Licensed under the Apache License, Version 2.0 (the "License");
 rem * you may not use this file except in compliance with the License.
@@ -18,47 +18,34 @@ rem * limitations under the License.
 rem *
 rem **************************************************************************
 rem *
-rem * Global compile script
+rem * libcommon Visual Studio 2019 compile script
 rem *
 rem **************************************************************************
 
 setlocal
 
-rem Retrieve user-specific settings from file
-call Scripts\getuserprefs.bat
+set SCRIPTPATH=..\..\..\Scripts
+set PROJECTFILE=libcommon.vcxproj
+
+call "%SCRIPTPATH%\msbuild.bat" %PROJECTFILE% Debug Win32
 if errorlevel 1 goto failed
 
-:delphi
-
-if "%DELPHIROOT%"=="" goto libcommon
-
-cd Delphi
+call "%SCRIPTPATH%\msbuild.bat" %PROJECTFILE% Debug x64
 if errorlevel 1 goto failed
 
-call compile.bat %*
+call "%SCRIPTPATH%\msbuild.bat" %PROJECTFILE% Release Win32
 if errorlevel 1 goto failed
 
-cd ..
-
-:libcommon
-
-if "%MSBUILD_BIN_PATH%"=="" goto next
-
-cd C\libcommon\VS2019
+call "%SCRIPTPATH%\msbuild.bat" %PROJECTFILE% Release x64
 if errorlevel 1 goto failed
 
-call compile.bat %*
-if errorlevel 1 goto failed
-
-cd ..\..\..
-
-:next
-
+echo:
+echo Success!
 goto exit
 
 :failed
-cd ..
-:failed2
+echo:
+echo *** FAILED ***
 exit /b 1
 
 :exit

@@ -25,7 +25,7 @@ rem **************************************************************************
 rem Intentionally commented out!
 rem setlocal
 
-set PREFS_PATH=..\userprefs.bat
+set PREFS_PATH=%~dp0\..\userprefs.bat
 if exist %PREFS_PATH% goto userprefsfound
 
 echo userprefs.bat not found in repository root - looking in parent folder
@@ -39,16 +39,21 @@ if exist %PREFS_PATH% (
 :userprefserror
 echo userprefs.bat (in the root of the repository or its parent) is missing or
 echo incomplete.
-echo It needs to be created with the following lines, adjusted for your
-echo system:
-echo.
-echo   set DELPHIROOT=c:\delphi4              [Path to Delphi 4 (or later)]
+echo It needs to be created with at least one of the following lines, adjusted
+echo for your system:
+echo:
+echo   set DELPHIROOT=c:\delphi4                [Path to Delphi 4 (or later)]
+echo   set MSBUILD_BIN_PATH=C:\...\MSBuild\Current\Bin  [Path to MSBuild.exe]
 goto failed
 
 :userprefsfound
 set DELPHIROOT=
 call %PREFS_PATH%
-if "%DELPHIROOT%"=="" goto userprefserror
+
+if not "%DELPHIROOT%"=="" goto exit
+if not "%MSBUILD_BIN_PATH%"=="" goto exit
+
+goto userprefserror
 
 goto exit
 

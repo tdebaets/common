@@ -2,7 +2,7 @@
 
 rem **************************************************************************
 rem *
-rem * Copyright 2016-2018 Tim De Baets
+rem * Copyright 2023 Tim De Baets
 rem *
 rem * Licensed under the Apache License, Version 2.0 (the "License");
 rem * you may not use this file except in compliance with the License.
@@ -18,47 +18,33 @@ rem * limitations under the License.
 rem *
 rem **************************************************************************
 rem *
-rem * Global compile script
+rem * Common MSBuild compile script
 rem *
 rem **************************************************************************
 
 setlocal
 
+set SCRIPTPATH=%~dp0
+set PROJECTFILE=%1
+set CONFIGURATION=%2
+set PLATFORM=%3
+
 rem Retrieve user-specific settings from file
-call Scripts\getuserprefs.bat
+call "%SCRIPTPATH%\getuserprefs.bat"
 if errorlevel 1 goto failed
 
-:delphi
+echo:
+echo - %PROJECTFILE% - %CONFIGURATION% - %PLATFORM%
+echo:
 
-if "%DELPHIROOT%"=="" goto libcommon
-
-cd Delphi
+"%MSBUILD_BIN_PATH%\MSBuild.exe" %PROJECTFILE% ^
+    -target:Rebuild ^
+    -property:Configuration=%CONFIGURATION%;Platform=%PLATFORM%
 if errorlevel 1 goto failed
-
-call compile.bat %*
-if errorlevel 1 goto failed
-
-cd ..
-
-:libcommon
-
-if "%MSBUILD_BIN_PATH%"=="" goto next
-
-cd C\libcommon\VS2019
-if errorlevel 1 goto failed
-
-call compile.bat %*
-if errorlevel 1 goto failed
-
-cd ..\..\..
-
-:next
 
 goto exit
 
 :failed
-cd ..
-:failed2
 exit /b 1
 
 :exit

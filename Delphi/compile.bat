@@ -24,7 +24,7 @@ rem **************************************************************************
 
 setlocal
 
-rem  Units in LibFixed to compile separately (keep alphabetical please)
+rem Units in LibFixed to compile separately (keep alphabetical please)
 set LIBFIXED_UNITS= ^
     Controls.pas ^
     ComCtrls.pas ^
@@ -96,7 +96,7 @@ if "%1"=="/incr" (
 rem Generate unique number for temporary file renames
 set RND=%RANDOM%
 
-rem  Retrieve user-specific settings from file
+rem Retrieve user-specific settings from file
 call ..\Scripts\getuserprefs.bat
 if errorlevel 1 goto failed2
 
