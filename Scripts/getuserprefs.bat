@@ -25,12 +25,15 @@ rem **************************************************************************
 rem Intentionally commented out!
 rem setlocal
 
+set DELPHIROOT=
+set MSBUILD_BIN_PATH=
+
 set PREFS_PATH=%~dp0\..\userprefs.bat
 if exist %PREFS_PATH% goto userprefsfound
 
 echo userprefs.bat not found in repository root - looking in parent folder
 
-set PREFS_PATH=..\%PREFS_PATH%
+set PREFS_PATH=%~dp0\..\..\userprefs.bat
 if exist %PREFS_PATH% (
   echo userprefs.bat found in parent folder
   goto userprefsfound
@@ -47,7 +50,6 @@ echo   set MSBUILD_BIN_PATH=C:\...\MSBuild\Current\Bin  [Path to MSBuild.exe]
 goto failed
 
 :userprefsfound
-set DELPHIROOT=
 call %PREFS_PATH%
 
 if not "%DELPHIROOT%"=="" goto exit
