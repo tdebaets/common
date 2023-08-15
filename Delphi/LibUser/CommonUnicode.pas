@@ -184,8 +184,10 @@ end;
 // This function quotes an argument for inclusion in a command line. It
 // effectively encodes an argument such that the CommandLineToArgvW API function
 // should decode it to its original string value.
-// See http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
-// See http://blogs.msdn.com/b/oldnewthing/archive/2010/09/17/10063629.aspx
+// See https://learn.microsoft.com/en-gb/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way
+// Also see The Old New Thing - What's up with the strange treatment of quotation
+// marks and backslashes by CommandLineToArgvW
+// https://devblogs.microsoft.com/oldnewthing/20100917-00/?p=12833
 function QuoteArgvForCmdLine(const Argv: WideString): WideString;
   procedure AppendResultStr(const Str: WideString);
   begin

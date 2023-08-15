@@ -2930,7 +2930,7 @@ const
 
 // Based on the code in The Old New Thing - Pumping messages while waiting for a
 // period of time
-// http://blogs.msdn.com/b/oldnewthing/archive/2006/01/26/517849.aspx
+// https://devblogs.microsoft.com/oldnewthing/20060126-00/?p=32513
 function MsgWaitForObjectWithTimeout(hHandle: THandle;
     dwTimeout: Cardinal): DWORD;
 var

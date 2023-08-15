@@ -24,7 +24,8 @@ unit DialogForm;
 
 // TODO: Vista: fix weird bugs when changing windows theme while dialog open/WMP running
 // TODO: look into weird hiding/showing accelerator behaviour
-// see http://blogs.msdn.com/b/oldnewthing/archive/2013/05/17/10419502.aspx
+//    see "Who sends the initial WM_UPDATEUISTATE message?"
+//    https://devblogs.microsoft.com/oldnewthing/20130517-00/?p=4323
 // TODO: support poDefault/poDefaultSizeOnly?
 
 interface
