@@ -128,7 +128,8 @@ bool LoadResString(HINSTANCE hInstance, UINT uID, wstring & refString)
 }
 
 // TODO: automatically determine method index by macro?
-//      see https://devblogs.microsoft.com/oldnewthing/20130329-00/?p=4813
+//      see "How do I convert a method name to a method index for the purpose of INTERFACEINFO?"
+//      https://devblogs.microsoft.com/oldnewthing/20130329-00/?p=4813
 HRESULT PatchCOMMethod(PVOID    pObj,
                        WORD     wMethodIndex,
                        PVOID    pNewAddress,

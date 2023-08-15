@@ -28,6 +28,7 @@
     <ClInclude Include="..\PEUtils.h" />
     <ClInclude Include="..\Processes.h" />
     <ClInclude Include="..\Utils.h" />
+    <ClInclude Include="..\WindowProxy.h" />
     <ClInclude Include="..\WMPUtils.h" />
     <ClInclude Include="..\Wow64Utils.h" />
   </ItemGroup>

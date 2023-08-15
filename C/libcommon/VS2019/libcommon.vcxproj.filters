@@ -48,6 +48,9 @@
     <ClInclude Include="..\MessageLoopThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\WindowProxy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\NativeApi.cpp">
