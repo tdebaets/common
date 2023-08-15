@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="..\APIHookUtils.h" />
     <ClInclude Include="..\DelayLoadUtils.h" />
+    <ClInclude Include="..\MessageLoopThread.h" />
     <ClInclude Include="..\ModuleHandle.h" />
     <ClInclude Include="..\NativeApi.h" />
     <ClInclude Include="..\PEModuleWalker.h" />
@@ -32,6 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\DelayLoadUtils.cpp" />
+    <ClCompile Include="..\MessageLoopThread.cpp" />
     <ClCompile Include="..\ModuleHandle.cpp" />
     <ClCompile Include="..\NativeApi.cpp" />
     <ClCompile Include="..\PEModuleWalker.cpp" />
