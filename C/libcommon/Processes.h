@@ -26,6 +26,8 @@
 #include <Utils.h>
 #include <Windows.h>
 
+#include "NativeApi.h"
+
 typedef std::vector<BYTE> ByteVector;
 
 // TODO: use a strong typedef instead and define operators for casting to and assigning from PSID
@@ -34,3 +36,6 @@ typedef ByteVector SidWrapper;
 bool GetProcessSidToken(HANDLE hProc, SidWrapper& refSid);
 bool GetProcessSid(DWORD dwProcId, HANDLE hProc, SidWrapper& refSid);
 bool IsSystemSid(PSID pSid);
+
+NTSTATUS PhEnumHandlesEx2(_In_  HANDLE                                  ProcessHandle,
+                          _Out_ PPROCESS_HANDLE_SNAPSHOT_INFORMATION   *pHandles);

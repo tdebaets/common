@@ -20,7 +20,11 @@
  *
  ****************************************************************************/
 
+#include <ntstatus.h>
+
+#define WIN32_NO_STATUS
 #include "Processes.h"
+#undef WIN32_NO_STATUS
 
 bool GetProcessSidToken(HANDLE hProc, SidWrapper& refSid)
 {
@@ -148,4 +152,72 @@ bool IsSystemSid(PSID pSid)
     return SidEqualsKnownSid(pSid, SECURITY_LOCAL_SYSTEM_RID) ||
         SidEqualsKnownSid(pSid, SECURITY_LOCAL_SERVICE_RID) ||
         SidEqualsKnownSid(pSid, SECURITY_LOCAL_SERVICE_RID);
+}
+
+/**
+ * Enumerates all open handles.
+ *
+ * \param ProcessHandle A handle to the process. The handle must have PROCESS_QUERY_INFORMATION access.
+ * \param pHandles A variable which receives a pointer to a structure containing information about
+ * handles opened by the process. You must free the structure using delete when you no longer need it.
+ *
+ * \retval STATUS_INSUFFICIENT_RESOURCES The handle information returned by the kernel is too large.
+ *
+ * \remarks This function is only available starting with Windows 8.
+ */
+NTSTATUS PhEnumHandlesEx2(_In_  HANDLE                                  ProcessHandle,
+                          _Out_ PPROCESS_HANDLE_SNAPSHOT_INFORMATION   *pHandles)
+{
+    NTSTATUS                                status;
+    PPROCESS_HANDLE_SNAPSHOT_INFORMATION    pHandleInfo     = NULL;
+    ULONG                                   bufferSize      = 0;
+    ULONG                                   returnLength    = 0;
+    ULONG                                   attempts        = 0;
+
+    bufferSize = 0x8000;
+    pHandleInfo = reinterpret_cast<PPROCESS_HANDLE_SNAPSHOT_INFORMATION>(new BYTE[bufferSize]);
+    pHandleInfo->NumberOfHandles = 0;
+
+    status = NtQueryInformationProcess(ProcessHandle,
+                                       ProcessHandleInformation,
+                                       pHandleInfo, bufferSize,
+                                       &returnLength);
+
+    while (status == STATUS_INFO_LENGTH_MISMATCH && attempts < 8)
+    {
+        delete[] pHandleInfo;
+        bufferSize = returnLength;
+        pHandleInfo = reinterpret_cast<PPROCESS_HANDLE_SNAPSHOT_INFORMATION>(new BYTE[bufferSize]);
+        pHandleInfo->NumberOfHandles = 0;
+
+        status = NtQueryInformationProcess(ProcessHandle,
+                                           ProcessHandleInformation,
+                                           pHandleInfo, bufferSize,
+                                           &returnLength);
+
+        attempts++;
+    }
+
+    if (NT_SUCCESS(status))
+    {
+        // NOTE: This is needed to workaround minimal processes on Windows 10
+        // returning STATUS_SUCCESS with invalid handle data. (dmex)
+        // NOTE: 21H1 and above no longer set NumberOfHandles to zero before returning
+        // STATUS_SUCCESS so we first zero the entire buffer using PhAllocateZero. (dmex)
+        if (pHandleInfo->NumberOfHandles == 0)
+        {
+            status = STATUS_UNSUCCESSFUL;
+            delete[] pHandleInfo;
+        }
+        else
+        {
+            *pHandles = pHandleInfo;
+        }
+    }
+    else
+    {
+        delete[] pHandleInfo;
+    }
+
+    return status;
 }

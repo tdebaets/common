@@ -25,6 +25,26 @@
 #include <windows.h>
 #include <winternl.h>
 
+#define ProcessHandleInformation (PROCESSINFOCLASS)51 // q: PROCESS_HANDLE_SNAPSHOT_INFORMATION // since WIN8
+
+typedef struct _PROCESS_HANDLE_TABLE_ENTRY_INFO
+{
+    HANDLE      HandleValue;
+    ULONG_PTR   HandleCount;
+    ULONG_PTR   PointerCount;
+    ULONG       GrantedAccess;
+    ULONG       ObjectTypeIndex;
+    ULONG       HandleAttributes;
+    ULONG       Reserved;
+} PROCESS_HANDLE_TABLE_ENTRY_INFO, *PPROCESS_HANDLE_TABLE_ENTRY_INFO;
+
+typedef struct _PROCESS_HANDLE_SNAPSHOT_INFORMATION
+{
+    ULONG_PTR NumberOfHandles;
+    ULONG_PTR Reserved;
+    _Field_size_(NumberOfHandles) PROCESS_HANDLE_TABLE_ENTRY_INFO Handles[1];
+} PROCESS_HANDLE_SNAPSHOT_INFORMATION, *PPROCESS_HANDLE_SNAPSHOT_INFORMATION;
+
 typedef enum _SECTION_INFORMATION_CLASS
 {
     SectionBasicInformation,
