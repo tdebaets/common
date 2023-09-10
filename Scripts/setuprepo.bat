@@ -67,7 +67,7 @@ for /f %%i in ('"%SCRIPTPATH%\getreponame.bat"') do (
 
 echo Setting up repository '%REPONAME%'...
 
-git config pull.rebase preserve
+git config pull.rebase merges
 if errorlevel 1 goto failed
 
 rem Check that all submodule commits to push are available on a remote
