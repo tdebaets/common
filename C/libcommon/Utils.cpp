@@ -23,9 +23,49 @@
 #include "Utils.h"
 
 #include <strsafe.h>
+#include <vector>
+
+#include "NativeApi.h"
 
 static const LPCSTR g_szKernel32    = "kernel32.dll";
 static const LPCSTR g_szUser32      = "user32.dll";
+
+NTSTATUS GetPathFromHandle(HANDLE hObject, wstring &refStrPath)
+{
+    ULONG           ulSize = 0;
+    NTSTATUS        status;
+    vector<BYTE>    vecBuffer;
+
+    refStrPath.resize(0);
+
+    // Query the name information a first time to get the size of the name.
+    status = NtQueryObject(hObject, ObjectNameInformation, NULL, 0, &ulSize);
+    
+    if (ulSize > 0)
+    {
+        vecBuffer.resize(ulSize);
+
+        POBJECT_NAME_INFORMATION pNameInfo = reinterpret_cast<POBJECT_NAME_INFORMATION>(&vecBuffer[0]);
+        
+        // Query the name information a second time to get the name of the object referenced by the
+        // handle.
+        status = NtQueryObject(hObject, ObjectNameInformation, pNameInfo, ulSize, &ulSize);
+
+        if (NT_SUCCESS(status))
+        {
+            refStrPath.resize(pNameInfo->Name.Length / sizeof(WCHAR));
+
+            if (pNameInfo->Name.Buffer && pNameInfo->Name.Length > 0)
+            {
+                wcsncpy_s(&refStrPath[0], refStrPath.capacity(),
+                          pNameInfo->Name.Buffer,
+                          refStrPath.capacity());
+            }
+        }
+    }
+
+    return status;
+}
 
 BOOL CloseHandleSafe(PHANDLE phObject)
 {
