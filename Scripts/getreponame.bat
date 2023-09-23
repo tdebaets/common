@@ -35,13 +35,13 @@ set NUMSEGMENTS=0
 set LASTSEGMENT=
 
 :loopprocess
-for /f "tokens=1* delims=/" %%i in ("%TMP%") do (
+for /f "tokens=1* delims=/\" %%i in ("%TMP%") do (
     set /a NUMSEGMENTS+=1
     set TMP=%%j
     goto loopprocess
 )
 
-for /f "tokens=%NUMSEGMENTS% delims=/" %%i in ("%ORIGINURL%") do (
+for /f "tokens=%NUMSEGMENTS% delims=/\" %%i in ("%ORIGINURL%") do (
     set LASTSEGMENT=%%i
 )
 
