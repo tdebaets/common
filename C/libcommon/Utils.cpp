@@ -31,6 +31,22 @@
 static const LPCSTR g_szKernel32    = "kernel32.dll";
 static const LPCSTR g_szUser32      = "user32.dll";
 
+string NarrowString(const LPCWSTR message, UINT codePage)
+{
+    string result;
+    int chars = WideCharToMultiByte(codePage, 0, message, -1, 0, 0, 0, 0);
+    // TODO: add error checking
+    result.resize(chars);
+    WideCharToMultiByte(codePage, 0, message, -1, &*result.begin(), chars, 0, 0);
+    result.erase(result.length() - 1); // remove terminating null
+    return result;
+}
+
+string NarrowStringUTF8(const LPCWSTR message)
+{
+    return NarrowString(message, CP_UTF8);
+}
+
 NTSTATUS GetPathFromHandle(HANDLE hObject, wstring &refStrPath)
 {
     ULONG           ulSize = 0;

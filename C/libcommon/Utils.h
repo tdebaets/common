@@ -34,6 +34,9 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 extern const LPCSTR g_szKernel32;
 extern const LPCSTR g_szUser32;
 
+string NarrowString(const LPCWSTR message, UINT codePage = CP_ACP);
+string NarrowStringUTF8(const LPCWSTR message);
+
 NTSTATUS GetPathFromHandle(HANDLE hObject, wstring &refStrPath);
 BOOL CloseHandleSafe(PHANDLE phObject);
 
