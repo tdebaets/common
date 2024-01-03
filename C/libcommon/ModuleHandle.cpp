@@ -22,12 +22,13 @@
 
 #include "ModuleHandle.h"
 #include <sstream>
+#include <Utils.h>
 
-CModuleHandleError::CModuleHandleError(LPCSTR lpModuleName, DWORD dwErrorCode)
+CModuleHandleError::CModuleHandleError(LPCWSTR lpModuleName, DWORD dwErrorCode)
 :   m_dwErrorCode(dwErrorCode)
 {
     ostringstream oss;
-    oss << "Failed to load module " << lpModuleName << ": " << dwErrorCode;
+    oss << "Failed to load module " << NarrowString(lpModuleName) << ": " << dwErrorCode;
     m_message = string(oss.str());
 }
 
@@ -36,10 +37,15 @@ const char *CModuleHandleError::what() const
     return m_message.c_str();
 }
 
-CModuleHandle::CModuleHandle(LPCSTR lpModuleName)
-:   m_hMod(NULL)
+CModuleHandle::CModuleHandle()
+    : m_hMod(NULL)
 {
-    if (!GetModuleHandleExA(0, lpModuleName, &m_hMod))
+}
+
+CModuleHandle::CModuleHandle(LPCWSTR lpModuleName)
+    : m_hMod(NULL)
+{
+    if (!GetModuleHandleEx(0, lpModuleName, &m_hMod))
     {
         throw CModuleHandleError(lpModuleName, GetLastError());
     }
@@ -57,4 +63,14 @@ CModuleHandle::~CModuleHandle()
 HMODULE CModuleHandle::get_hMod()
 {
     return m_hMod;
+}
+
+CModuleHandleLoad::CModuleHandleLoad(LPCWSTR lpModuleName)
+{
+    m_hMod = LoadLibrary(lpModuleName);
+
+    if (!m_hMod)
+    {
+        throw CModuleHandleError(lpModuleName, GetLastError());
+    }
 }

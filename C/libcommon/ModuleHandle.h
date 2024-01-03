@@ -37,20 +37,29 @@ private:
 
 public:
 
-    CModuleHandleError(LPCSTR lpModuleName, DWORD dwErrorCode);
+    CModuleHandleError(LPCWSTR lpModuleName, DWORD dwErrorCode);
     virtual const char *what() const;
 };
 
 class CModuleHandle
 {
-private:
+protected:
+
+    CModuleHandle();
 
     HMODULE m_hMod;
 
 public:
 
-    CModuleHandle(LPCSTR lpModuleName);
+    CModuleHandle(LPCWSTR lpModuleName);
     ~CModuleHandle();
 
     HMODULE get_hMod();
+};
+
+class CModuleHandleLoad : public CModuleHandle
+{
+public:
+
+    CModuleHandleLoad(LPCWSTR lpModuleName);
 };
