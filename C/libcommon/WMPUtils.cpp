@@ -22,7 +22,7 @@
 
 #include "WMPUtils.h"
 
-static const LPCSTR g_szWMPDLL = "wmp.dll";
+static const LPCWSTR g_wszWMPDLL = L"wmp.dll";
 
 BYTE GetWMPMainVersion(CComBSTR &pbstrVersionInfo)
 {

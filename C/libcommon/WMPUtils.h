@@ -32,6 +32,6 @@ using namespace std;
 #define WMP_VERSION_11  (11)
 #define WMP_VERSION_12  (12)
 
-extern const LPCSTR g_szWMPDLL;
+extern const LPCWSTR g_wszWMPDLL;
 
 BYTE GetWMPMainVersion(CComBSTR &pbstrVersionInfo);
