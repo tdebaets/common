@@ -59,7 +59,9 @@ set LIBUSER_UNITS= ^
     NewDialogs.pas ^
     PathFuncWide.pas ^
     PEStruct.pas ^
-    PJMessageDialog ^
+    PJMessageDialog.pas ^
+    PropKey.pas ^
+    PropSys.pas ^
     Scanf.pas ^
     Scanf_c.pas ^
     ShellApi2.pas ^

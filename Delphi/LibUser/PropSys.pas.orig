@@ -1,0 +1,664 @@
+unit PropSys;
+
+interface 
+ 
+uses 
+  Windows, Classes, SysUtils, ActiveX, ComObj;
+
+{ Structured Storage interfaces, types and constants for Delphi 3 }
+
+{$MINENUMSIZE 4}
+ 
+type 
+  PClipData = ^TClipData; 
+  tagCLIPDATA = record 
+    cbSize: Longint; 
+    ulClipFmt: Longint; 
+    pClipData: Pointer; 
+  end; 
+  TClipData = tagCLIPDATA; 
+  CLIPDATA = TClipData;
+
+  PPropVariant = ^TPropVariant;
+ 
+  tagCAUB = packed record 
+    cElems: ULONG; 
+    pElems: PByte; 
+  end; 
+  CAUB = tagCAUB; 
+  PCAUB = ^TCAUB; 
+  TCAUB = tagCAUB; 
+ 
+  PShortInt = ^ShortInt; 
+ 
+  tagCAI = packed record 
+    cElems: ULONG; 
+    pElems: PShortInt; 
+  end; 
+  CAI = tagCAI; 
+  PCAI = ^TCAI; 
+  TCAI = tagCAI; 
+ 
+  tagCAUI = packed record 
+    cElems: ULONG; 
+    pElems: PWord; 
+  end; 
+  CAUI = tagCAUI; 
+  PCAUI = ^TCAUI; 
+  TCAUI = tagCAUI; 
+ 
+  tagCAL = packed record 
+    cElems: ULONG; 
+    pElems: PLongint; 
+  end; 
+  CAL = tagCAL; 
+  PCAL = ^TCAL; 
+  TCAL = tagCAL; 
+ 
+  tagCAUL = packed record 
+    cElems: ULONG; 
+    pElems: PULONG; 
+  end; 
+  CAUL = tagCAUL; 
+  PCAUL = ^TCAUL; 
+  TCAUL = tagCAUL; 
+ 
+  tagCAFLT = packed record 
+    cElems: ULONG; 
+    pElems: PSingle; 
+  end; 
+  CAFLT = tagCAFLT; 
+  PCAFLT = ^TCAFLT; 
+  TCAFLT = tagCAFLT; 
+ 
+  tagCADBL = packed record 
+    cElems: ULONG; 
+    pElems: PDouble; 
+  end; 
+  CADBL = tagCADBL; 
+  PCADBL = ^TCADBL; 
+  TCADBL = tagCADBL; 
+ 
+  tagCACY = packed record 
+    cElems: ULONG; 
+    pElems: PCurrency; 
+  end; 
+  CACY = tagCACY; 
+  PCACY = ^TCACY; 
+  TCACY = tagCACY; 
+ 
+  TOleDate = Double; 
+  POleDate = ^TOleDate; 
+ 
+  TOleBool = WordBool; 
+  POleBool = ^TOleBool; 
+   
+  tagCADATE = packed record 
+    cElems: ULONG; 
+    pElems: POleDate; 
+  end; 
+  CADATE = tagCADATE; 
+  PCADATE = ^TCADATE; 
+  TCADATE = tagCADATE; 
+ 
+  tagCABSTR = packed record 
+    cElems: ULONG; 
+    pElems: PBSTR; 
+  end; 
+  CABSTR = tagCABSTR; 
+  PCABSTR = ^TCABSTR; 
+  TCABSTR = tagCABSTR; 
+ 
+  tagCABOOL = packed record 
+    cElems: ULONG; 
+    pElems: POleBool; 
+  end; 
+  CABOOL = tagCABOOL; 
+  PCABOOL = ^TCABOOL; 
+  TCABOOL = tagCABOOL; 
+ 
+  tagCASCODE = packed record 
+    cElems: ULONG; 
+    pElems: PSCODE; 
+  end; 
+  CASCODE = tagCASCODE; 
+  PCASCODE = ^TCASCODE; 
+  TCASCODE = tagCASCODE; 
+ 
+  tagCAPROPVARIANT = packed record 
+    cElems: ULONG; 
+    pElems: PPropVariant; 
+  end; 
+  CAPROPVARIANT = tagCAPROPVARIANT; 
+  PCAPROPVARIANT = ^TCAPROPVARIANT; 
+  TCAPROPVARIANT = tagCAPROPVARIANT; 
+ 
+  tagCAH = packed record 
+    cElems: ULONG; 
+    pElems: PLargeInteger; 
+  end; 
+  CAH = tagCAH; 
+  PCAH = ^TCAH; 
+  TCAH = tagCAH; 
+ 
+  TULargeInteger = TLargeInteger; 
+  PULargeInteger = ^TULargeInteger; 
+   
+  tagCAUH = packed record 
+    cElems: ULONG; 
+    pElems: PULargeInteger; 
+  end; 
+  CAUH = tagCAUH; 
+  PCAUH = ^TCAUH; 
+  TCAUH = tagCAUH; 
+ 
+  PLPSTR = PChar; 
+  PLPWSTR = PWideChar; 
+   
+  tagCALPSTR = packed record 
+    cElems: ULONG; 
+    pElems: PLPSTR; 
+  end; 
+  CALPSTR = tagCALPSTR; 
+  PCALPSTR = ^TCALPSTR; 
+  TCALPSTR = tagCALPSTR; 
+ 
+  tagCALPWSTR = packed record 
+    cElems: ULONG; 
+    pElems: PLPWSTR; 
+  end; 
+  CALPWSTR = tagCALPWSTR; 
+  PCALPWSTR = ^TCALPWSTR; 
+  TCALPWSTR = tagCALPWSTR; 
+ 
+  tagCAFILETIME = packed record 
+    cElems: ULONG; 
+    pElems: PFileTime; 
+  end; 
+  CAFILETIME = tagCAFILETIME; 
+  PCAFILETIME = ^TCAFILETIME; 
+  TCAFILETIME = tagCAFILETIME; 
+ 
+  tagCACLIPDATA = packed record 
+    cElems: ULONG; 
+    pElems: PClipData; 
+  end; 
+  CACLIPDATA = tagCACLIPDATA; 
+  PCACLIPDATA = ^TCACLIPDATA; 
+  TCACLIPDATA = tagCACLIPDATA; 
+ 
+  tagCACLSID = packed record 
+    cElems: ULONG; 
+    pElems: PCLSID; 
+  end; 
+  CACLSID = tagCACLSID; 
+  PCACLSID = ^TCACLSID; 
+  TCACLSID = tagCACLSID; 
+ 
+  tagPROPVARIANT = packed record 
+    vt: TVarType; 
+    wReserved1: Word; 
+    wReserved2: Word; 
+    wReserved3: Word; 
+    case Integer of 
+      0: (bVal: Byte); 
+      1: (iVal: SmallInt); 
+      2: (uiVal: Word); 
+      3: (boolVal: TOleBool); 
+      4: (bool: TOleBool); 
+      5: (lVal: Longint); 
+      6: (ulVal: Cardinal); 
+      7: (fltVal: Single); 
+      8: (scode: SCODE); 
+      9: (hVal: TLargeInteger); 
+      10: (uhVal: TULargeInteger); 
+      11: (dblVal: Double); 
+      12: (cyVal: Currency); 
+      13: (date: TOleDate); 
+      14: (filetime: TFileTime); 
+      15: (puuid: PGUID); 
+      16: (blob: TBlob); 
+      17: (pclipdata: PClipData); 
+      18: (pStream: Pointer{IStream}); 
+      19: (pStorage: Pointer{IStorage}); 
+      20: (bstrVal: TBStr); 
+      21: (pszVal: PAnsiChar); 
+      22: (pwszVal: PWideChar); 
+      23: (caub: TCAUB); 
+      24: (cai: TCAI); 
+      25: (caui: TCAUI); 
+      26: (cabool: TCABOOL); 
+      27: (cal: TCAL); 
+      28: (caul: TCAUL); 
+      29: (caflt: TCAFLT); 
+      30: (cascode: TCASCODE); 
+      31: (cah: TCAH); 
+      32: (cauh: TCAUH); 
+      33: (cadbl: TCADBL); 
+      34: (cacy: TCACY); 
+      35: (cadate: TCADATE); 
+      36: (cafiletime: TCAFILETIME); 
+      37: (cauuid: TCACLSID); 
+      38: (caclipdata: TCACLIPDATA); 
+      39: (cabstr: TCABSTR); 
+      40: (calpstr: TCALPSTR); 
+      41: (calpwstr: TCALPWSTR ); 
+      42: (capropvar: TCAPROPVARIANT); 
+  end; 
+  PROPVARIANT = tagPROPVARIANT; 
+  TPropVariant = tagPROPVARIANT;
+ 
+  tagPROPSPEC = packed record 
+    ulKind: ULONG; 
+    case Integer of 
+      0: (propid: TPropID); 
+      1: (lpwstr: POleStr); 
+  end; 
+  PROPSPEC = tagPROPSPEC; 
+  PPropSpec = ^TPropSpec; 
+  TPropSpec = tagPROPSPEC; 
+ 
+  tagSTATPROPSTG = packed record 
+    lpwstrName: POleStr; 
+    propid: TPropID; 
+    vt: TVarType; 
+  end; 
+  STATPROPSTG = tagSTATPROPSTG; 
+  PStatPropStg = ^TStatPropStg; 
+  TStatPropStg = tagSTATPROPSTG; 
+ 
+  FMTID = TGUID; 
+  PFmtID = ^TFmtID; 
+  TFmtID = TGUID; 
+   
+  tagSTATPROPSETSTG = packed record 
+    fmtid: TFmtID; 
+    clsid: TClsID; 
+    grfFlags: DWORD; 
+    mtime: TFileTime; 
+    ctime: TFileTime; 
+    atime: TFileTime; 
+    dwOSVersion: DWORD; 
+  end; 
+  STATPROPSETSTG = tagSTATPROPSETSTG; 
+  PStatPropSetStg = ^TStatPropSetStg; 
+  TStatPropSetStg = tagSTATPROPSETSTG; 
+ 
+  PROPID = ULONG; 
+  PPropID = ^TPropID; 
+  TPropID = PROPID; 
+ 
+  PPOleStr = ^POleStr;
+
+  TPscState = (
+      PSC_NORMAL,       // 0
+      PSC_NOTINSOURCE,  // 1
+      PSC_DIRTY,        // 2
+      PSC_READONLY      // 3
+  );
+ 
+  IEnumSTATPROPSTG = interface; 
+  IEnumSTATPROPSETSTG = interface; 
+   
+  IPropertyStorage = interface(IUnknown) 
+    ['{00000138-0000-0000-C000-000000000046}'] 
+    function ReadMultiple(cpspec: ULONG; rgpspec, rgpropvar: PPropSpec): HResult; stdcall; 
+    function WriteMultiple(cpspec: ULONG; rgpspec, rgpropvar: PPropSpec; 
+      propidNameFirst: TPropID): HResult; stdcall; 
+    function DeleteMultiple(cpspec: ULONG; rgpspec: PPropSpec): HResult; stdcall; 
+    function ReadPropertyNames(cpropid: ULONG; rgpropid: PPropID; 
+      rglpwstrName: PPOleStr): HResult; stdcall; 
+    function WritePropertyNames(cpropid: ULONG; rgpropid: PPropID; 
+      rglpwstrName: PPOleStr): HResult; stdcall; 
+    function DeletePropertyNames(cpropid: ULONG; rgpropid: PPropID): HResult; stdcall; 
+    function Commit(grfCommitFlags: DWORD): HResult; stdcall; 
+    function Revert: HResult; stdcall; 
+    function Enum(out ppenum: IEnumSTATPROPSTG): HResult; stdcall; 
+    function SetTimes(const pctime, patime, pmtime: TFileTime): HResult; stdcall; 
+    function SetClass(const clsid: TCLSID): HResult; stdcall; 
+    function Stat(pstatpsstg: PStatPropSetStg): HResult; stdcall; 
+  end; 
+ 
+  IPropertySetStorage = interface(IUnknown) 
+    ['{0000013A-0000-0000-C000-000000000046}'] 
+    function Create(const rfmtid: TFmtID; const pclsid: TCLSID; grfFlags, 
+      grfMode: DWORD; out ppprstg: IPropertyStorage): HResult; stdcall; 
+    function Open(const rfmtid: TFmtID; grfMode: DWORD; 
+      out ppprstg: IPropertyStorage): HResult; stdcall; 
+    function Delete(const rfmtid: TFmtID): HResult; stdcall; 
+    function Enum(out ppenum: IEnumSTATPROPSETSTG): HResult; stdcall;
+  end; 
+ 
+  IEnumSTATPROPSTG = interface(IUnknown) 
+    ['{00000139-0000-0000-C000-000000000046}'] 
+    function Next(celt: ULONG; out rgelt; pceltFetched: PULONG): HResult; stdcall; 
+    function Skip(celt: ULONG): HResult; stdcall; 
+    function Reset: HResult; stdcall; 
+    function Clone(out ppenum: IEnumSTATPROPSTG): HResult; stdcall; 
+  end; 
+ 
+  IEnumSTATPROPSETSTG = interface(IUnknown) 
+    ['{0000013B-0000-0000-C000-000000000046}'] 
+    function Next(celt: ULONG; out rgelt; pceltFetched: PULONG): HResult; stdcall; 
+    function Skip(celt: ULONG): HResult; stdcall; 
+    function Reset: HResult; stdcall; 
+    function Clone(out ppenum: IEnumSTATPROPSETSTG): HResult; stdcall; 
+  end;
+
+   IInitializeWithFile = interface(IUnknown)
+   ['{b7d14566-0509-4cce-a71f-0a554233bd9b}']
+     function Initialize(pszFilePath: PWideChar; grfMode: DWORD):HRESULT; stdcall;
+   end;
+
+
+   IInitializeWithStream = interface(IUnknown)
+   ['{b824b49d-22ac-4161-ac8a-9916e8fa3f7f}']
+     function Initialize(var pIStream: IStream; grfMode: DWORD):HRESULT; stdcall;
+   end;
+
+   _tagpropertykey = packed record 
+     fmtid: TGUID;
+     pid: DWORD;
+   end;
+   PROPERTYKEY = _tagpropertykey;
+   PPropertyKey = ^TPropertyKey;
+   TPropertyKey = _tagpropertykey;
+
+   IPropertyStore = interface(IUnknown)
+     ['{886d8eeb-8cf2-4446-8d02-cdba1dbdcf99}']
+     function GetCount(out cProps: DWORD): HResult; stdcall;
+     function GetAt(iProp: DWORD; out pkey: TPropertyKey): HResult; stdcall;
+     function GetValue(const key: TPropertyKey; out ppropvar: TPropVariant): HResult; stdcall;
+     function SetValue(const key: TPropertyKey; const ppropvar: TPropVariant): HResult; stdcall;
+     function Commit: HResult; stdcall;
+   end;
+
+   IPropertyStoreCache = interface(IPropertyStore)
+     ['{3017056d-9a91-4e90-937d-746c72abbf4f}']
+     function GetState(const key: TPropertyKey;
+        out pState: TPscState): HResult; stdcall;
+     function GetValueAndState(const key: TPropertyKey; out ppropvar: TPropVariant;
+        out pState: TPscState): HResult; stdcall;
+     function SetState(const key: TPropertyKey;
+        state: TPscState): HResult; stdcall;
+     function SetValueAndState(const key: TPropertyKey;
+        const ppropvar: TPropVariant; state: TPscState): HResult; stdcall;
+   end;
+
+
+   IPropertyStoreCapabilities = interface(IUnknown)
+   ['{c8e2d566-186e-4d49-bf41-6909ead56acc}']
+     function IsPropertyWritable(const pPropKey: TPropertyKey): HRESULT; stdcall;
+   end;
+
+const
+   PKEY_Device_FriendlyName: TPropertyKey = (
+                fmtid: (D1:$a45c254e; D2:$df1c ; D3:$4efd;
+                D4: ($80, $20, $67, $d1, $46, $a8, $50, $e0));
+                pid: 14);
+ 
+const 
+  PRSPEC_INVALID            = $ffffffff; 
+  PRSPEC_LPWSTR             = 0; 
+  PRSPEC_PROPID             = 1; 
+ 
+const 
+  PROPSETFLAG_DEFAULT   = 0;
+  PROPSETFLAG_NONSIMPLE = 1; 
+  PROPSETFLAG_ANSI      = 2;
+
+const
+  GPS_DEFAULT               = 0;
+  GPS_HANDLERPROPERTIESONLY = $1;
+  GPS_READWRITE             = $2;
+  GPS_TEMPORARY             = $4;
+  GPS_FASTPROPERTIESONLY    = $8;
+  GPS_OPENSLOWITEM          = $10;
+  GPS_DELAYCREATION         = $20;
+  GPS_BESTEFFORT            = $40;
+  GPS_NO_OPLOCK             = $80;
+  GPS_MASK_VALID            = $ff;
+
+type
+  PSTIME_FLAGS = (
+      PSTF_UTC,   // 0x00000000
+      PSTF_LOCAL  // 0x00000001
+  );
+
+const
+  PropSysLib = 'propsys.dll';
+
+procedure PropVariantInit(var pvar: TPropVariant);
+function InitPropVariantFromString(psz: PWideChar;
+    out ppropvar: TPropVariant): HRESULT;
+function InitPropVariantFromBoolean(fVal: BOOL;
+    out ppropvar: TPropVariant): HRESULT;
+function InitPropVariantFromInt16(nVal: SmallInt;
+    out ppropvar: TPropVariant): HRESULT;
+function InitPropVariantFromUInt16(uiVal: Word;
+    out ppropvar: TPropVariant): HRESULT;
+function InitPropVariantFromInt32(lVal: Integer;
+    out ppropvar: TPropVariant): HRESULT;
+function InitPropVariantFromUInt32(ulVal: Cardinal;
+    out ppropvar: TPropVariant): HRESULT;
+function InitPropVariantFromInt64(llVal: Int64;
+    out ppropvar: TPropVariant): HRESULT;
+function InitPropVariantFromUInt64(ullVal: Int64;
+    out ppropvar: TPropVariant): HRESULT;
+function InitPropVariantFromDouble(dblVal: Double;
+    out ppropvar: TPropVariant): HRESULT;
+
+function PropVariantClear(const pvar: TPropVariant): HResult; stdcall;
+    external 'ole32.dll';
+
+function PSGetNameFromPropertyKey(const propKey: TPropertyKey;
+    out ppszCanonicalName: PWideChar): HRESULT; stdcall; external 'propsys.dll';
+
+function GetPropertyKeyName(const PropKey: TPropertyKey): String;    
+
+var
+  PSCreateMemoryPropertyStore: function(const riid: TIID;
+      out ppv): HRESULT; stdcall = nil;
+  PSLookupPropertyHandlerCLSID: function(pszFilePath: PWideChar;
+      out pclsid: TCLSID): HResult; stdcall = nil;
+  InitPropVariantFromGUIDAsString: function(const guid: TGUID;
+      out ppropvar: TPropVariant): HResult; stdcall = nil;
+  InitPropVariantFromFileTime: function(const pftIn: TFileTime;
+      out ppropvar: TPropVariant): HResult; stdcall = nil;
+  PropVariantToBoolean: function(const propvarIn: TPropVariant;
+      out pfRet: BOOL): HResult; stdcall = nil;
+  PropVariantToUInt32: function(const propvarIn: TPropVariant;
+      out pulRet: Cardinal): HResult; stdcall = nil;
+  PropVariantToUInt64: function(const propvarIn: TPropVariant;
+      out pullRet: Int64): HResult; stdcall = nil;
+  PropVariantToStringAlloc: function(const propvar: TPropVariant;
+      out ppszOut: PWideChar): HResult; stdcall = nil;
+  PropVariantToGUID: function(const propvarIn: TPropVariant;
+      out pguid: TGUID): HResult; stdcall = nil;
+  PropVariantToFileTime: function(const propvar: TPropVariant;
+      pstfOut: PSTIME_FLAGS; out pftOut: TFileTime): HResult; stdcall = nil;
+
+
+function InitPropSys: Boolean;
+procedure FreePropSys;
+
+implementation
+
+uses ShlWapi, SyncObjs;
+
+procedure PropVariantInit(var pvar: TPropVariant);
+begin
+  FillChar(pvar, SizeOf(TPropVariant), 0);
+end;
+
+function InitPropVariantFromBoolean(fVal: BOOL;
+    out ppropvar: TPropVariant): HRESULT;
+begin
+  ppropvar.vt := VT_BOOL;
+  ppropvar.boolVal := fVal;
+  Result := S_OK;
+end;
+
+function InitPropVariantFromInt16(nVal: SmallInt;
+    out ppropvar: TPropVariant): HRESULT;
+begin
+  ppropvar.vt := VT_I2;
+  ppropvar.iVal := nVal;
+  Result := S_OK;
+end;
+
+function InitPropVariantFromUInt16(uiVal: Word;
+    out ppropvar: TPropVariant): HRESULT;
+begin
+  ppropvar.vt := VT_UI2;
+  ppropvar.uiVal := uiVal;
+  Result := S_OK;
+end;
+
+function InitPropVariantFromInt32(lVal: Integer;
+    out ppropvar: TPropVariant): HRESULT;
+begin
+  ppropvar.vt := VT_I4;
+  ppropvar.lVal := lVal;
+  Result := S_OK;
+end;
+
+function InitPropVariantFromUInt32(ulVal: Cardinal;
+    out ppropvar: TPropVariant): HRESULT;
+begin
+  ppropvar.vt := VT_UI4;
+  ppropvar.ulVal := ulVal;
+  Result := S_OK;
+end;
+
+function InitPropVariantFromInt64(llVal: Int64;
+    out ppropvar: TPropVariant): HRESULT;
+begin
+  ppropvar.vt := VT_I8;
+  ppropvar.hVal := llVal;
+  Result := S_OK;
+end;
+
+function InitPropVariantFromUInt64(ullVal: Int64;
+    out ppropvar: TPropVariant): HRESULT;
+begin
+  ppropvar.vt := VT_UI8;
+  ppropvar.hVal := ullVal;
+  Result := S_OK;
+end;
+
+function InitPropVariantFromDouble(dblVal: Double;
+    out ppropvar: TPropVariant): HRESULT;
+begin
+  ppropvar.vt := VT_R8;
+  ppropvar.dblVal := dblVal;
+  Result := S_OK;
+end;
+
+// Creates a VT_LPWSTR propvariant.
+function InitPropVariantFromString(psz: PWideChar;
+    out ppropvar: TPropVariant): HRESULT;
+begin
+  ppropvar.vt := VT_LPWSTR;
+  Result := SHStrDupW(psz, ppropvar.pwszVal);
+  if Failed(Result) then
+    PropVariantInit(ppropvar);
+end;
+
+// Use this function for debugging purposes only. For use in production,
+// PSGetNameFromPropertyKey should be imported dynamically!
+function GetPropertyKeyName(const PropKey: TPropertyKey): String;
+var
+  pName: PWideChar;
+begin
+  if Succeeded(PSGetNameFromPropertyKey(PropKey, pName)) then begin
+    Result := String(pName);
+    CoTaskMemFree(pName);
+  end
+  else begin
+    Result := Format('(unrecognized propkey: %s:%u)',
+        [GUIDToString(PropKey.fmtid), PropKey.pid]);
+  end;
+end;
+
+var
+  hPropSys: THandle;
+  ReferenceCount: Integer;  // We have to keep track of several load/unload calls.
+  Lock: TCriticalSection;
+
+procedure FreePropSys;
+begin
+  Lock.Enter;
+  try
+    if ReferenceCount > 0 then
+      Dec(ReferenceCount);
+    if (hPropSys <> 0) and (ReferenceCount = 0) then
+    begin
+      FreeLibrary(hPropSys);
+      hPropSys := 0;
+      PSCreateMemoryPropertyStore := nil;
+      PSLookupPropertyHandlerCLSID := nil;
+      InitPropVariantFromGUIDAsString := nil;
+      InitPropVariantFromFileTime := nil;
+      PropVariantToBoolean := nil;
+      PropVariantToUInt32 := nil;
+      PropVariantToUInt64 := nil;
+      PropVariantToStringAlloc := nil;
+      PropVariantToGUID := nil;
+      PropVariantToFileTime := nil;
+    end;
+  finally
+    Lock.Leave;
+  end;
+end;
+
+
+function InitPropSys: Boolean;
+  function LoadProc(ProcName: PChar): Pointer;
+  begin
+    Result := GetProcAddress(hPropSys, ProcName);
+  end;
+begin
+  Lock.Enter;
+  try
+    Inc(ReferenceCount);
+    if hPropSys = 0 then
+    begin
+      hPropSys := LoadLibrary(PropSysLib);
+      if hPropSys <> 0 then
+      begin
+        PSCreateMemoryPropertyStore := LoadProc('PSCreateMemoryPropertyStore');
+        PSLookupPropertyHandlerCLSID := LoadProc('PSLookupPropertyHandlerCLSID');
+        InitPropVariantFromGUIDAsString :=
+            LoadProc('InitPropVariantFromGUIDAsString');
+        InitPropVariantFromFileTime := LoadProc('InitPropVariantFromFileTime');
+        PropVariantToBoolean := LoadProc('PropVariantToBoolean');
+        PropVariantToUInt32 := LoadProc('PropVariantToUInt32');
+        PropVariantToUInt64 := LoadProc('PropVariantToUInt64');
+        PropVariantToStringAlloc := LoadProc('PropVariantToStringAlloc');
+        PropVariantToGUID := LoadProc('PropVariantToGUID');
+        PropVariantToFileTime := LoadProc('PropVariantToFileTime');
+      end;
+    end;
+    Result := (hPropSys <> 0)
+        and Assigned(PSCreateMemoryPropertyStore)
+        and Assigned(PSLookupPropertyHandlerCLSID)
+        and Assigned(InitPropVariantFromGUIDAsString)
+        and Assigned(InitPropVariantFromFileTime)
+        and Assigned(PropVariantToBoolean) and Assigned(PropVariantToUInt32)
+        and Assigned(PropVariantToUInt64) and Assigned(PropVariantToStringAlloc)
+        and Assigned(PropVariantToFileTime);
+  finally
+    Lock.Leave;
+  end;
+end;
+
+initialization
+  Lock := TCriticalSection.Create;
+
+finalization
+  while ReferenceCount > 0 do
+    FreePropSys;
+  Lock.Free;
+  
+end.
