@@ -28,10 +28,10 @@ interface
 
 uses Windows, Registry, Classes, SysUtils;
 
-function RegLoadMUIStringW(hKey: HKEY; pszValue: PWideChar; pszOutBuf: PWideChar;
-    cbOutBuf: DWORD; pcbData: PDWORD; Flags: DWORD;
-    pszDirectory: PWideChar): Longint; stdcall;
-    external advapi32 name 'RegLoadMUIStringW'; // TODO: must use Unicode version instead?
+type
+  TRegLoadMUIStringW = function(hKey: HKEY; pszValue: PWideChar;
+      pszOutBuf: PWideChar; cbOutBuf: DWORD; pcbData: PDWORD; Flags: DWORD;
+      pszDirectory: PWideChar): Longint; stdcall;
 
 type
   TMyRegistry = class;
@@ -41,11 +41,12 @@ type
 
   TMyRegistry = class(TRegistry)
   private
+    fRegLoadMUIString: TRegLoadMUIStringW;
     function ClearValuesProc(Reg: TMyRegistry; const ValueName: String;
         Data: Pointer): Boolean;
-  protected
-
   public
+    constructor Create;
+    
     function OpenKeyReadOnly(const Key: String): Boolean;
     
     function ReadIntegerDef(const Name: String; default: Integer): Integer;
@@ -93,6 +94,15 @@ end;
 function IsRelative(const Value: String): boolean;
 begin
   Result := not ((Value <> '') and (Value[1] = '\'));
+end;
+
+constructor TMyRegistry.Create;
+begin
+  // Must use the Unicode version of RegLoadMUIString here - the ANSI version
+  // always returns ERROR_CALL_NOT_IMPLEMENTED.
+  fRegLoadMUIString := GetProcAddress(GetModuleHandle(advapi32),
+      'RegLoadMUIStringW');
+  inherited;
 end;
 
 function TMyRegistry.OpenKeyReadOnly(const Key: String): boolean;
@@ -166,19 +176,21 @@ var
 begin
   Result := default;
   Len := 0;
-  // Must use the Unicode version of RegLoadMUIString here - the ANSI version
-  // always returns ERROR_CALL_NOT_IMPLEMENTED.
-  RegLoadMUIStringW(CurrentKey, PWideChar(Name), nil, 0, @Len, 0, nil);
-  if Len <= 0 then
-    Exit;
-  SetString(Result, nil, Len div SizeOf(WideChar));
-  Res := RegLoadMUIStringW(CurrentKey, PWideChar(Name), PWideChar(Result), Len,
-      @Len, 0, nil);
-  if Res <> ERROR_SUCCESS then begin
-    Result := default;
-    Exit;
-  end;
-  SetLength(Result, lstrlenW(PWideChar(Result)));
+  if Assigned(fRegLoadMUIString) then begin
+    fRegLoadMUIString(CurrentKey, PWideChar(Name), nil, 0, @Len, 0, nil);
+    if Len <= 0 then
+      Exit;
+    SetString(Result, nil, Len div SizeOf(WideChar));
+    Res := fRegLoadMUIString(CurrentKey, PWideChar(Name), PWideChar(Result), Len,
+        @Len, 0, nil);
+    if Res <> ERROR_SUCCESS then begin
+      Result := default;
+      Exit;
+    end;
+    SetLength(Result, lstrlenW(PWideChar(Result)));
+  end
+  else
+    Result := ReadStringDef(Name, default);
 end;
 
 function TMyRegistry.ReadIntegerSafe(const Name: String;
