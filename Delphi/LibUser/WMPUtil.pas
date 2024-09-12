@@ -177,11 +177,11 @@ const
 type
   EWMPNavigateException = class(Exception);
 
-function WMPNavigateToAddress(WMPAppDispatch: IDispatch;
-    const Address: WideString): Boolean;
-function WMPNavigateToLibraryCategory(WMPAppDispatch: IDispatch; WMPVersion: Byte;
+procedure WMPNavigateToAddress(WMPAppDispatch: IDispatch;
+    const Address: WideString);
+procedure WMPNavigateToLibraryCategory(WMPAppDispatch: IDispatch; WMPVersion: Byte;
     MediaType: TWMPMediaType; Category: TWMPLibraryCategory;
-    const CategoryValue: WideString; const WordWheelText: WideString = ''): Boolean;
+    const CategoryValue: WideString; const WordWheelText: WideString = '');
 
 type
   TWMPPlayState = (
@@ -956,8 +956,8 @@ begin
   end;
 end;
 
-function WMPNavigateToAddress(WMPAppDispatch: IDispatch;
-    const Address: WideString): Boolean;
+procedure WMPNavigateToAddress(WMPAppDispatch: IDispatch;
+    const Address: WideString);
 var
   VarWMPAppDispatch: OleVariant;
 begin
@@ -968,7 +968,6 @@ begin
   // when closing WMP. Make sure that such exceptions are handled somewhere,
   // otherwise WMP could crash!
   VarWMPAppDispatch.navigateToAddress(Address);
-  Result := True;
 end;
 
 // In the following constants, %s is always a placeholder for the media type
@@ -982,11 +981,11 @@ const
     'Music', '', '', '', '', 'Other', 'Pictures', 'Playlists', '', 'Video', '');
   WMPLibraryWordWheelGUID = '95ca482e-7442-463e-8df7-fb71f3607ff7';
 
-function WMPNavigateToLibraryCategory(WMPAppDispatch: IDispatch; WMPVersion: Byte;
-    MediaType: TWMPMediaType; Category: TWMPLibraryCategory;
-    const CategoryValue: WideString; const WordWheelText: WideString = ''): Boolean;
+function GetWMPLibraryAddress(WMPVersion: Byte; MediaType: TWMPMediaType;
+    Category: TWMPLibraryCategory; const CategoryValue: WideString;
+    const WordWheelText: WideString): WideString;
 var
-  LocalLibraryAddress, Address: WideString;
+  LocalLibraryAddress: WideString;
 begin
   if (MediaType = wmpmtPlaylist)
       or (WMPLibraryAddressLibraryTypes[MediaType] = '') then begin
@@ -1001,29 +1000,52 @@ begin
     if WMPVersion > 11 then begin
       // Here, there's a single 'playlists' location for all media types, so we
       // ignore MediaType
-      Address := RealWideFormat(LocalLibraryAddress,
+      Result := RealWideFormat(LocalLibraryAddress,
           [WMPLibraryAddressLibraryTypes[wmpmtPlaylist]]);
     end
     else begin
-      Address := RealWideFormat(WMPPlaylistsLibraryAddress11,
+      Result := RealWideFormat(WMPPlaylistsLibraryAddress11,
           [WMPLibraryAddressLibraryTypes[MediaType]]);
     end;
   end
   else begin
-    Address := RealWideFormat(LocalLibraryAddress + '\%s',
+    Result := RealWideFormat(LocalLibraryAddress + '\%s',
         [WMPLibraryAddressLibraryTypes[MediaType],
          WMPLibraryCategoryStrs[Category]]);
   end;
   // ignore CategoryValue when navigating to 'all tracks'
   if (Category <> wmplcAllTracks) and (CategoryValue <> '') then begin
     // escape backslashes in CategoryValue
-    Address := Address + '\' + WideEscapeChars(CategoryValue, ['\'], '\');
+    Result := Result + '\' + WideEscapeChars(CategoryValue, ['\'], '\');
   end;
   if WordWheelText <> '' then begin
-    Address := Address + RealWideFormat('\%s!%s',
+    Result := Result + RealWideFormat('\%s!%s',
         [WMPLibraryWordWheelGUID, WordWheelText]);
   end;
-  Result := WMPNavigateToAddress(WMPAppDispatch, Address);
+end;
+
+procedure WMPNavigateToLibraryCategory(WMPAppDispatch: IDispatch; WMPVersion: Byte;
+    MediaType: TWMPMediaType; Category: TWMPLibraryCategory;
+    const CategoryValue: WideString; const WordWheelText: WideString = '');
+var
+  Address: WideString;
+begin
+  Address := GetWMPLibraryAddress(WMPVersion, MediaType, Category, CategoryValue,
+      WordWheelText);
+  {$IFDEF Debug}
+  DebugFmt('WMPNavigateToAddress: %s', [Address]);
+  {$ENDIF Debug}
+  WMPNavigateToAddress(WMPAppDispatch, Address);
+  // In WMP 11, if CategoryValue ends with space(s), we may need to do a 2nd try
+  // with a trimmed version of that string
+  if (WMPVersion <= 11) and (WideLastChar(CategoryValue) = ' ') then begin
+    Address := GetWMPLibraryAddress(WMPVersion, MediaType, Category,
+        WideTrim(CategoryValue), WordWheelText);
+    {$IFDEF Debug}
+    DebugFmt('WMPNavigateToAddress: %s', [Address]);
+    {$ENDIF Debug}
+    WMPNavigateToAddress(WMPAppDispatch, Address);
+  end;
 end;
 
 function WMPNavigateToSingleMedia(WMPAppDispatch: IDispatch; WMPVersion: Byte;
@@ -1035,8 +1057,9 @@ begin
   if not Succeeded(Media.getItemInfo(WMPAttributes[wmpaTrackingID].Name,
       TrackingID)) then
     Exit;
-  Result := WMPNavigateToLibraryCategory(WMPAppDispatch, WMPVersion,
-      GetWMPMediaType(Media), wmplcAllTracks, '', 'trackingid:' + TrackingID);
+  WMPNavigateToLibraryCategory(WMPAppDispatch, WMPVersion, GetWMPMediaType(Media),
+      wmplcAllTracks, '', 'trackingid:' + TrackingID);
+  Result := True;
 end;
 
 function WMPGetItemInfo(Media: IWMPMedia;
