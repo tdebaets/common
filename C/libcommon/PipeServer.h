@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2023 Tim De Baets
+ * Copyright 2024 Tim De Baets
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,49 @@
  *
  ****************************************************************************
  *
- * Helper class that implements a thread running a Windows message loop
+ * Helper classes for implementing a named pipe server
  *
  ****************************************************************************/
 
-#include <Utils.h>
+#pragma once
 
-#include "MessageLoopThread.h"
+#include <BaseThread.h>
 
-void CMessageLoopThread::Stop()
+class CPipeServerThread : public CBaseThread
 {
-    PostThreadMessage(GetThreadID(), WM_QUIT, 0, 0);
+public:
 
-    WaitFor();
-}
+    CPipeServerThread(const wstring strPipeName, size_t szMsgSize);
 
-DWORD CMessageLoopThread::Run()
+    virtual void Stop();
+
+    virtual void OnError(DWORD dwErrorCode) = 0;
+
+protected: 
+
+    virtual DWORD Run();
+
+private:
+
+    wstring m_strPipeName;
+    size_t  m_szMsgSize;
+
+};
+
+class CPipeInstanceThread : public CBaseThread
 {
-    MSG     msg;
-    BOOL    fRet;
+public:
 
-    while ((fRet = GetMessage(&msg, NULL, 0, 0)) != 0)
-    {
-        if (fRet == -1)
-            throw GetLastError();
+    CPipeInstanceThread(HANDLE hPipe);
 
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
+    virtual void Stop();
 
-    return (DWORD)msg.wParam;
-}
+protected:
+
+    virtual DWORD Run();
+
+private:
+
+    HANDLE m_hPipe;
+
+};

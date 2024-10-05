@@ -20,12 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\APIHookUtils.h" />
+    <ClInclude Include="..\BaseThread.h" />
     <ClInclude Include="..\DelayLoadUtils.h" />
     <ClInclude Include="..\MessageLoopThread.h" />
     <ClInclude Include="..\ModuleHandle.h" />
     <ClInclude Include="..\NativeApi.h" />
     <ClInclude Include="..\PEModuleWalker.h" />
     <ClInclude Include="..\PEUtils.h" />
+    <ClInclude Include="..\PipeServer.h" />
     <ClInclude Include="..\Processes.h" />
     <ClInclude Include="..\Utils.h" />
     <ClInclude Include="..\WindowProxy.h" />
@@ -33,12 +35,14 @@
     <ClInclude Include="..\Wow64Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\BaseThread.cpp" />
     <ClCompile Include="..\DelayLoadUtils.cpp" />
     <ClCompile Include="..\MessageLoopThread.cpp" />
     <ClCompile Include="..\ModuleHandle.cpp" />
     <ClCompile Include="..\NativeApi.cpp" />
     <ClCompile Include="..\PEModuleWalker.cpp" />
     <ClCompile Include="..\PEUtils.cpp" />
+    <ClCompile Include="..\PipeServer.cpp" />
     <ClCompile Include="..\Processes.cpp" />
     <ClCompile Include="..\Utils.cpp" />
     <ClCompile Include="..\WMPUtils.cpp" />

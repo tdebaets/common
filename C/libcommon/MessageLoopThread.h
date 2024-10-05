@@ -22,48 +22,16 @@
 
 #pragma once
 
-#include <exception>
-#include <string>
-#include <Windows.h>
+#include <BaseThread.h>
 
-using namespace std;
-
-class CMessageLoopThreadError : public exception
+class CMessageLoopThread : public CBaseThread
 {
 public:
 
-    CMessageLoopThreadError(const char *message);
-    virtual const char *what() const;
-
-private:
-
-    string  m_message;
-    DWORD   m_dwErrorCode;
-
-};
-
-class CMessageLoopThread
-{
-public:
-
-    CMessageLoopThread();
-    ~CMessageLoopThread();
-
-    void Start();
-    void Stop();
+    virtual void Stop();
 
 protected:
 
-    virtual bool OnThreadBegin();
-    virtual void OnThreadEnd();
-
-private:
-
-    static DWORD WINAPI ThreadProc(LPVOID lpParameter);
-
-private:
-
-    HANDLE  m_hThread; // TODO: use wrapper class?
-    DWORD   m_dwThreadID;
+    virtual DWORD Run();
 
 };
