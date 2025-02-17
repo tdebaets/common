@@ -174,9 +174,6 @@ const
   IDD_DLG = 1000;
 
 constructor TDialogForm.Create(hWndParent: HWND; pData: Pointer);
-var
-  ThemesAvailable: Boolean;
-  MsgBoxFont: TLogFontW;
 begin
   fDialogProcStub := CreateStub(Self, @TDialogForm.DialogProc);
   fObjectInstance := MakeObjectInstance(DialogWndProc);
@@ -193,15 +190,6 @@ begin
   inherited CreateParented(fDialogHandle);
   fDialogActive := True;
   DialogResult := 0;
-  ThemesAvailable := InitThemeLibrary;
-  if CompareText(Font.Name, 'MS Shell Dlg 2') = 0 then begin
-    if ThemesAvailable and Assigned(GetWindowTheme)
-        and Assigned(GetThemeSysFont) then begin
-      if Succeeded(GetThemeSysFont(GetWindowTheme(fDialogHandle), TMT_MSGBOXFONT,
-          MsgBoxFont)) then
-        Font.Handle := CreateFontIndirectW(MsgBoxFont);
-    end;
-  end;
 end;
 
 constructor TDialogForm.Create(hWndParent: HWND);
@@ -211,39 +199,52 @@ end;
 
 procedure TDialogForm.AfterConstruction;
 var
+  ThemesAvailable: Boolean;
+  MsgBoxFont: TLogFontW;
   Style: Integer;
   RectClient, RectWindow: TRect;
 begin
   inherited;
-  Assert(BorderStyle = bsDialog, 'Incorrect BorderStyle'); 
-  Left := 0;
-  Top := 0;
-  // Following lines trigger RecreateWnd, which exposes a bug in ThemeManager
-  // see TDialogForm.CreateParams for a (faster) alternative
-  {Position := poDesigned;
-  BorderStyle := bsNone;
-  BorderIcons := [];}
-  if Resizable then begin
-    Style := GetWindowLongW(fDialogHandle, GWL_STYLE);
-    // Combining WS_SYSMENU with WS_THICKFRAME has the side-effect that resizing
-    // doesn't work anymore, see WM_NCLBUTTONDOWN handler
-    SetWindowLongW(fDialogHandle, GWL_STYLE,
-        (Style {and not WS_SYSMENU}) or WS_THICKFRAME);
+  Assert(BorderStyle = bsDialog, 'Incorrect BorderStyle');
+  ThemesAvailable := InitThemeLibrary;
+  if CompareText(Font.Name, 'MS Shell Dlg 2') = 0 then begin
+    if ThemesAvailable and Assigned(GetWindowTheme)
+        and Assigned(GetThemeSysFont) then begin
+      if Succeeded(GetThemeSysFont(GetWindowTheme(fDialogHandle), TMT_MSGBOXFONT,
+          MsgBoxFont)) then
+        Font.Handle := CreateFontIndirectW(MsgBoxFont);
+    end;
   end;
-  SetWindowTextW(fDialogHandle, PWideChar(Caption));
-  // Dummy call to SetWindowPos, which may be necessary for Windows to set the
-  // actual client rect (and therefore, border)
-  SetWindowPos(fDialogHandle, 0, 0, 0,
-      inherited Width,
-      inherited Height,
-      SWP_NOMOVE or SWP_NOOWNERZORDER or SWP_NOZORDER);
-  // Account for thick glass border on Vista+
-  Windows.GetClientRect(fDialogHandle, RectClient);
-  Windows.GetWindowRect(fDialogHandle, RectWindow);
-  fBorderX := (RectWindow.Right - RectWindow.Left) - RectClient.Right;
-  fBorderY := (RectWindow.Bottom - RectWindow.Top) - RectClient.Bottom;
-  SetDialogBounds(inherited Width, inherited Height);
-  fInitialBoundsSet := True;  
+  if fDialogHandle <> 0 then begin
+    Left := 0;
+    Top := 0;
+    // Following lines trigger RecreateWnd, which exposes a bug in ThemeManager
+    // see TDialogForm.CreateParams for a (faster) alternative
+    {Position := poDesigned;
+    BorderStyle := bsNone;
+    BorderIcons := [];}
+    if Resizable then begin
+      Style := GetWindowLongW(fDialogHandle, GWL_STYLE);
+      // Combining WS_SYSMENU with WS_THICKFRAME has the side-effect that resizing
+      // doesn't work anymore, see WM_NCLBUTTONDOWN handler
+      SetWindowLongW(fDialogHandle, GWL_STYLE,
+          (Style {and not WS_SYSMENU}) or WS_THICKFRAME);
+    end;
+    SetWindowTextW(fDialogHandle, PWideChar(Caption));
+    // Dummy call to SetWindowPos, which may be necessary for Windows to set the
+    // actual client rect (and therefore, border)
+    SetWindowPos(fDialogHandle, 0, 0, 0,
+        inherited Width,
+        inherited Height,
+        SWP_NOMOVE or SWP_NOOWNERZORDER or SWP_NOZORDER);
+    // Account for thick glass border on Vista+
+    Windows.GetClientRect(fDialogHandle, RectClient);
+    Windows.GetWindowRect(fDialogHandle, RectWindow);
+    fBorderX := (RectWindow.Right - RectWindow.Left) - RectClient.Right;
+    fBorderY := (RectWindow.Bottom - RectWindow.Top) - RectClient.Bottom;
+    SetDialogBounds(inherited Width, inherited Height);
+    fInitialBoundsSet := True;
+  end;
 end;
 
 destructor TDialogForm.Destroy;
@@ -251,8 +252,10 @@ begin
   // Important: destroy the base form before destroying the parent dialog, and
   // only then free the DialogProc- and WindowProc-related members
   inherited;
-  DestroyWindow(fDialogHandle);
-  SetWindowLongW(fDialogHandle, GWL_WNDPROC, Integer(@DefWindowProc));
+  if fDialogHandle <> 0 then begin
+    DestroyWindow(fDialogHandle);
+    SetWindowLongW(fDialogHandle, GWL_WNDPROC, Integer(@DefWindowProc));
+  end;
   FreeThemeLibrary;
   if Assigned(fDialogProcStub) then
     DisposeAndNilStub(fDialogProcStub);
