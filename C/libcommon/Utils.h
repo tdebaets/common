@@ -31,6 +31,10 @@ using namespace std;
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
 
+// Macro to make our own exception code
+#define MAKE_EXCEPTION_CODE(_severity, _facility, _exception) \
+    (((_severity) << 30) | (1 << 29) | (0 << 28) | ((_facility) << 16) | (_exception))
+
 extern const LPCSTR g_szKernel32;
 extern const LPCSTR g_szUser32;
 
