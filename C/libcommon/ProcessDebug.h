@@ -33,11 +33,7 @@ class CProcessDebug
 {
 public:
 
-    CProcessDebug();
-
     void Run();
-
-    DWORD GetExitCode();
 
 protected:
 
@@ -58,13 +54,5 @@ protected:
                                OUTPUT_DEBUG_STRING_INFO    *pInfo);
 
     virtual void OnDbgOut(LPCTSTR message);
-
-private:
-
-
-
-private:
-
-    DWORD m_dwExitCode;
 
 };

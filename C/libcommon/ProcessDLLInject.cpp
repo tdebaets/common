@@ -129,6 +129,10 @@ CProcessDLLInject::CProcessDLLInject(const wstring &strDLLFilename32, const wstr
     m_strDLLFilename32(strDLLFilename32),
     m_strDLLFilename64(strDLLFilename64)
 {
+    m_procInfo.createInfo.hFile     = INVALID_HANDLE_VALUE;
+    m_procInfo.createInfo.hProcess  = INVALID_HANDLE_VALUE;
+    m_procInfo.createInfo.hThread   = INVALID_HANDLE_VALUE;
+
     m_bIs64BitWindows = Is64BitWindows();
 
     if (!GetNativeLoadLibraryAddress())
@@ -408,6 +412,8 @@ bool CProcessDLLInject::InjectCode(tProcInfo *pProcInfo)
     // Initialize the stub
     if (pProcInfo->bIs32Bit)
     {
+        DbgOut(L"Injecting 32-bit DLL: %s", m_strDLLFilename32.c_str());
+
         if (!InitLoadLibraryStub32(&stub32,
                                    pStubInTarget,
                                    m_strDLLFilename32.c_str(),
@@ -421,6 +427,8 @@ bool CProcessDLLInject::InjectCode(tProcInfo *pProcInfo)
     }
     else
     {
+        DbgOut(L"Injecting 64-bit DLL: %s", m_strDLLFilename64.c_str());
+
         if (!InitLoadLibraryStub64(&stub64,
                                    pStubInTarget,
                                    m_strDLLFilename64.c_str(),
@@ -553,7 +561,7 @@ void CProcessDLLInject::OnException(DWORD                           dwProcessID,
     {
         if (pInfo->ExceptionRecord.ExceptionCode == EXCEPTION_BREAKPOINT)
         {
-            OnBreakpoint(dwProcessID, dwThreadID, pInfo);
+            OnBreakpoint(&m_procInfo, dwThreadID, pInfo);
             return;
         }
     }
@@ -561,15 +569,17 @@ void CProcessDLLInject::OnException(DWORD                           dwProcessID,
     {
         if (pInfo->ExceptionRecord.ExceptionCode == STATUS_WX86_BREAKPOINT)
         {
-            OnBreakpoint(dwProcessID, dwThreadID, pInfo);
+            OnBreakpoint(&m_procInfo, dwThreadID, pInfo);
             return;
         }
     }
+
+    OnException2(&m_procInfo, dwThreadID, pInfo, pbExceptionHandled);
 }
 
-void CProcessDLLInject::OnBreakpoint(DWORD                          dwProcessID,
-                                     DWORD                          dwThreadID,
-                                     EXCEPTION_DEBUG_INFO          *pInfo)
+void CProcessDLLInject::OnBreakpoint(const tProcInfo              *pProcInfo,
+                                     DWORD                         dwThreadID,
+                                     const EXCEPTION_DEBUG_INFO   *pInfo)
 {
     if (!m_procInfo.bInjected)
     {
@@ -629,4 +639,12 @@ void CProcessDLLInject::OnBreakpoint(DWORD                          dwProcessID,
 
         // Ignore
     }
+}
+
+void CProcessDLLInject::OnException2(const tProcInfo            *pProcInfo,
+                                     DWORD                       dwThreadID,
+                                     EXCEPTION_DEBUG_INFO       *pInfo,
+                                     bool                       *pbExceptionHandled)
+{
+
 }

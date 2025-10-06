@@ -30,6 +30,7 @@ using namespace std;
 
 typedef struct tProcInfo
 {
+    DWORD                       dwProcessID;
     bool                        bIs32Bit;
     bool                        bIsNative; // false when we're 64-bit and debugging a WOW64 process
     bool                        bInjected;
@@ -94,6 +95,15 @@ typedef struct tLoadLibraryStub64
 } tLoadLibraryStub64;
 #pragma pack(pop)
 
+bool ReadTargetMemory(HANDLE hProc, PVOID pAddress, PVOID pBuf, SIZE_T bufSize);
+bool ReadProcessString(HANDLE   hProc,
+                       bool     bUnicode,
+                       PVOID    pAddress,
+                       DWORD    dwLength,
+                       wstring &refString);
+bool WriteTargetMemory(HANDLE hProc, PVOID pAddress, PVOID pBuf, SIZE_T bufSize);
+bool WriteTargetByte(HANDLE hProc, PVOID pAddress, BYTE byte);
+
 class CProcessDLLInject : public CProcessDebug
 {
 public:
@@ -101,6 +111,8 @@ public:
     CProcessDLLInject(const wstring &strDLLFilename32, const wstring &strDLLFilename64);
 
 protected:
+
+    /* CProcessDebug */
 
     virtual bool OnProcessCreate(DWORD                      dwProcessID,
                                  DWORD                      dwThreadID,
@@ -111,9 +123,16 @@ protected:
                              EXCEPTION_DEBUG_INFO          *pInfo,
                              bool                          *pbExceptionHandled);
 
-    virtual void OnBreakpoint(DWORD                         dwProcessID,
+    /* CProcessDLLInject */
+
+    virtual void OnBreakpoint(const tProcInfo              *pProcInfo,
                               DWORD                         dwThreadID,
-                              EXCEPTION_DEBUG_INFO         *pInfo);
+                              const EXCEPTION_DEBUG_INFO   *pInfo);
+
+    virtual void OnException2(const tProcInfo              *pProcInfo,
+                              DWORD                         dwThreadID,
+                              EXCEPTION_DEBUG_INFO         *pInfo,
+                              bool                         *pbExceptionHandled);
 
 private:
 

@@ -24,16 +24,15 @@
 
 #include <Utils.h>
 
-CProcessDebug::CProcessDebug() :
-    m_dwExitCode(0)
-{
-
-}
-
 void CProcessDebug::Run()
 {
-    DEBUG_EVENT dbgEvent    = {};
-    bool        bRunning    = true;
+    CREATE_PROCESS_DEBUG_INFO   createInfo  = {};
+    DEBUG_EVENT                 dbgEvent    = {};
+    bool                        bRunning    = true;
+
+    createInfo.hFile    = INVALID_HANDLE_VALUE;
+    createInfo.hProcess = INVALID_HANDLE_VALUE;
+    createInfo.hThread  = INVALID_HANDLE_VALUE;
 
     while (bRunning)
     {
@@ -45,11 +44,12 @@ void CProcessDebug::Run()
         switch (dbgEvent.dwDebugEventCode)
         {
         case CREATE_PROCESS_DEBUG_EVENT:
+            createInfo = dbgEvent.u.CreateProcessInfo;
             if (!OnProcessCreate(dbgEvent.dwProcessId,
                                  dbgEvent.dwThreadId,
                                  &dbgEvent.u.CreateProcessInfo))
             {
-                return;
+                goto exit;
             }
             break;
         case EXIT_PROCESS_DEBUG_EVENT:
@@ -94,14 +94,15 @@ void CProcessDebug::Run()
         if (!ContinueDebugEvent(dbgEvent.dwProcessId, dbgEvent.dwThreadId, DBG_CONTINUE))
             break;
     }
+
+exit:
+
+    CloseHandleSafe(&createInfo.hFile);
+    CloseHandleSafe(&createInfo.hProcess);
+    CloseHandleSafe(&createInfo.hThread);
 }
 
-// TODO: move?
-DWORD CProcessDebug::GetExitCode()
-{
-    return m_dwExitCode;
-}
-
+// TODO: add const argument qualifiers
 bool CProcessDebug::OnProcessCreate(DWORD                       dwProcessID,
                                     DWORD                       dwThreadID,
                                     CREATE_PROCESS_DEBUG_INFO  *pInfo)
