@@ -24,6 +24,7 @@
 
 #include "ProcessDebug.h"
 
+#include <stdexcept>
 #include <string>
 
 using namespace std;
@@ -103,6 +104,12 @@ bool ReadProcessString(HANDLE   hProc,
                        wstring &refString);
 bool WriteTargetMemory(HANDLE hProc, PVOID pAddress, PVOID pBuf, SIZE_T bufSize);
 bool WriteTargetByte(HANDLE hProc, PVOID pAddress, BYTE byte);
+
+class CProcessDLLInjectError : public runtime_error
+{
+public:
+    CProcessDLLInjectError(const char* _Message) : runtime_error(_Message) {}
+};
 
 class CProcessDLLInject : public CProcessDebug
 {

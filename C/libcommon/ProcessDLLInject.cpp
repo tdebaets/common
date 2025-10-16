@@ -30,6 +30,8 @@
 #include <Utils.h>
 #include <Wow64Utils.h>
 
+// TODO: clean up DbgOut calls
+
 #define OPCODE_INT3         ((BYTE)0xCC)
 #define OPCODE_REXW_PREFIX  ((BYTE)0x48)
 #define OPCODE_SUB_ESP      ((WORD)0xEC83) // reverse byte order due to endianness
@@ -137,8 +139,7 @@ CProcessDLLInject::CProcessDLLInject(const wstring &strDLLFilename32, const wstr
 
     if (!GetNativeLoadLibraryAddress())
     {
-        DbgOut(L"Failed to get native LoadLibrary address");
-        // TODO: throw exception
+        throw CProcessDLLInjectError("Failed to get native LoadLibrary address");
     }
 }
 
@@ -555,6 +556,7 @@ void CProcessDLLInject::OnException(DWORD                           dwProcessID,
 {
     *pbExceptionHandled = false;
 
+    // TODO: move to CProcessDebug::OnException?
     // When checking for breakpoint exceptions, we need to be careful which type to handle
     // depending on native/non-native bitness
     if (m_procInfo.bIsNative)
