@@ -579,6 +579,25 @@ void CProcessDLLInject::OnException(DWORD                           dwProcessID,
     OnException2(&m_procInfo, dwThreadID, pInfo, pbExceptionHandled);
 }
 
+void CProcessDLLInject::OnDebugString(DWORD                        dwProcessID,
+                                      DWORD                        dwThreadID,
+                                      OUTPUT_DEBUG_STRING_INFO    *pInfo)
+{
+    wstring dbgString;
+
+    if (!ReadProcessString(m_procInfo.createInfo.hProcess,
+                           pInfo->fUnicode,
+                           pInfo->lpDebugStringData,
+                           pInfo->nDebugStringLength,
+                           dbgString))
+    {
+        DbgOut(L"Failed to read debug string from target process (%u)", GetLastError());
+        return;
+    }
+
+    OnDebugString2(&m_procInfo, dwThreadID, pInfo, dbgString.c_str());
+}
+
 void CProcessDLLInject::OnBreakpoint(const tProcInfo              *pProcInfo,
                                      DWORD                         dwThreadID,
                                      const EXCEPTION_DEBUG_INFO   *pInfo)
@@ -647,6 +666,14 @@ void CProcessDLLInject::OnException2(const tProcInfo            *pProcInfo,
                                      DWORD                       dwThreadID,
                                      EXCEPTION_DEBUG_INFO       *pInfo,
                                      bool                       *pbExceptionHandled)
+{
+
+}
+
+void CProcessDLLInject::OnDebugString2(const tProcInfo          *pProcInfo,
+                                       DWORD                     dwThreadID,
+                                       OUTPUT_DEBUG_STRING_INFO *pInfo,
+                                       LPCWSTR                   wszDebugString)
 {
 
 }

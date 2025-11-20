@@ -130,6 +130,10 @@ protected:
                              EXCEPTION_DEBUG_INFO          *pInfo,
                              bool                          *pbExceptionHandled);
 
+    virtual void OnDebugString(DWORD                        dwProcessID,
+                               DWORD                        dwThreadID,
+                               OUTPUT_DEBUG_STRING_INFO    *pInfo);
+
     /* CProcessDLLInject */
 
     virtual void OnBreakpoint(const tProcInfo              *pProcInfo,
@@ -140,6 +144,11 @@ protected:
                               DWORD                         dwThreadID,
                               EXCEPTION_DEBUG_INFO         *pInfo,
                               bool                         *pbExceptionHandled);
+
+    virtual void OnDebugString2(const tProcInfo            *pProcInfo,
+                                DWORD                       dwThreadID,
+                                OUTPUT_DEBUG_STRING_INFO   *pInfo,
+                                LPCWSTR                     wszDebugString);
 
 private:
 
