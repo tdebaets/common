@@ -30,8 +30,6 @@
 #include <Utils.h>
 #include <Wow64Utils.h>
 
-// TODO: clean up DbgOut calls
-
 #define OPCODE_INT3         ((BYTE)0xCC)
 #define OPCODE_REXW_PREFIX  ((BYTE)0x48)
 #define OPCODE_SUB_ESP      ((WORD)0xEC83) // reverse byte order due to endianness
@@ -154,13 +152,13 @@ bool CProcessDLLInject::InitLoadLibraryStub32(tLoadLibraryStub32  *pStub,       
 
     if (HIDWORD((DWORD64)pStubInTarget) != 0)
     {
-        DbgOut(L"Upper 32 bits of stub address in target process are nonzero (0x%p)", pStubInTarget);
+        OnDbgOut("Upper 32 bits of stub address in target process are nonzero (0x%p)", pStubInTarget);
         return false;
     }
 
     if (HIDWORD((DWORD64)pLoadLibraryAddr) != 0)
     {
-        DbgOut(L"Upper 32 bits of LoadLibraryW address are nonzero (0x%p)", pLoadLibraryAddr);
+        OnDbgOut("Upper 32 bits of LoadLibraryW address are nonzero (0x%p)", pLoadLibraryAddr);
         return false;
     }
 
@@ -241,7 +239,8 @@ bool CProcessDLLInject::SetEntryPointBP(tProcInfo *pProcInfo)
                           &pProcInfo->byOriginalEntryPointOpcode,
                           sizeof(pProcInfo->byOriginalEntryPointOpcode)))
     {
-        DbgOut(L"Failed to read original entry-point opcode from target process (%u)", GetLastError());
+        OnDbgOut("Failed to read original entry-point opcode from target process (%u)",
+                 GetLastError());
         return false;
     }
 
@@ -249,7 +248,7 @@ bool CProcessDLLInject::SetEntryPointBP(tProcInfo *pProcInfo)
                          pProcInfo->createInfo.lpStartAddress,
                          OPCODE_INT3))
     {
-        DbgOut(L"Failed to write INT3 entry-point opcode to target process (%u)", GetLastError());
+        OnDbgOut("Failed to write INT3 entry-point opcode to target process (%u)", GetLastError());
         return false;
     }
 
@@ -274,7 +273,7 @@ bool CProcessDLLInject::SaveEntryPointContext(tProcInfo *pProcInfo)
 
         if (!GetThreadContext(pProcInfo->createInfo.hThread, pContext))
         {
-            DbgOut(L"GetThreadContext failed (%u)", GetLastError());
+            OnDbgOut("GetThreadContext failed (%u)", GetLastError());
             return false;
         }
 
@@ -290,7 +289,7 @@ bool CProcessDLLInject::SaveEntryPointContext(tProcInfo *pProcInfo)
 
         if (!Wow64GetThreadContext(pProcInfo->createInfo.hThread, pContext))
         {
-            DbgOut(L"Wow64GetThreadContext failed (%u)", GetLastError());
+            OnDbgOut("Wow64GetThreadContext failed (%u)", GetLastError());
             return false;
         }
 
@@ -321,13 +320,13 @@ bool CProcessDLLInject::SaveBaseAddressAndRestoreEntryPointContext(tProcInfo *pP
         }
         else
         {
-            DbgOut(L"GetThreadContext failed (%u)", GetLastError());
+            OnDbgOut("GetThreadContext failed (%u)", GetLastError());
         }
 
         if (!SetThreadContext(pProcInfo->createInfo.hThread,
                               &pProcInfo->origThreadContext))
         {
-            DbgOut(L"SetThreadContext failed (%u)", GetLastError());
+            OnDbgOut("SetThreadContext failed (%u)", GetLastError());
             return false;
         }
     }
@@ -343,18 +342,18 @@ bool CProcessDLLInject::SaveBaseAddressAndRestoreEntryPointContext(tProcInfo *pP
         }
         else
         {
-            DbgOut(L"GetThreadContext failed (%u)", GetLastError());
+            OnDbgOut("GetThreadContext failed (%u)", GetLastError());
         }
 
         if (!Wow64SetThreadContext(pProcInfo->createInfo.hThread,
                                    &pProcInfo->origThreadWow64Context))
         {
-            DbgOut(L"Wow64SetThreadContext failed (%u)", GetLastError());
+            OnDbgOut("Wow64SetThreadContext failed (%u)", GetLastError());
             return false;
         }
     }
 
-    DbgOut(L"Base address of injected DLL: 0x%p", pProcInfo->pInjectedDllBaseInTarget);
+    OnDbgOut("Base address of injected DLL: 0x%p", pProcInfo->pInjectedDllBaseInTarget);
 
     return true;
 }
@@ -366,7 +365,7 @@ bool CProcessDLLInject::FreeStub(tProcInfo *pProcInfo)
 
     if (!VirtualFreeEx(pProcInfo->createInfo.hProcess, pProcInfo->pStubInTarget, 0, MEM_RELEASE))
     {
-        DbgOut(L"VirtualFreeEx failed (%u)", GetLastError());
+        OnDbgOut("VirtualFreeEx failed (%u)", GetLastError());
         return false;
     }
 
@@ -406,14 +405,14 @@ bool CProcessDLLInject::InjectCode(tProcInfo *pProcInfo)
                                    PAGE_EXECUTE_READWRITE);
     if (!pStubInTarget)
     {
-        DbgOut(L"VirtualAllocEx failed (%u)", GetLastError());
+        OnDbgOut("VirtualAllocEx failed (%u)", GetLastError());
         goto exit;
     }
 
     // Initialize the stub
     if (pProcInfo->bIs32Bit)
     {
-        DbgOut(L"Injecting 32-bit DLL: %s", m_strDLLFilename32.c_str());
+        OnDbgOut("Injecting 32-bit DLL: %s", m_strDLLFilename32.c_str());
 
         if (!InitLoadLibraryStub32(&stub32,
                                    pStubInTarget,
@@ -422,13 +421,13 @@ bool CProcessDLLInject::InjectCode(tProcInfo *pProcInfo)
                                                           m_pWow64LoadLibraryW,
                                    &pStubInTargetBP))
         {
-            DbgOut(L"Failed to initialize 32-bit inject code");
+            OnDbgOut("Failed to initialize 32-bit inject code");
             goto exit;
         }
     }
     else
     {
-        DbgOut(L"Injecting 64-bit DLL: %s", m_strDLLFilename64.c_str());
+        OnDbgOut("Injecting 64-bit DLL: %s", m_strDLLFilename64.c_str());
 
         if (!InitLoadLibraryStub64(&stub64,
                                    pStubInTarget,
@@ -436,7 +435,7 @@ bool CProcessDLLInject::InjectCode(tProcInfo *pProcInfo)
                                    m_pNativeLoadLibraryW,
                                    &pStubInTargetBP))
         {
-            DbgOut(L"Failed to initialize 64-bit inject code");
+            OnDbgOut("Failed to initialize 64-bit inject code");
             goto exit;
         }
     }
@@ -444,7 +443,7 @@ bool CProcessDLLInject::InjectCode(tProcInfo *pProcInfo)
     // Copy the stub into the target process
     if (!WriteTargetMemory(pProcInfo->createInfo.hProcess, pStubInTarget, pStub, stubSize))
     {
-        DbgOut(L"Failed to write inject code to target process (%u)", GetLastError());
+        OnDbgOut("Failed to write inject code to target process (%u)", GetLastError());
         goto exit;
     }
 
@@ -455,8 +454,8 @@ bool CProcessDLLInject::InjectCode(tProcInfo *pProcInfo)
 
         if (!SetThreadContext(pProcInfo->createInfo.hThread, &stubContext))
         {
-            DbgOut(L"Failed to modify thread context to point to injected code (%u)",
-                   GetLastError());
+            OnDbgOut("Failed to modify thread context to point to injected code (%u)",
+                     GetLastError());
             goto exit;
         }
     }
@@ -464,8 +463,8 @@ bool CProcessDLLInject::InjectCode(tProcInfo *pProcInfo)
     {
         if (HIDWORD((DWORD64)pStubInTarget) != 0)
         {
-            DbgOut(L"Upper 32 bits of stub address in target process are nonzero (0x%p)",
-                   pStubInTarget);
+            OnDbgOut("Upper 32 bits of stub address in target process are nonzero (0x%p)",
+                     pStubInTarget);
             goto exit;
         }
 
@@ -473,8 +472,8 @@ bool CProcessDLLInject::InjectCode(tProcInfo *pProcInfo)
 
         if (!Wow64SetThreadContext(pProcInfo->createInfo.hThread, &stubWow64Context))
         {
-            DbgOut(L"Failed to modify Wow64 thread context to point to injected code (%u)",
-                   GetLastError());
+            OnDbgOut("Failed to modify Wow64 thread context to point to injected code (%u)",
+                     GetLastError());
             goto exit;
         }
     }
@@ -518,7 +517,7 @@ bool CProcessDLLInject::OnProcessCreate(DWORD                       dwProcessID,
 #if !defined(_WIN64)
         if (!m_procInfo.bIs32Bit)
         {
-            DbgOut(L"Cannot debug a 64-bit process with a 32-bit debugger");
+            OnDbgOut("Cannot debug a 64-bit process with a 32-bit debugger");
             return false;
         }
 #endif
@@ -526,10 +525,10 @@ bool CProcessDLLInject::OnProcessCreate(DWORD                       dwProcessID,
         if (!m_procInfo.bIsNative && !m_pWow64LoadLibraryW)
         {
             m_pWow64LoadLibraryW = Wow64GetKnownDllProcAddress(g_szKernel32, "LoadLibraryW");
-            DbgOut(L"pWow64LoadLibraryW: 0x%p", m_pWow64LoadLibraryW); // TODO: remove
+            OnDbgOut("pWow64LoadLibraryW: 0x%p", m_pWow64LoadLibraryW); // TODO: remove
             if (!m_pWow64LoadLibraryW)
             {
-                DbgOut(L"Failed to get Wow64 LoadLibraryW address");
+                OnDbgOut("Failed to get Wow64 LoadLibraryW address");
                 return false;
             }
         }
@@ -541,10 +540,10 @@ bool CProcessDLLInject::OnProcessCreate(DWORD                       dwProcessID,
         m_procInfo.bIsNative    = true;
     }
 
-    DbgOut(L"Debugging process with ID %u (%hs, %hs bitness)",
-           dwProcessID,
-           m_procInfo.bIs32Bit ? "32-bit" : "64-bit",
-           m_procInfo.bIsNative ? "native" : "non-native");
+    OnDbgOut("Debugging process with ID %u (%hs, %hs bitness)",
+             dwProcessID,
+             m_procInfo.bIs32Bit ? "32-bit" : "64-bit",
+             m_procInfo.bIsNative ? "native" : "non-native");
 
     return true;
 }
@@ -591,7 +590,7 @@ void CProcessDLLInject::OnDebugString(DWORD                        dwProcessID,
                            pInfo->nDebugStringLength,
                            dbgString))
     {
-        DbgOut(L"Failed to read debug string from target process (%u)", GetLastError());
+        OnDbgOut("Failed to read debug string from target process (%u)", GetLastError());
         return;
     }
 
@@ -610,28 +609,28 @@ void CProcessDLLInject::OnBreakpoint(const tProcInfo              *pProcInfo,
 
             if (!SetEntryPointBP(&m_procInfo))
             {
-                DbgOut(L"Failed to initialize hook");
+                OnDbgOut("Failed to initialize hook");
             }
         }
         else if (pInfo->ExceptionRecord.ExceptionAddress == m_procInfo.createInfo.lpStartAddress)
         {
-            DbgOut(L"Process entry point hit");
+            OnDbgOut("Process entry point hit");
 
             if (!RemoveEntryPointBP(&m_procInfo))
             {
-                DbgOut(L"Failed to remove entry point breakpoint");
+                OnDbgOut("Failed to remove entry point breakpoint");
                 return;
             }
 
             if (!SaveEntryPointContext(&m_procInfo))
             {
-                DbgOut(L"Failed to save entry point context");
+                OnDbgOut("Failed to save entry point context");
                 return;
             }
 
             if (!InjectCode(&m_procInfo))
             {
-                DbgOut(L"Failed to inject code");
+                OnDbgOut("Failed to inject code");
                 return;
             }
 
@@ -641,11 +640,11 @@ void CProcessDLLInject::OnBreakpoint(const tProcInfo              *pProcInfo,
         }
         else if (pInfo->ExceptionRecord.ExceptionAddress == m_procInfo.pStubInTargetBP)
         {
-            DbgOut(L"Stub breakpoint hit");
+            OnDbgOut("Stub breakpoint hit");
 
             if (!SaveBaseAddressAndRestoreEntryPointContext(&m_procInfo))
             {
-                DbgOut(L"Failed to restore entry point context");
+                OnDbgOut("Failed to restore entry point context");
             }
 
             FreeStub(&m_procInfo);
@@ -655,8 +654,8 @@ void CProcessDLLInject::OnBreakpoint(const tProcInfo              *pProcInfo,
     }
     else
     {
-        DbgOut(L"Breakpoint during regular execution at address 0x%p",
-               pInfo->ExceptionRecord.ExceptionAddress);
+        OnDbgOut("Breakpoint during regular execution at address 0x%p",
+                 pInfo->ExceptionRecord.ExceptionAddress);
 
         // Ignore
     }

@@ -53,6 +53,17 @@ protected:
                                DWORD                        dwThreadID,
                                OUTPUT_DEBUG_STRING_INFO    *pInfo);
 
-    virtual void OnDbgOut(LPCTSTR message);
+    /*
+     * Method that should be used by this class and all non-leaf subclasses to generate debugging
+     * output. Intentionally using LPCSTR for szFormat and not LPCWSTR to allow passing format
+     * strings without having to use the Unicode literal string modifier (L"").
+     */
+    void OnDbgOut(LPCSTR szFormat, ...);
+
+    /*
+     * Method that can be used by leaf subclasses to consume all debugging output from superclasses
+     * and do something useful with it.
+     */
+    virtual void OnDbgOut(LPCWSTR wszFormat, va_list argList);
 
 };

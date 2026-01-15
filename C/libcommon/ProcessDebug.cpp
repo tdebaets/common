@@ -69,7 +69,8 @@ void CProcessDebug::Run()
 #if defined(_WIN64)
             case STATUS_WX86_BREAKPOINT:
 #endif
-                OnDbgOut(TEXT("Breakpoint"));
+                OnDbgOut("Breakpoint at address 0x%p",
+                         dbgEvent.u.Exception.ExceptionRecord.ExceptionAddress);
                 break;
             default:
                 ContinueDebugEvent(dbgEvent.dwProcessId,
@@ -131,7 +132,18 @@ void CProcessDebug::OnDebugString(DWORD                         dwProcessID,
 
 }
 
-void CProcessDebug::OnDbgOut(LPCTSTR message)
+void CProcessDebug::OnDbgOut(LPCSTR szFormat, ...)
+{
+    va_list argList;
+
+    va_start(argList, szFormat);
+
+    OnDbgOut(simple_string_to_wstring(szFormat).c_str(), argList);
+
+    va_end(argList);
+}
+
+void CProcessDebug::OnDbgOut(LPCWSTR wszFormat, va_list argList)
 {
 
 }
