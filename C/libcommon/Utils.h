@@ -56,6 +56,9 @@ HRESULT PatchCOMMethod(PVOID    pObj,
                        PVOID    pNewAddress,
                        PVOID   *ppOldAddress);
 
+INT FormatArgListAlloc(LPCWSTR kwszFormatString, va_list argList, PWCHAR *pwszResult);
+BOOL FormatArgListFree(PWCHAR *pwszResult);
+
 /*
  * Defining DbgOut as a macro to allow projects to override this with their own
  * specific define (e.g. to prepend a project-specific prefix).
@@ -76,3 +79,16 @@ void _DBGPRINT(LPCWSTR  kwszFunction,
 #else
 #define DBGPRINT(kwszDebugFormatString, ...) ;;
 #endif
+
+/*
+ * Template to convert **only** plain ASCII char strings to Unicode wstrings.
+ * This relies on the implicit conversion of char to wchar_t, which is why only plain ASCII is
+ * supported.
+ * Inspired by the answer at
+ * https://stackoverflow.com/questions/46665891/initialize-stdstring-and-stdwstring-from-the-same-hard-coded-string-literals
+ */
+template <typename StringType>
+static inline constexpr std::wstring simple_string_to_wstring(const StringType data)
+{
+    return std::wstring(data, data + std::strlen(data));
+}

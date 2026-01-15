@@ -237,30 +237,59 @@ HRESULT PatchCOMMethod(PVOID    pObj,
     return S_OK;
 }
 
+INT FormatArgListAlloc(LPCWSTR kwszFormatString, va_list argList, PWCHAR *pwszResult)
+{
+    INT     cbFormatString  = 0;
+    PWCHAR  wszResult       = NULL;
+
+    if (!pwszResult)
+        return 0;
+
+    *pwszResult = NULL;
+
+    cbFormatString = _vscwprintf(kwszFormatString, argList) * sizeof(WCHAR) + 2;
+
+    if (cbFormatString < 1 || cbFormatString > STRSAFE_MAX_CCH * sizeof(WCHAR))
+        return 0;
+
+    /* Depending on the size of the format string, allocate space on the stack or the heap. */
+    wszResult = (PWCHAR)_malloca(cbFormatString);
+    if (!wszResult)
+        return 0;
+
+    /* Populate the buffer with the contents of the format string. */
+    StringCbVPrintfW(wszResult, cbFormatString, kwszFormatString, argList);
+
+    *pwszResult = wszResult;
+
+    return cbFormatString;
+}
+
+BOOL FormatArgListFree(PWCHAR *pwszResult)
+{
+    if (!pwszResult || !*pwszResult)
+        return FALSE;
+
+    _freea(*pwszResult);
+
+    *pwszResult = NULL;
+
+    return TRUE;
+}
+
 void _DbgOut(LPCWSTR kwszDebugFormatString, ...)
 {
-    INT     cbFormatString = 0;
     PWCHAR  wszDebugString = NULL;
     va_list args;
 
     va_start(args, kwszDebugFormatString);
 
-    cbFormatString = _vscwprintf(kwszDebugFormatString, args) * sizeof(WCHAR) + 2;
-
-    if (cbFormatString < 1 || cbFormatString > STRSAFE_MAX_CCH * sizeof(WCHAR))
+    if (FormatArgListAlloc(kwszDebugFormatString, args, &wszDebugString) == 0)
         goto exit;
-
-    /* Depending on the size of the format string, allocate space on the stack or the heap. */
-    wszDebugString = (PWCHAR)_malloca(cbFormatString);
-    if (!wszDebugString)
-        goto exit;
-
-    /* Populate the buffer with the contents of the format string. */
-    StringCbVPrintfW(wszDebugString, cbFormatString, kwszDebugFormatString, args);
 
     OutputDebugStringW(wszDebugString);
 
-    _freea(wszDebugString);
+    FormatArgListFree(&wszDebugString);
 
 exit:
     va_end(args);
