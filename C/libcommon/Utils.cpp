@@ -237,59 +237,46 @@ HRESULT PatchCOMMethod(PVOID    pObj,
     return S_OK;
 }
 
-INT FormatArgListAlloc(LPCWSTR kwszFormatString, va_list argList, PWCHAR *pwszResult)
+INT FormatArgListGetBufSize(LPCWSTR kwszFormatString, va_list argList)
 {
-    INT     cbFormatString  = 0;
-    PWCHAR  wszResult       = NULL;
-
-    if (!pwszResult)
-        return 0;
-
-    *pwszResult = NULL;
+    INT cbFormatString = 0;
 
     cbFormatString = _vscwprintf(kwszFormatString, argList) * sizeof(WCHAR) + 2;
 
     if (cbFormatString < 1 || cbFormatString > STRSAFE_MAX_CCH * sizeof(WCHAR))
         return 0;
 
-    /* Depending on the size of the format string, allocate space on the stack or the heap. */
-    wszResult = (PWCHAR)_malloca(cbFormatString);
-    if (!wszResult)
-        return 0;
-
-    /* Populate the buffer with the contents of the format string. */
-    StringCbVPrintfW(wszResult, cbFormatString, kwszFormatString, argList);
-
-    *pwszResult = wszResult;
-
     return cbFormatString;
-}
-
-BOOL FormatArgListFree(PWCHAR *pwszResult)
-{
-    if (!pwszResult || !*pwszResult)
-        return FALSE;
-
-    _freea(*pwszResult);
-
-    *pwszResult = NULL;
-
-    return TRUE;
 }
 
 void _DbgOut(LPCWSTR kwszDebugFormatString, ...)
 {
+    INT     cbDebugString  = 0;
     PWCHAR  wszDebugString = NULL;
     va_list args;
 
     va_start(args, kwszDebugFormatString);
 
-    if (FormatArgListAlloc(kwszDebugFormatString, args, &wszDebugString) == 0)
+    cbDebugString = FormatArgListGetBufSize(kwszDebugFormatString, args);
+    if (cbDebugString == 0)
         goto exit;
+
+    /*
+     * Depending on the size of the format string, allocate space on the stack or the heap.
+     * NOTE: the _malloca() call should always be done in this function because it may allocate on
+     * the stack! When moving the call to a helper function, the pointer could become invalid when
+     * that function has returned.
+     */
+    wszDebugString = (PWCHAR)_malloca(cbDebugString);
+    if (!wszDebugString)
+        goto exit;
+
+    /* Populate the buffer with the contents of the format string. */
+    StringCbVPrintfW(wszDebugString, cbDebugString, kwszDebugFormatString, args);
 
     OutputDebugStringW(wszDebugString);
 
-    FormatArgListFree(&wszDebugString);
+    _freea(wszDebugString);
 
 exit:
     va_end(args);

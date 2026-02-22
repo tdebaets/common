@@ -56,8 +56,7 @@ HRESULT PatchCOMMethod(PVOID    pObj,
                        PVOID    pNewAddress,
                        PVOID   *ppOldAddress);
 
-INT FormatArgListAlloc(LPCWSTR kwszFormatString, va_list argList, PWCHAR *pwszResult);
-BOOL FormatArgListFree(PWCHAR *pwszResult);
+INT FormatArgListGetBufSize(LPCWSTR kwszFormatString, va_list argList);
 
 /*
  * Defining DbgOut as a macro to allow projects to override this with their own
