@@ -215,6 +215,9 @@ procedure InterfaceDisconnect(const Source: IUnknown; const IID: TIID;
 
 // COM
 
+const
+  CLSCTX_ACTIVATE_64_BIT_SERVER = $80000;
+
 function CoCreateInstanceAsAdmin(Handle: HWND; const ClassID, IID: TGuid;
     out ppv): HResult;
 function OpenCOMObjectKey(Registry: TRegistry; const CLSID: TGUID;
