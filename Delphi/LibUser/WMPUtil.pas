@@ -572,9 +572,17 @@ type
     function Get_status: WideString; safecall;
   end;
 
+{ IWMPCore2: Public interface. }
+
+  IWMPCore2Safe = interface(IWMPCoreSafe)
+    ['{BC17E5B7-7561-4C18-BB90-17D485775659}']
+    function Get_dvd: IWMPDVD; safecall;
+    property dvd: IWMPDVD read Get_dvd;
+  end;
+
 { IWMPCore3: Public interface. }
 
-  IWMPCore3Safe = interface(IWMPCore2)
+  IWMPCore3Safe = interface(IWMPCore2Safe)
     ['{7587C667-628F-499F-88E7-6A6F4E888464}']
     function newPlaylist(const bstrName, bstrURL: WideString;
         out ppPlaylist: IWMPPlaylistSafe): HResult; stdcall;
@@ -652,6 +660,7 @@ function ParseWMPCDUrl(const URL: String;
     var DriveIdx, TrackNum: Integer): Boolean;
 
 procedure WMPPlayOrPause(Core: IWMPCoreSafe);
+function WMPClearCurrentMedia(Core: IWMPCore3Safe): HResult;
 
 function GetWMPAppInternal(Core: IWMPCoreSafe): IWMPPlayerAppInternal;
 function GetWMPRemoteApps(Core: IWMPCoreSafe; var Count: Integer;
@@ -1510,6 +1519,23 @@ begin
     Core.Get_controls.pause
   else
     Core.Get_controls.play;
+end;
+
+function WMPClearCurrentMedia(Core: IWMPCore3Safe): HResult;
+var
+  Playlist: IWMPPlaylistSafe;
+begin
+  // This seems to be the only way to clear the current media item - neither
+  // IWMPCore.Set_currentMedia(nil) nor IWMPControls.Set_currentItem(nil) works.
+  Result := Core.newPlaylist('', '', Playlist);
+  if not Succeeded(Result) then
+    Exit;
+  if Assigned(Playlist) then begin
+    // WMP 11 and 12 close the file synchronously here
+    Result := Core.Set_currentPlaylist(Playlist);
+  end
+  else
+    Result := E_UNEXPECTED;
 end;
 
 function GetWMPAppInternal(Core: IWMPCoreSafe): IWMPPlayerAppInternal;
